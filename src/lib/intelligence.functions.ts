@@ -37,7 +37,9 @@ export const listFacts = createServerFn({ method: "POST" }).middleware([requireS
     if (error) throw new Error("Unable to load proposed facts");
     const { data: canReview } = await context.supabase.rpc("may_review_facts", { _org: data.organizationId });
     const { data: reviews } = await context.supabase.from("fact_reviews").select("fact_id,decision,previous_state,value,note,reviewer_id,created_at").eq("organization_id", data.organizationId).order("created_at");
-    return { canReview: !!canReview, facts: facts ?? [], reviews: reviews ?? [] };
+    const { data: links } = await context.supabase.from("relationships").select("id,source_id,relation_type,target_label,status,rule_id,provenance").eq("organization_id", data.organizationId).eq("source_type", "fact").limit(2000);
+    const { data: runs } = await context.supabase.from("rule_runs").select("rule_id,input_ref,gaps,created_at").eq("organization_id", data.organizationId).eq("rule_id", "R-AGENCY-001").order("created_at", { ascending: false }).limit(500);
+    return { canReview: !!canReview, facts: facts ?? [], reviews: reviews ?? [], links: links ?? [], runs: runs ?? [] };
   });
 
 export const reviewFact = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])

@@ -12,7 +12,6 @@ import { DataTable, Status } from "./ui";
 import { useWorkspace } from "./workspace";
 import { listDocuments, registerDocument, finalizeDocument, markDocumentFailed, retryDocument, getDocumentLink } from "@/lib/documents.functions";
 import { processDocument } from "@/lib/intelligence.functions";
-import { Link } from "@tanstack/react-router";
 import { ALLOWED_EXTENSIONS, STATUS_LABELS, isStored, UPLOAD_BUCKET, sha256Hex, validateSelection, type ProcessingStatus, type UploadModule } from "@/lib/upload-rules";
 
 const EVIDENCE_FRAMEWORKS = ["NAAC", "NIRF", "QS", "THE", "UI GreenMetric", "Other / not stated"];
@@ -114,7 +113,7 @@ export function DocumentUploads({ module, label }: { module: UploadModule; label
           <div className="text-xs"><p>{d.category_code}</p><p className="text-muted-foreground">{d.document_type_id}</p></div>,
           <div className="text-xs"><p>{d.reporting_period ?? "Not stated"}</p><p className="text-muted-foreground">{d.document_date_raw ?? ""}</p></div>,
           <div className="space-y-1"><Status tone={tone(d.processing_status)}>{STATUS_LABELS[d.processing_status as ProcessingStatus] ?? d.processing_status}</Status>{d.duplicateOf.length > 0 && <p className="text-xs text-muted-foreground">Duplicate candidate: same content as {d.duplicateOf.join(", ")}</p>}{(d.validation_errors as string[]).map(e => <p key={e} className="max-w-xs text-xs text-destructive">{e}</p>)}<p className="text-xs text-muted-foreground">Extraction: {d.extraction_status.replaceAll("_", " ")}</p></div>,
-          <div className="flex flex-wrap gap-2">{isStored(d.processing_status) && <Button size="sm" variant="outline" onClick={() => void open(d.id)}><Download /> Download</Button>}{isStored(d.processing_status) && data?.canUpload && <Button size="sm" variant="outline" disabled={busy} onClick={() => void runProcessing(d.id)}>{d.processing_status === "awaiting_processing" ? "Process" : "Re-run processing"}</Button>}{(d.processing_status === "needs_review" || d.processing_status === "extracted") && <Button size="sm" variant="ghost" asChild><Link to="/review">Review facts</Link></Button>}{d.processing_status === "upload_failed" && d.uploader_id === data?.userId && data?.canUpload && <Button size="sm" variant="outline" disabled={busy} onClick={() => { setRetryId(d.id); retryInput.current?.click(); }}><RotateCcw /> Retry</Button>}</div>,
+          <div className="flex flex-wrap gap-2">{isStored(d.processing_status) && <Button size="sm" variant="outline" onClick={() => void open(d.id)}><Download /> Download</Button>}{isStored(d.processing_status) && data?.canUpload && <Button size="sm" variant="outline" disabled={busy} onClick={() => void runProcessing(d.id)}>{d.processing_status === "awaiting_processing" ? "Process" : "Re-run processing"}</Button>}{(d.processing_status === "needs_review" || d.processing_status === "extracted") && <Button size="sm" variant="ghost" asChild><a href="#fact-review">Review facts</a></Button>}{d.processing_status === "upload_failed" && d.uploader_id === data?.userId && data?.canUpload && <Button size="sm" variant="outline" disabled={busy} onClick={() => { setRetryId(d.id); retryInput.current?.click(); }}><RotateCcw /> Retry</Button>}</div>,
         ])} />}
   </section>;
 }
