@@ -26,7 +26,7 @@ function Page() {
       <InternalOnly>
         <PlaceholderNotice>No relationship rules run yet. The diagram is a static illustration.</PlaceholderNotice>
         <div className="grid gap-6 lg:grid-cols-5">
-          <Panel title="Illustrative graph" className="lg:col-span-3">
+          <Panel title="Illustrative graph" className="min-w-0 lg:col-span-3">
             <div className="hatch relative h-72 overflow-hidden rounded-lg border">
               <svg className="absolute inset-0 size-full" aria-hidden>
                 {([[0, 2], [1, 0], [2, 4], [3, 4], [0, 3]] as const).map(([a, b], i) => (
@@ -41,7 +41,7 @@ function Page() {
             </div>
             <p className="mt-3 text-xs text-muted-foreground">Dashed line = candidate link awaiting review.</p>
           </Panel>
-          <div className="lg:col-span-2">
+          <div className="min-w-0 lg:col-span-2">
             <DataTable
               caption="Link queue"
               columns={["From", "To", "State"]}
