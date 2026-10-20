@@ -13,7 +13,7 @@ const nodes = [
   { label: "NAAC 3.2.1", x: 50, y: 18 },
   { label: "Council decision", x: 50, y: 78 },
   { label: "Report", x: 84, y: 45 },
-];
+] as const;
 
 function Page() {
   return (
