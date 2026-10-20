@@ -29,6 +29,13 @@
       "when": 1792500141409,
       "tag": "0003_audit_failure_outcome",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1792501803086,
+      "tag": "0004_phase4_document_intelligence_relationships",
+      "breakpoints": true
     }
   ]
 }
