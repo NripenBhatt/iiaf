@@ -8,6 +8,13 @@
       "when": 1792493492776,
       "tag": "0000_iiaf_phase1_security_foundation",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1792497416789,
+      "tag": "0001_phase2_controlled_master_import",
+      "breakpoints": true
     }
   ]
 }

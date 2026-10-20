@@ -10,6 +10,8 @@
 # Phase 2 controlled master import
 - [x] Inspect actual workbook inventory, identifiers, references and validation issues.
 - [x] Provide a protected import preview, exact field mappings and downloadable inspection summary.
-- [ ] Review proposed mapping before data writes — waiting for user review of the preview and plan.
-- [ ] Add minimum approved staging/import records and run a representative sample with idempotency and access tests — blocked on mapping review.
-- [ ] Enable approved full import only after review and passing sample; verify persisted results and deliver acceptance report — blocked on review and passing sample.
+- [x] Review proposed mapping before data writes — plan approved by user.
+- [x] Add minimum approved staging/import records and run a representative sample with idempotency and two-university access tests.
+- [x] Enable separately approved full import after verified sample, with persisted results and downloadable row outcomes.
+- [ ] Execute and verify full import — waiting for separate authorized operator approval in the import page.
+- [ ] Deliver current Phase 2 acceptance and limitations report.

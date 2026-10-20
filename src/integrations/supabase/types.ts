@@ -59,6 +59,217 @@ export type Database = {
           },
         ]
       }
+      master_import_outcomes: {
+        Row: {
+          created_at: string
+          id: string
+          mapping_log: Json
+          outcome: string
+          reason: string
+          run_id: string
+          source_fields: Json | null
+          source_identifier: string | null
+          source_row: number
+          source_sheet: string
+          target_record_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          mapping_log?: Json
+          outcome: string
+          reason: string
+          run_id: string
+          source_fields?: Json | null
+          source_identifier?: string | null
+          source_row: number
+          source_sheet: string
+          target_record_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          mapping_log?: Json
+          outcome?: string
+          reason?: string
+          run_id?: string
+          source_fields?: Json | null
+          source_identifier?: string | null
+          source_row?: number
+          source_sheet?: string
+          target_record_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "master_import_outcomes_run_id_fkey"
+            columns: ["run_id"]
+            isOneToOne: false
+            referencedRelation: "master_import_runs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "master_import_outcomes_target_record_id_fkey"
+            columns: ["target_record_id"]
+            isOneToOne: false
+            referencedRelation: "master_reference_records"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      master_import_runs: {
+        Row: {
+          approved_at: string
+          completed_at: string | null
+          created_at: string
+          expected_rows: number
+          id: string
+          initiated_by: string
+          mode: string
+          organization_id: string
+          source_sha256: string
+          source_workbook: string
+          state: string
+          validation_summary: Json
+        }
+        Insert: {
+          approved_at?: string
+          completed_at?: string | null
+          created_at?: string
+          expected_rows: number
+          id?: string
+          initiated_by: string
+          mode: string
+          organization_id: string
+          source_sha256: string
+          source_workbook: string
+          state?: string
+          validation_summary?: Json
+        }
+        Update: {
+          approved_at?: string
+          completed_at?: string | null
+          created_at?: string
+          expected_rows?: number
+          id?: string
+          initiated_by?: string
+          mode?: string
+          organization_id?: string
+          source_sha256?: string
+          source_workbook?: string
+          state?: string
+          validation_summary?: Json
+        }
+        Relationships: [
+          {
+            foreignKeyName: "master_import_runs_initiated_by_fkey"
+            columns: ["initiated_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "master_import_runs_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      master_reference_records: {
+        Row: {
+          agency_record_id: string | null
+          created_at: string
+          evidence_record_id: string | null
+          field_record_id: string | null
+          first_run_id: string
+          id: string
+          parent_record_id: string | null
+          requirement_record_id: string | null
+          source_fields: Json
+          source_identifier: string
+          source_row: number
+          source_sha256: string
+          source_sheet: string
+          source_workbook: string
+        }
+        Insert: {
+          agency_record_id?: string | null
+          created_at?: string
+          evidence_record_id?: string | null
+          field_record_id?: string | null
+          first_run_id: string
+          id?: string
+          parent_record_id?: string | null
+          requirement_record_id?: string | null
+          source_fields: Json
+          source_identifier: string
+          source_row: number
+          source_sha256: string
+          source_sheet: string
+          source_workbook: string
+        }
+        Update: {
+          agency_record_id?: string | null
+          created_at?: string
+          evidence_record_id?: string | null
+          field_record_id?: string | null
+          first_run_id?: string
+          id?: string
+          parent_record_id?: string | null
+          requirement_record_id?: string | null
+          source_fields?: Json
+          source_identifier?: string
+          source_row?: number
+          source_sha256?: string
+          source_sheet?: string
+          source_workbook?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "master_reference_records_agency_record_id_fkey"
+            columns: ["agency_record_id"]
+            isOneToOne: false
+            referencedRelation: "master_reference_records"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "master_reference_records_evidence_record_id_fkey"
+            columns: ["evidence_record_id"]
+            isOneToOne: false
+            referencedRelation: "master_reference_records"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "master_reference_records_field_record_id_fkey"
+            columns: ["field_record_id"]
+            isOneToOne: false
+            referencedRelation: "master_reference_records"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "master_reference_records_first_run_id_fkey"
+            columns: ["first_run_id"]
+            isOneToOne: false
+            referencedRelation: "master_import_runs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "master_reference_records_parent_record_id_fkey"
+            columns: ["parent_record_id"]
+            isOneToOne: false
+            referencedRelation: "master_reference_records"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "master_reference_records_requirement_record_id_fkey"
+            columns: ["requirement_record_id"]
+            isOneToOne: false
+            referencedRelation: "master_reference_records"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       organization_memberships: {
         Row: {
           active: boolean
@@ -193,13 +404,29 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      begin_master_import: {
+        Args: {
+          _approval: boolean
+          _expected: number
+          _mode: string
+          _org: string
+          _sha: string
+          _workbook: string
+        }
+        Returns: string
+      }
       bootstrap_operator: { Args: { _user: string }; Returns: string }
       can_manage: { Args: { _org: string }; Returns: boolean }
       can_read_org: { Args: { _org: string }; Returns: boolean }
+      finish_master_import: { Args: { _run: string }; Returns: Json }
       is_member: { Args: { _org: string }; Returns: boolean }
       is_operator: {
         Args: { _roles: Database["public"]["Enums"]["app_role"][] }
         Returns: boolean
+      }
+      process_master_import: {
+        Args: { _rows: Json; _run: string }
+        Returns: number
       }
       record_security_event: {
         Args: { _event: string; _org: string }
