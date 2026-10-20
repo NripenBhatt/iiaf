@@ -1,6 +1,13 @@
-import { Link, useRouterState } from "@tanstack/react-router";
-import type { ReactNode } from "react";
-import { ChevronsUpDown, Lock, Check, Layers3 } from "lucide-react";
+import { useQueryClient } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { Button } from "@/components/ui/button";
+import { ROLE_LABELS, mayOpen } from "@/lib/access";
+import { recordSessionEvent } from "@/lib/session.functions";
+import { clearOrganization } from "@/lib/workspace-selection";
+import { toast } from "sonner";
+import { Link, useRouterState, useNavigate } from "@tanstack/react-router";
+import { useState, type ReactNode } from "react";
+import { ChevronsUpDown, Lock, Check, Layers3, LogOut } from "lucide-react";
 import {
   Sidebar,
   SidebarContent,
@@ -24,11 +31,11 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { getNavGroups } from "./nav";
-import { WORKSPACES, useWorkspace } from "./workspace";
+import { useWorkspace } from "./workspace";
 import { cn } from "@/lib/utils";
 
 function WorkspaceSwitcher() {
-  const { workspace, setWorkspaceId } = useWorkspace();
+  const { workspace, workspaces, setWorkspaceId } = useWorkspace();
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -54,9 +61,9 @@ function WorkspaceSwitcher() {
       </DropdownMenuTrigger>
       <DropdownMenuContent className="w-72" align="start">
         <DropdownMenuLabel className="eyebrow text-muted-foreground">
-          Switch workspace (demo)
+          Authorized workspaces
         </DropdownMenuLabel>
-        {WORKSPACES.map((w) => (
+        {workspaces.map((w) => (
           <DropdownMenuItem key={w.id} onClick={() => setWorkspaceId(w.id)} className="gap-3">
             <span className="flex size-7 items-center justify-center rounded bg-muted font-mono text-[10px] font-semibold">
               {w.short}
@@ -70,7 +77,7 @@ function WorkspaceSwitcher() {
         ))}
         <DropdownMenuSeparator />
         <p className="px-2 py-1.5 text-xs text-muted-foreground">
-          Visual preview of workspace separation only. No access control is enforced yet.
+          {workspace.roles.map(r => ROLE_LABELS[r]).join(", ")}
         </p>
       </DropdownMenuContent>
     </DropdownMenu>
@@ -90,7 +97,7 @@ function AppSidebar() {
           <span className="font-display text-2xl font-bold text-sidebar-accent-foreground">
             IIAF
           </span>
-          <span className="ml-auto rounded border px-1.5 py-0.5 font-mono text-[9px] text-muted-foreground">PHASE 0</span>
+          <span className="ml-auto rounded border px-1.5 py-0.5 font-mono text-[9px] text-muted-foreground">PHASE 1</span>
         </div>
         <SidebarMenu>
           <SidebarMenuItem>
@@ -100,7 +107,7 @@ function AppSidebar() {
       </SidebarHeader>
       <SidebarContent>
         {getNavGroups(workspace.kind).map((g) => {
-          const items = g.items.filter((i) => !(isUni && i.internalOnly));
+          const items = g.items.filter((i) => !(isUni && i.internalOnly) && mayOpen(i.url, workspace.kind, workspace.roles));
           if (!items.length) return null;
           return (
             <SidebarGroup key={g.label}>
@@ -130,8 +137,7 @@ function AppSidebar() {
       </SidebarContent>
       <SidebarFooter className="group-data-[collapsible=icon]:hidden">
         <p className="px-2 pb-2 text-[11px] leading-relaxed text-sidebar-foreground/60">
-          <Lock className="mr-1 inline size-3" /> marks company-only modules, hidden in university
-          workspaces.
+          <Lock className="mr-1 inline size-3" /> Organization and role access protected. Analytical records remain samples.
         </p>
       </SidebarFooter>
     </Sidebar>
@@ -139,7 +145,10 @@ function AppSidebar() {
 }
 
 export function AppShell({ children }: { children: ReactNode }) {
-  const { workspace } = useWorkspace();
+  const { workspace, displayName } = useWorkspace();
+  const queryClient = useQueryClient(); const navigate = useNavigate(); const [leaving,setLeaving]=useState(false);
+  async function signOut(){setLeaving(true);try{await recordSessionEvent({data:{organizationId:workspace.id,event:"session.sign_out"}});}catch{toast.error("Security event could not be recorded; signing out continues.");}await queryClient.cancelQueries();queryClient.clear();clearOrganization();const {error}=await supabase.auth.signOut();if(error){toast.error("Sign-out failed. Please try again.");setLeaving(false);return;}await navigate({to:"/auth",replace:true});}
+
   return (
     <SidebarProvider>
       <div className="flex min-h-screen w-full">
@@ -151,9 +160,10 @@ export function AppShell({ children }: { children: ReactNode }) {
             <span className="truncate text-sm text-muted-foreground">{workspace.name}</span>
             <span className="ml-auto inline-flex items-center gap-2 rounded border border-gold/40 bg-gold-soft px-3 py-1 text-xs font-medium text-foreground">
               <span className="size-1.5 rounded-full bg-gold" />
-              <span className="hidden sm:inline">Design preview · demonstration data</span>
-              <span className="sm:hidden">Demo</span>
+              <span className="hidden sm:inline">{displayName || workspace.roles.map(r=>ROLE_LABELS[r]).join(", ")}</span>
+              <span className="sm:hidden">{workspace.short}</span>
             </span>
+            <Button size="icon" variant="ghost" title="Sign out" aria-label="Sign out" disabled={leaving} onClick={signOut}><LogOut className="size-4"/></Button>
           </header>
           <main className="mx-auto w-full max-w-[1440px] flex-1 px-4 py-6 sm:px-7">{children}</main>
         </div>
