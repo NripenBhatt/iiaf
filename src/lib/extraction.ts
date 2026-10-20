@@ -3,7 +3,7 @@ import fieldSpec from "@/data/fact-fields.json";
 
 /** Extraction output is untrusted data: it is stored and displayed, never executed or interpreted as instructions. */
 export const PROCESSOR = "iiaf-extractor";
-export const PROCESSOR_VERSION = "1.0.0";
+export const PROCESSOR_VERSION = "1.1.0";
 export const MAX_SEGMENTS = 2000;
 
 export type Locator = Record<string, string | number | null>;
