@@ -3,6 +3,7 @@ import { Analytics } from "@/components/iiaf/analytics";
 import { createFileRoute } from "@tanstack/react-router";
 import { pageHead } from "@/lib/seo";
 import { DocumentUploads } from "@/components/iiaf/document-uploads";
+import { FactReview } from "@/components/iiaf/fact-review";
 import { DataTable, PageHeader, PlaceholderNotice, Status } from "@/components/iiaf/ui";
 
 export const Route = createFileRoute("/_authenticated/institutional")({
@@ -20,6 +21,7 @@ function Page() {
       />
       <PlaceholderNotice>Uploads are real and stored privately. Parsing, OCR and extraction are not built yet; the sample table below is illustrative only.</PlaceholderNotice>
       <DocumentUploads module="institutional" label="Institutional documents" />
+      <FactReview module="institutional" />
       <Analytics page="institutional" />
       <InstitutionDomains />
       <DataTable

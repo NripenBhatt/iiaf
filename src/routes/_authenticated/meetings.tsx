@@ -2,6 +2,7 @@ import { Analytics } from "@/components/iiaf/analytics";
 import { createFileRoute } from "@tanstack/react-router";
 import { pageHead } from "@/lib/seo";
 import { DocumentUploads } from "@/components/iiaf/document-uploads";
+import { FactReview } from "@/components/iiaf/fact-review";
 import { DataTable, PageHeader, PlaceholderNotice, Stat, Status } from "@/components/iiaf/ui";
 
 export const Route = createFileRoute("/_authenticated/meetings")({
@@ -19,6 +20,7 @@ function Page() {
       />
       <PlaceholderNotice>Meeting files upload and are stored privately. Meeting capture, decisions and action tracking are not extracted yet; figures below are samples.</PlaceholderNotice>
       <DocumentUploads module="meeting" label="Meeting records" />
+      <FactReview module="meeting" />
       <div className="mb-6 grid gap-4 sm:grid-cols-3">
         <Stat label="Meetings this term" value="14" />
         <Stat label="Open actions" value="38" />
