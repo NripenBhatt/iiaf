@@ -52,7 +52,6 @@ const PAIR = /^\s*([A-Za-z][A-Za-z0-9 _/&().-]{1,60}?)\s*[:=]\s*(.{1,500})$/;
 export function proposeFacts(segments: Segment[]): Fact[] {
   const facts: Fact[] = [];
   for (const s of segments) {
-    if (s.sheet !== null && s.locator["header_mapped"]) continue;
     const m = s.content.match(PAIR);
     if (!m) continue;
     const label = m[1]!.trim(); const value = m[2]!.trim(); const f = matchField(label);
