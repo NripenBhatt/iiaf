@@ -1,0 +1,18 @@
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { useState, type FormEvent } from "react";
+import { Layers3 } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { lovable } from "@/integrations/lovable/index";
+import "@lovable.dev/cloud-auth-js/styles.css";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { pageHead } from "@/lib/seo";
+export const Route = createFileRoute("/auth")({ head: () => pageHead("Sign in", "Secure access to your IIAF organization workspace."), component: SignIn });
+function SignIn() {
+  const navigate = useNavigate(); const [email,setEmail]=useState(""); const [password,setPassword]=useState(""); const [busy,setBusy]=useState(false); const [error,setError]=useState(""); const [notice,setNotice]=useState("");
+  async function submit(e:FormEvent) { e.preventDefault(); setBusy(true);setError(""); const result=await supabase.auth.signInWithPassword({email,password});setBusy(false); if(result.error){setError("Sign-in failed. Check your email and password.");return;} await navigate({to:"/"}); }
+  async function social(provider:"google"|"lovable") {setBusy(true);setError("");try {const r=await lovable.auth.signInWithOAuth(provider,{redirect_uri:window.location.origin+"/auth/callback"});if(r.error)setError("Sign-in is unavailable. Please try again.");else if(!r.redirected)await navigate({to:"/"});}catch{setError("Sign-in is unavailable. Please try again.");}finally{setBusy(false);}}
+  async function reset(){setError("");if(!email){setError("Enter your email first.");return;}setBusy(true);const {error}=await supabase.auth.resetPasswordForEmail(email,{redirectTo:window.location.origin+"/reset-password"});setBusy(false);if(error)setError("Unable to send a reset email. Try again later.");else setNotice("If an account exists, a password reset link will be emailed to you.");}
+  return <main className="mx-auto flex min-h-screen max-w-md flex-col justify-center px-6 py-12"><div className="mb-8 flex items-center gap-3 text-primary"><Layers3 className="size-8"/><span className="font-display text-3xl font-bold">IIAF</span></div><h1 className="text-2xl font-semibold">Sign in</h1><p className="mb-6 mt-2 text-sm text-muted-foreground">Your organization workspace</p><form onSubmit={submit} className="space-y-4"><div className="space-y-2"><Label htmlFor="email">Email</Label><Input id="email" type="email" autoComplete="email" required value={email} onChange={e=>setEmail(e.target.value)}/></div><div className="space-y-2"><Label htmlFor="password">Password</Label><Input id="password" type="password" autoComplete="current-password" required value={password} onChange={e=>setPassword(e.target.value)}/></div>{error&&<p role="alert" className="text-sm text-destructive">{error}</p>}{notice&&<p role="status" className="text-sm text-success">{notice}</p>}<Button disabled={busy} className="w-full" type="submit">{busy?"Please wait…":"Sign in"}</Button><Button type="button" variant="link" onClick={reset} disabled={busy} className="px-0">Forgot password?</Button></form><div className="my-5 border-t"/><Button variant="outline" disabled={busy} onClick={()=>social("google")} className="mb-3">Sign in with Google</Button><Button disabled={busy} className="lovable-auth-button" onClick={()=>social("lovable")}>Sign in with Lovable</Button><p className="mt-6 text-xs leading-relaxed text-muted-foreground">Organization access is assigned by an administrator. Signing in does not grant membership or operator privileges.</p></main>;
+}
