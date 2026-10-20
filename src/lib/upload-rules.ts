@@ -2,9 +2,12 @@ export const MAX_UPLOAD_BYTES = 20 * 1024 * 1024;
 export const UPLOAD_BUCKET = "institution-documents";
 export const ALLOWED_EXTENSIONS = ["pdf", "docx", "doc", "xlsx", "xls", "csv", "pptx", "txt", "jpg", "jpeg", "png"] as const;
 export type UploadModule = "institutional" | "meeting" | "evidence";
-export type ProcessingStatus = "uploading" | "uploaded" | "validation_failed" | "upload_failed" | "awaiting_processing";
+export type ProcessingStatus = "uploading" | "uploaded" | "validation_failed" | "upload_failed" | "awaiting_processing" | "queued" | "processing" | "extracted" | "needs_review" | "processing_failed" | "ocr_required";
+/** Stored, verified originals that may be downloaded or (re)processed. */
+export const STORED_STATES = ["awaiting_processing", "queued", "processing", "extracted", "needs_review", "processing_failed", "ocr_required"] as const;
+export const isStored = (s: string) => (STORED_STATES as readonly string[]).includes(s);
 export const STATUS_LABELS: Record<ProcessingStatus, string> = {
-  uploading: "Uploading", uploaded: "Uploaded", validation_failed: "Validation Failed", upload_failed: "Upload Failed", awaiting_processing: "Awaiting Processing",
+  uploading: "Uploading", uploaded: "Uploaded", validation_failed: "Validation Failed", upload_failed: "Upload Failed", awaiting_processing: "Awaiting Processing", queued: "Queued for Processing", processing: "Processing", extracted: "Extracted", needs_review: "Needs Review", processing_failed: "Processing Failed", ocr_required: "OCR Required",
 };
 const ZIP_TYPES = ["docx", "xlsx", "pptx"];
 const OLE_TYPES = ["doc", "xls"];

@@ -1,7 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { z } from "zod";
-import { UPLOAD_BUCKET, contentMatchesExtension, detectMime, sha256Hex, validateSelection } from "./upload-rules";
+import { UPLOAD_BUCKET, isStored, contentMatchesExtension, detectMime, sha256Hex, validateSelection } from "./upload-rules";
 
 const moduleSchema = z.enum(["institutional", "meeting", "evidence"]);
 const text = z.string().trim().max(300).optional().default("");
@@ -15,7 +15,7 @@ export const listDocuments = createServerFn({ method: "POST" }).middleware([requ
     if (error) throw new Error("Unable to load uploaded documents");
     const { data: canUpload } = await context.supabase.rpc("may_upload", { _org: data.organizationId });
     const all = rows ?? [];
-    return { canUpload: !!canUpload, userId: context.userId, documents: all.map(d => ({ ...d, duplicateOf: all.filter(o => o.id !== d.id && o.sha256_hash === d.sha256_hash && o.processing_status === "awaiting_processing").map(o => o.original_filename) })) };
+    return { canUpload: !!canUpload, userId: context.userId, documents: all.map(d => ({ ...d, duplicateOf: all.filter(o => o.id !== d.id && o.sha256_hash === d.sha256_hash && isStored(o.processing_status)).map(o => o.original_filename) })) };
   });
 
 export const registerDocument = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
@@ -71,7 +71,7 @@ export const getDocumentLink = createServerFn({ method: "POST" }).middleware([re
   .inputValidator(z.object({ id: z.string().uuid() }))
   .handler(async ({ context, data }) => {
     const { data: doc } = await context.supabase.from("uploaded_documents").select("storage_object_key,original_filename,processing_status").eq("id", data.id).maybeSingle();
-    if (!doc || doc.processing_status !== "awaiting_processing") throw new Error("Document is not available");
+    if (!doc || !isStored(doc.processing_status)) throw new Error("Document is not available");
     const { error: auditError } = await context.supabase.rpc("record_document_access", { _id: data.id });
     if (auditError) throw new Error("Access denied");
     const { data: signed, error } = await context.supabase.storage.from(UPLOAD_BUCKET).createSignedUrl(doc.storage_object_key, 60, { download: doc.original_filename });
