@@ -53,3 +53,23 @@ export const getImportResults = createServerFn({ method: "POST" }).middleware([r
     if (error) throw new Error("Unable to read import results");
     return rows ?? [];
   });
+
+export const listHeldReviews = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { data, error } = await context.supabase.from("held_record_reviews").select("id,source_sheet,source_row,source_identifier,decision,explanation,reviewer_id,created_at").order("created_at", { ascending: false }).limit(2000);
+    if (error) throw new Error("Unable to read held-record reviews");
+    const ids = [...new Set((data ?? []).map(r => r.reviewer_id))];
+    const { data: names } = ids.length ? await context.supabase.from("profiles").select("id,display_name").in("id", ids) : { data: [] };
+    return (data ?? []).map(r => ({ ...r, reviewer: names?.find(n => n.id === r.reviewer_id)?.display_name || r.reviewer_id }));
+  });
+export const recordHeldReview = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
+  .inputValidator(z.object({ organizationId: z.string().uuid(), sheet: z.string().max(80), row: z.number().int().min(1), decision: z.enum(["keep_held", "source_correction_required", "escalate_for_expert_review"]), explanation: z.string().trim().min(10).max(2000) }))
+  .handler(async ({ context, data }) => {
+    const { default: inspection } = await import("@/data/master-inspection.json");
+    const issue = inspection.issues.find(i => i.sheet === data.sheet && i.row === data.row);
+    if (!issue) throw new Error("Only inspected held records can be reviewed.");
+    const { error } = await context.supabase.from("held_record_reviews").insert({ organization_id: data.organizationId, source_sheet: issue.sheet, source_row: issue.row, source_identifier: String(issue.identifier), decision: data.decision, explanation: data.explanation, reviewer_id: context.userId });
+    if (error) throw new Error(error.code === "42501" ? "Only a Super Admin or Internal Reviewer can record held-record decisions." : "Review could not be saved.");
+    return { ok: true, stillHeld: true };
+  });
+
