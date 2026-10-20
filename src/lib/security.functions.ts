@@ -34,10 +34,11 @@ export const getAdministration = createServerFn({ method: "POST" }).middleware([
     const { data: org } = await context.supabase.from("organizations").select("id,name,kind,code,created_at").eq("id", data.organizationId).maybeSingle();
     if (!org) throw new Error("Access denied");
     const { data: managed } = await context.supabase.rpc("can_manage", { _org: data.organizationId });
+    const { data: portfolio } = await context.supabase.from("organizations").select("id,name,kind").order("name");
     const { data: memberships, error } = await context.supabase.from("organization_memberships").select("id,user_id,active,created_at").eq("organization_id", data.organizationId);
     if (error) throw new Error("Unable to load members");
     const { data: roles } = await context.supabase.from("user_roles").select("user_id,role").eq("organization_id", data.organizationId);
     const { data: profiles } = await context.supabase.from("profiles").select("id,display_name").in("id", (memberships ?? []).map(m => m.user_id));
     const { data: events } = await context.supabase.from("audit_events").select("id,event,actor_id,outcome,created_at").eq("organization_id", data.organizationId).order("created_at", { ascending: false }).limit(100);
-    return { org, managed: !!managed, members: (memberships ?? []).map(m => ({ ...m, name: profiles?.find(p => p.id === m.user_id)?.display_name ?? "Member", roles: (roles ?? []).filter(r => r.user_id === m.user_id).map(r => r.role) })), events: events ?? [] };
+    return { org, portfolio: portfolio ?? [], managed: !!managed, members: (memberships ?? []).map(m => ({ ...m, name: profiles?.find(p => p.id === m.user_id)?.display_name ?? "Member", roles: (roles ?? []).filter(r => r.user_id === m.user_id).map(r => r.role) })), events: events ?? [] };
   });
