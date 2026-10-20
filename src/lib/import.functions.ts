@@ -82,3 +82,15 @@ export const recordHeldReview = createServerFn({ method: "POST" }).middleware([r
     return { ok: true, stillHeld: true };
   });
 
+
+/** Records one decision for many inspected held records at once; each row is still an individual append-only review. */
+export const recordHeldReviewsBulk = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
+  .inputValidator(z.object({ organizationId: z.string().uuid(), records: z.array(z.object({ sheet: z.string().max(80), row: z.number().int().min(1) })).min(1).max(300), decision: z.enum(["keep_held", "source_correction_required", "escalate_for_expert_review", "exclude_documented"]), explanation: z.string().trim().min(10).max(2000) }))
+  .handler(async ({ context, data }) => {
+    const { default: inspection } = await import("@/data/master-inspection.json");
+    const rows = data.records.map(r => inspection.issues.find(i => i.sheet === r.sheet && i.row === r.row));
+    if (rows.some(r => !r)) throw new Error("Only inspected held records can be reviewed.");
+    const { error } = await context.supabase.from("held_record_reviews").insert(rows.map(i => ({ organization_id: data.organizationId, source_sheet: i!.sheet, source_row: i!.row, source_identifier: String(i!.identifier), decision: data.decision, explanation: data.explanation, reviewer_id: context.userId, finding: `${i!.kind}: ${i!.reason}`.slice(0, 1000), affected_fields: String(i!.field ?? ""), revalidation_result: "blocking_issue_persists" })));
+    if (error) throw new Error(error.code === "42501" ? "Your role cannot record these decisions." : "Reviews could not be saved.");
+    return { recorded: rows.length, stillHeld: true };
+  });

@@ -26,6 +26,7 @@ export interface NavItem {
     | "/reports"
     | "/conversation"
     | "/review"
+    | "/agency-requirements"
     | "/users"
     | "/audit"
     | "/settings"
@@ -57,6 +58,7 @@ export const NAV_GROUPS: { label: string; items: NavItem[] }[] = [
   {
     label: "Assurance",
     items: [
+      { title: "Agency Requirement Explorer", url: "/agency-requirements", icon: Award, internalOnly: true },
       { title: "Review & Certification", url: "/review", icon: BadgeCheck, internalOnly: true },
       { title: "Audit & Activity", url: "/audit", icon: History, internalOnly: true },
     ],
