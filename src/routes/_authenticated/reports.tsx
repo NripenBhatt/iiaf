@@ -17,7 +17,7 @@ function Page() {
   const { workspace } = useWorkspace();
   const isUni = workspace.kind === "university";
   const [filter, setFilter] = useState("All");
-  const visible = visibleOutputs(isUni, workspace.id).filter(r => filter === "All" || r.state === filter);
+  const visible = visibleOutputs(isUni, isUni ? "demo-uni" : workspace.id).filter(r => filter === "All" || r.state === filter);
 
   return (
     <>
@@ -28,12 +28,12 @@ function Page() {
         actions={!isUni && <PlannedButton><FilePlus2 className="size-4" /> New report</PlannedButton>}
       />
       <PlaceholderNotice>
-        Report generation is not built. {isUni ? "University view contains institution-authorized sample drafts and review items, plus designated releases. It excludes company-only analysis." : "Company-only analyses are not shown to university workspaces."}
+        Report generation is not built. {isUni ? "The register below contains fictional example drafts and releases, not your university’s private output records. No actual outputs are stored in Phase 1." : "Company-only analyses are not shown to university workspaces."}
       </PlaceholderNotice>
       <Analytics page="reports" />
       <Tabs value={filter} onValueChange={setFilter} className="mb-4"><div className="overflow-x-auto"><TabsList className="h-auto bg-transparent p-0">{["All", "Draft", "In review", "Approved", "Released", "Published"].map(state => <TabsTrigger key={state} value={state} className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-secondary/30 data-[state=active]:shadow-none">{state}</TabsTrigger>)}</TabsList></div></Tabs>
       <DataTable
-        caption={isUni ? "Institution-authorized sample outputs" : "All outputs"}
+        caption={isUni ? "Fictional output examples" : "All outputs"}
         columns={["Output", "Type", "Version", "State"]}
         rows={visible.map((r) => [r.title, r.category, <span className="font-mono text-xs">{r.version}</span>, <Status tone={r.state === "Released" || r.state === "Published" ? "success" : r.state === "In review" ? "warning" : "neutral"}>{r.state}</Status>])}
       />

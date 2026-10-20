@@ -42,7 +42,7 @@ function WorkspaceSwitcher() {
         <SidebarMenuButton size="lg" className="data-[state=open]:bg-sidebar-accent">
           <span
             className={cn(
-              "flex size-8 shrink-0 items-center justify-center rounded-md font-mono text-xs font-semibold",
+              "flex size-8 shrink-0 items-center justify-center overflow-hidden rounded-md font-mono text-[9px] font-semibold",
               workspace.kind === "internal"
                 ? "bg-secondary text-secondary-foreground"
                 : "bg-success-soft text-success",

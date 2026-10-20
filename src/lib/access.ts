@@ -9,6 +9,6 @@ export function mayOpen(path: string, kind: string, roles: AppRole[]) {
   if (["/relationships", "/conversation"].includes(path)) return kind === "internal" && roles.some(r => ["super_admin", "authorized_operator"].includes(r));
   if (path === "/review") return kind === "internal" && roles.some(r => ["super_admin", "authorized_operator", "internal_reviewer"].includes(r));
   if (path === "/audit") return kind === "internal" && roles.some(r => ["super_admin", "internal_reviewer"].includes(r));
-  return true;
+  return ["/", "/institutional", "/meetings", "/evidence", "/reports", "/users", "/settings", "/help"].includes(path);
 }
 export function mayManage(roles: AppRole[]) { return roles.includes("super_admin") || roles.includes("university_administrator"); }
