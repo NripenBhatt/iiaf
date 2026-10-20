@@ -15,3 +15,10 @@
 - [x] Enable separately approved full import after verified sample, with persisted results and downloadable row outcomes.
 - [ ] Execute and verify full import — waiting for separate authorized operator approval in the import page.
 - [x] Deliver current Phase 2 acceptance and limitations report.
+# Combined Phase 2 closure + Phase 3 upload foundation
+- [ ] A1 Execute import authorization tests with real accounts (company roles, university, unassigned, direct API).
+- [ ] A2 Held-record review log (decision, explanation, reviewer, timestamp) without changing importability.
+- [ ] A3 Separate import counts: inserted, existing identical, excluded, held, rejected, conflicts, updated.
+- [ ] A4 Keep full import gated; do not run it.
+- [ ] B1–B6 Shared secure upload pipeline for Institutional, Meetings and Evidence pages with metadata, hash duplicates, honest states, audit.
+- [ ] Acceptance tests 1–11 and one combined completion report.
