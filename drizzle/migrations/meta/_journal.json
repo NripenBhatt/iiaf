@@ -50,6 +50,13 @@
       "when": 1792502492217,
       "tag": "0006_revoke_internal_rule_functions",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1792503151028,
+      "tag": "0007_phase5_trusted_extraction_and_packages",
+      "breakpoints": true
     }
   ]
 }

@@ -10,8 +10,10 @@ export const processDocument = createServerFn({ method: "POST" }).middleware([re
   .handler(async ({ context, data }) => {
     const { data: job, error } = await context.supabase.rpc("begin_processing", { _doc: data.id });
     if (error || !job) throw new Error(error?.code === "42501" ? "Your role cannot process this document." : error?.message ?? "Processing could not start.");
+    // Results are written only by this trusted server process (service role) after the caller was authorized by begin_processing.
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const finish = (status: string, method: string, segments: unknown[], facts: unknown[], err: string | null) =>
-      context.supabase.rpc("complete_processing", { _job: job, _status: status, _processor: `${PROCESSOR}:${method}`, _version: PROCESSOR_VERSION, _segments: JSON.parse(JSON.stringify(segments)), _facts: JSON.parse(JSON.stringify(facts)), _error: err ?? "" });
+      supabaseAdmin.rpc("complete_processing_trusted", { _actor: context.userId, _job: job, _status: status, _processor: `${PROCESSOR}:${method}`, _version: PROCESSOR_VERSION, _segments: JSON.parse(JSON.stringify(segments)), _facts: JSON.parse(JSON.stringify(facts)), _error: err ?? "" });
     try {
       const { data: doc } = await context.supabase.from("uploaded_documents").select("storage_object_key,file_extension").eq("id", data.id).single();
       const { data: blob } = doc ? await context.supabase.storage.from(UPLOAD_BUCKET).download(doc.storage_object_key) : { data: null };
@@ -32,7 +34,7 @@ export const listFacts = createServerFn({ method: "POST" }).middleware([requireS
   .inputValidator(z.object({ organizationId: z.string().uuid() }))
   .handler(async ({ context, data }) => {
     const { data: facts, error } = await context.supabase.from("proposed_facts")
-      .select("id,document_id,source_label,canonical_field,spec_source,extracted_value,reviewed_value,state,validation_issues,confidence,locator_key,locator,method,method_version,reviewer_id,reviewed_at,review_note,created_at,uploaded_documents(original_filename,module,processing_status)")
+      .select("id,document_id,integrity,source_label,canonical_field,spec_source,extracted_value,reviewed_value,state,validation_issues,confidence,locator_key,locator,method,method_version,reviewer_id,reviewed_at,review_note,created_at,uploaded_documents(original_filename,module,processing_status)")
       .eq("organization_id", data.organizationId).order("created_at", { ascending: false }).limit(500);
     if (error) throw new Error("Unable to load proposed facts");
     const { data: canReview } = await context.supabase.rpc("may_review_facts", { _org: data.organizationId });

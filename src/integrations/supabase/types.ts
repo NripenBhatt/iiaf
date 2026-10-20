@@ -199,6 +199,73 @@ export type Database = {
           },
         ]
       }
+      evidence_packages: {
+        Row: {
+          certification_status: string
+          content: Json
+          content_sha256: string
+          generated_at: string
+          generated_by: string
+          id: string
+          organization_id: string
+          reporting_period: string
+          requirement_identifier: string
+          requirement_record_id: string
+          status: string
+          version: number
+        }
+        Insert: {
+          certification_status?: string
+          content: Json
+          content_sha256: string
+          generated_at?: string
+          generated_by: string
+          id?: string
+          organization_id: string
+          reporting_period?: string
+          requirement_identifier: string
+          requirement_record_id: string
+          status?: string
+          version: number
+        }
+        Update: {
+          certification_status?: string
+          content?: Json
+          content_sha256?: string
+          generated_at?: string
+          generated_by?: string
+          id?: string
+          organization_id?: string
+          reporting_period?: string
+          requirement_identifier?: string
+          requirement_record_id?: string
+          status?: string
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "evidence_packages_generated_by_fkey"
+            columns: ["generated_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "evidence_packages_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "evidence_packages_requirement_record_id_fkey"
+            columns: ["requirement_record_id"]
+            isOneToOne: false
+            referencedRelation: "master_reference_records"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       fact_reviews: {
         Row: {
           created_at: string
@@ -597,6 +664,61 @@ export type Database = {
         }
         Relationships: []
       }
+      package_reviews: {
+        Row: {
+          content_sha256: string
+          created_at: string
+          decision: string
+          id: string
+          note: string
+          organization_id: string
+          package_id: string
+          reviewer_id: string
+        }
+        Insert: {
+          content_sha256: string
+          created_at?: string
+          decision: string
+          id?: string
+          note: string
+          organization_id: string
+          package_id: string
+          reviewer_id: string
+        }
+        Update: {
+          content_sha256?: string
+          created_at?: string
+          decision?: string
+          id?: string
+          note?: string
+          organization_id?: string
+          package_id?: string
+          reviewer_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "package_reviews_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "package_reviews_package_id_fkey"
+            columns: ["package_id"]
+            isOneToOne: false
+            referencedRelation: "evidence_packages"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "package_reviews_reviewer_id_fkey"
+            columns: ["reviewer_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           created_at: string
@@ -626,6 +748,7 @@ export type Database = {
           document_id: string
           extracted_value: string
           id: string
+          integrity: string
           locator: Json
           locator_key: string
           method: string
@@ -648,6 +771,7 @@ export type Database = {
           document_id: string
           extracted_value: string
           id?: string
+          integrity?: string
           locator: Json
           locator_key: string
           method: string
@@ -670,6 +794,7 @@ export type Database = {
           document_id?: string
           extracted_value?: string
           id?: string
+          integrity?: string
           locator?: Json
           locator_key?: string
           method?: string
@@ -1044,6 +1169,19 @@ export type Database = {
         }
         Returns: Json
       }
+      complete_processing_trusted: {
+        Args: {
+          _actor: string
+          _error: string
+          _facts: Json
+          _job: string
+          _processor: string
+          _segments: Json
+          _status: string
+          _version: string
+        }
+        Returns: Json
+      }
       finalize_document: {
         Args: {
           _detected_mime: string
@@ -1094,6 +1232,10 @@ export type Database = {
         Returns: boolean
       }
       retry_document: { Args: { _id: string }; Returns: string }
+      review_evidence_package: {
+        Args: { _decision: string; _note: string; _pkg: string; _sha: string }
+        Returns: undefined
+      }
       review_fact: {
         Args: {
           _decision: string
@@ -1106,6 +1248,16 @@ export type Database = {
       review_relationship: {
         Args: { _decision: string; _note: string; _rel: string }
         Returns: undefined
+      }
+      save_evidence_package: {
+        Args: {
+          _content: Json
+          _org: string
+          _period: string
+          _req: string
+          _sha: string
+        }
+        Returns: Json
       }
       set_member_role: {
         Args: {

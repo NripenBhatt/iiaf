@@ -31,3 +31,7 @@
 - [x] B1–B6 Extraction (PDF text, DOCX, XLSX, CSV, TXT), lifecycle, provenance, proposed facts, review queue.
 - [x] C1–C5 Rules R-ENTITY-001, R-AGENCY-001, R-CONFLICT-001; live relationships page; lineage demonstrated.
 - [ ] OCR for scans/images — needs a decision on a paid OCR service.
+# Phase 5 criterion-to-evidence
+- [x] Bulk held-record review workflow by finding type.
+- [ ] Full import — blocked: 244 held records still need reviewer decisions and operator approval.
+- [x] Agency Requirement Explorer, retrieval, draft package, hash-bound review, trusted extraction.
