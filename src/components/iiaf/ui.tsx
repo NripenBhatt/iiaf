@@ -147,17 +147,20 @@ export function DataTable({
   columns,
   rows,
   caption,
+  live = false,
 }: {
   columns: string[];
   rows: ReactNode[][];
   caption?: string;
+  /** Rows come from persisted records, so the demo label must not be shown. */
+  live?: boolean;
 }) {
   return (
     <div className="overflow-x-auto rounded-md border bg-card shadow-card">
       {caption && (
         <div className="flex items-center justify-between border-b px-5 py-3">
           <p className="text-sm font-semibold">{caption}</p>
-          <DemoTag />
+          {live ? <span className="text-[11px] font-medium uppercase tracking-wide text-success">Live records</span> : <DemoTag />}
         </div>
       )}
       <table className="w-full min-w-[640px] text-sm">

@@ -107,7 +107,7 @@ export function DocumentUploads({ module, label }: { module: UploadModule; label
     </div> : data && <p className="border-l-4 border-border bg-muted p-3 text-sm">Your role in this workspace can view uploaded documents but cannot upload.</p>}
     <input ref={retryInput} type="file" className="hidden" aria-label="Choose original file for retry" onChange={e => { const f = e.target.files?.[0]; if (f) void retryWith(f); e.target.value = ""; }} />
     {error ? <p role="alert" className="text-sm text-destructive">Uploaded documents could not be loaded.</p> : isLoading ? <p className="text-sm text-muted-foreground">Loading uploaded documents…</p> :
-      <DataTable caption={`Uploaded ${label.toLowerCase()} · ${data?.documents.length ?? 0} files`} columns={["Document", "Category / type", "Period / date", "Status", "Actions"]}
+      <DataTable live caption={`Uploaded ${label.toLowerCase()} · ${data?.documents.length ?? 0} files`} columns={["Document", "Category / type", "Period / date", "Status", "Actions"]}
         rows={(data?.documents ?? []).map(d => [
           <div className="max-w-xs"><p className="break-all font-medium">{d.original_filename}</p><p className="mt-1 text-xs text-muted-foreground">{(d.file_size_bytes / 1024).toFixed(0)} KB · {d.detected_mime_type ?? "not verified"} · {new Date(d.created_at).toLocaleString()}</p><p className="mt-1 break-all font-mono text-[10px] text-muted-foreground">ID {d.id} · SHA-256 {d.sha256_hash.slice(0, 16)}…</p></div>,
           <div className="text-xs"><p>{d.category_code}</p><p className="text-muted-foreground">{d.document_type_id}</p></div>,

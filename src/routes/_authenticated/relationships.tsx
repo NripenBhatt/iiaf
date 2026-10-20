@@ -60,7 +60,7 @@ function RealRelationships() {
     {all.length === 0 ? <Panel title="No relationships yet"><p className="text-sm text-muted-foreground">Process a document and review its facts in this workspace; rules run on those persisted records.</p></Panel> : <>
       <Panel title="Relationship network · live records"><Network rels={rels} selected={selected} onSelect={setSelected} /></Panel>
       <div className="grid gap-6 lg:grid-cols-[1fr_22rem]">
-        <DataTable caption="Relationships" columns={["From", "Type", "To", "Rule", "Status"]} rows={rels.map(r => [
+        <DataTable live caption="Relationships" columns={["From", "Type", "To", "Rule", "Status"]} rows={rels.map(r => [
           <button className="text-left text-xs underline-offset-2 hover:underline" onClick={() => setSelected(r.id)}>{r.source_label}<span className="block text-muted-foreground">{r.source_type}</span></button>,
           <span className="font-mono text-xs">{r.relation_type}</span>, <span className="text-xs">{r.target_label}<span className="block text-muted-foreground">{r.target_type}</span></span>,
           <span className="font-mono text-xs">{r.rule_id}</span>, <Status tone={tone(r.status)}>{r.status}</Status>])} />
@@ -75,7 +75,7 @@ function RealRelationships() {
           {sel.status === "candidate" && data.canReview && <div className="space-y-2"><Input aria-label="Review note" placeholder="Review note (required)" value={note} onChange={e => setNote(e.target.value)} /><div className="flex gap-2"><Button size="sm" disabled={busy || note.trim().length < 5} onClick={() => void decide("approved")}>Approve</Button><Button size="sm" variant="outline" disabled={busy || note.trim().length < 5} onClick={() => void decide("rejected")}>Reject</Button></div><p className="text-muted-foreground">To correct a link, reject it and correct the underlying fact; the rules re-run on the corrected value.</p></div>}
         </div> : <p className="text-sm text-muted-foreground">Select a relationship to see its provenance.</p>}</Panel>
       </div></>}
-    <DataTable caption="Rule execution log" columns={["Rule", "Trigger", "Created / existing", "Gaps", "When"]} rows={data.runs.slice(0, 30).map(r => [<span className="font-mono text-xs">{r.rule_id}</span>, r.trigger_event, `${r.created_count} / ${r.existing_count}`, <div className="max-w-xs text-xs">{(r.gaps as { gap: string }[]).map((g, i) => <p key={i} className="text-warning">{g.gap}</p>)}{!(r.gaps as unknown[]).length && "—"}</div>, new Date(r.created_at).toLocaleString()])} />
+    <DataTable live caption="Rule execution log" columns={["Rule", "Trigger", "Created / existing", "Gaps", "When"]} rows={data.runs.slice(0, 30).map(r => [<span className="font-mono text-xs">{r.rule_id}</span>, r.trigger_event, `${r.created_count} / ${r.existing_count}`, <div className="max-w-xs text-xs">{(r.gaps as { gap: string }[]).map((g, i) => <p key={i} className="text-warning">{g.gap}</p>)}{!(r.gaps as unknown[]).length && "—"}</div>, new Date(r.created_at).toLocaleString()])} />
     <p className="text-xs text-muted-foreground">Not yet runnable: governance rules R-GOV-001 to R-GOV-004 need parsed meeting, agenda, decision and action records, which the extractor does not create. Output, outreach and metric rules await later phases.</p>
   </div>;
 }
