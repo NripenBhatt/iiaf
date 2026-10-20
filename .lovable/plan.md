@@ -5,6 +5,8 @@ The actual workbook has **23 worksheets**, **1,881 evidence templates**, **20 ag
 
 Of 12,053 canonical rows, **11,809 are proposed** and **244 are held**. Other 20,117 populated rows are projections, notes, lists or future-phase structures and are not proposed as a second canonical import.
 
+The preview, summary download, held-row search, preserved overview and signed-out denial were verified in the running application with an authorized administrator session. All 16 automated tests pass; the latest application check is successful. Live university checks for the new import store will follow its creation. `_LISTS` is the sole hidden sheet; no worksheet contains formulas or merged cells.
+
 ## Mapping proposed for approval
 - Import only AGENCY_MASTER, EVIDENCE_MASTER, AGENCY_REQUIREMENT_MASTER, AGENCY_FIELD_MASTER and EVIDENCE_REQUIREMENT_MAPPING as company-restricted, agency-wide reference records. Evidence rows are requirement templates, not uploaded university evidence.
 - Preserve every original column and value, including nulls, in source fields. Preserve original identifiers, workbook SHA-256, worksheet and physical row provenance. Status labels are source labels, never official approval.
