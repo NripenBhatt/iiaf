@@ -1,3 +1,4 @@
+import { Button } from "@/components/ui/button";
 import { createFileRoute } from "@tanstack/react-router";
 import { MessagesSquare, SendHorizontal } from "lucide-react";
 import { pageHead } from "@/lib/seo";
@@ -25,10 +26,10 @@ function Page() {
             </EmptyState>
           </div>
           <div className="flex gap-2 border-t p-4">
-            <input disabled placeholder="Conversational Engine is not available in Phase 0" className="flex-1 cursor-not-allowed rounded-md border bg-muted px-3 py-2 text-sm" />
-            <button disabled aria-label="Send (disabled)" className="cursor-not-allowed rounded-md bg-muted px-3 text-muted-foreground">
+            <input disabled placeholder="Conversational Engine is not available in Phase 0" className="min-w-0 flex-1 cursor-not-allowed rounded-md border bg-muted px-3 py-2 text-sm" />
+            <Button disabled aria-label="Send (disabled)" className="cursor-not-allowed rounded-md bg-muted px-3 text-muted-foreground">
               <SendHorizontal className="size-4" />
-            </button>
+            </Button>
           </div>
         </div>
       </InternalOnly>

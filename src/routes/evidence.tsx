@@ -1,10 +1,11 @@
+import { Analytics } from "@/components/iiaf/analytics";
 import { createFileRoute } from "@tanstack/react-router";
 import { Upload } from "lucide-react";
 import { pageHead } from "@/lib/seo";
 import { DataTable, PageHeader, PlaceholderNotice, PlannedButton, Status } from "@/components/iiaf/ui";
 
 export const Route = createFileRoute("/evidence")({
-  head: () => pageHead("Accreditation & Ranking Evidence", "Evidence mapped to NAAC, NIRF, QS, THE and other framework criteria."),
+  head: () => pageHead("Accreditation & Ranking Evidence", "Demonstration evidence coverage and review states; official agency editions and mappings are unconfirmed."),
   component: Page,
 });
 
@@ -29,6 +30,7 @@ function Page() {
           </span>
         ))}
       </div>
+      <Analytics page="evidence" />
       <DataTable
         caption="NAAC · sample methodology edition"
         columns={["Criterion", "Evidence", "Source", "Mapping", "Review"]}

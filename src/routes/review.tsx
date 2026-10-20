@@ -1,6 +1,7 @@
+import { Analytics } from "@/components/iiaf/analytics";
 import { createFileRoute } from "@tanstack/react-router";
 import { pageHead } from "@/lib/seo";
-import { DataTable, PageHeader, Panel, PlaceholderNotice, Status } from "@/components/iiaf/ui";
+import { DataTable, InternalOnly, PageHeader, Panel, PlaceholderNotice, Status } from "@/components/iiaf/ui";
 
 export const Route = createFileRoute("/review")({
   head: () => pageHead("Review & Certification", "Review queues and registrar certification of evidence packages."),
@@ -17,7 +18,9 @@ function Page() {
         title="Review & Certification"
         description="Every package moves through explicit, human-controlled states."
       />
+      <InternalOnly>
       <PlaceholderNotice>Approvals and signatures are not functional. Nothing on this page certifies anything.</PlaceholderNotice>
+      <Analytics page="review" />
       <Panel title="Certification lifecycle" className="mb-6">
         <ol className="flex flex-wrap gap-2">
           {steps.map((s, i) => (
@@ -38,6 +41,7 @@ function Page() {
           ["Green campus evidence", "UI GreenMetric", "—", <Status>Prepared</Status>],
         ]}
       />
+      </InternalOnly>
     </>
   );
 }

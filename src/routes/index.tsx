@@ -1,9 +1,10 @@
+import { Analytics } from "@/components/iiaf/analytics";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { ArrowUpRight } from "lucide-react";
 import { pageHead } from "@/lib/seo";
-import { DemoTag, Panel, Stat, Status } from "@/components/iiaf/ui";
+import { DemoTag, PageHeader, Panel, Stat, Status } from "@/components/iiaf/ui";
 import { useWorkspace } from "@/components/iiaf/workspace";
-import { NAV_GROUPS } from "@/components/iiaf/nav";
+import { getNavGroups } from "@/components/iiaf/nav";
 
 export const Route = createFileRoute("/")({
   head: () => pageHead("Overview", "Workspace overview of institutional information, evidence, reviews and outputs."),
@@ -13,34 +14,21 @@ export const Route = createFileRoute("/")({
 function Overview() {
   const { workspace } = useWorkspace();
   const isUni = workspace.kind === "university";
-  const modules = NAV_GROUPS.flatMap((g) => g.items).filter(
+  const modules = getNavGroups(workspace.kind).flatMap((g) => g.items).filter(
     (i) => i.url !== "/" && !(isUni && i.internalOnly),
   );
 
   return (
     <div className="space-y-8">
-      <section className="bg-hero relative overflow-hidden rounded-2xl p-8 text-primary-foreground sm:p-10">
-        <p className="eyebrow text-sidebar-primary">{workspace.caption}</p>
-        <h1 className="mt-3 max-w-2xl text-4xl font-medium leading-tight sm:text-5xl">
-          {isUni ? "Your institution, authorised outputs only." : "One traceable layer of institutional intelligence."}
-        </h1>
-        <p className="mt-4 max-w-xl text-sm leading-relaxed text-primary-foreground/75">
-          {isUni
-            ? "University workspaces will show only the information and outputs released to this institution."
-            : "Institutional facts, meetings and accreditation evidence — preserved at source, connected, reviewed and released under control."}
-        </p>
-        <p className="mt-6 text-xs text-primary-foreground/60">
-          Phase 0 design preview. Figures below are illustrative demonstration values.
-        </p>
-      </section>
-
+      <PageHeader eyebrow={isUni ? "University workspace · demonstration" : "Operator workspace · demonstration"} title={isUni ? "University Overview" : "Rafts and Rivers Overview"} description={isUni ? "Demo University · institutional records, evidence, actions and designated outputs." : "Institutional portfolio, evidence coverage and operational review priorities."} />
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <Stat label="Source documents" value="1,284" hint="Illustrative count" />
-        <Stat label="Evidence items" value="312" hint="Across 4 frameworks" />
-        <Stat label="Open reviews" value="27" hint="Awaiting reviewer" />
-        <Stat label="Released outputs" value="9" hint="This academic year" />
+        <Stat label="Source documents" value={isUni ? "340" : "1,284"} hint="Illustrative count" />
+        <Stat label="Evidence items" value={isUni ? "84" : "312"} hint={isUni ? "Institution sample inventory" : "Across 4 frameworks"} />
+        <Stat label="Open reviews" value={isUni ? "8" : "27"} hint="Awaiting reviewer" />
+        <Stat label="Released outputs" value={isUni ? "2" : "9"} hint="Illustrative release count" />
       </div>
 
+      <Analytics page="overview" />
       <div className="grid gap-6 lg:grid-cols-3">
         <Panel title="Modules" description="Navigate the workspace" className="lg:col-span-2">
           <div className="grid gap-3 sm:grid-cols-2">

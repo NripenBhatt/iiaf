@@ -1,3 +1,4 @@
+import { Analytics } from "@/components/iiaf/analytics";
 import { createFileRoute } from "@tanstack/react-router";
 import { Upload } from "lucide-react";
 import { pageHead } from "@/lib/seo";
@@ -23,6 +24,13 @@ function Page() {
         <Stat label="Open actions" value="38" />
         <Stat label="Overdue" value="6" />
       </div>
+      <Analytics page="meetings" />
+      <DataTable
+        caption="Meeting register"
+        columns={["Meeting", "Agenda", "Minutes", "Decision", "State"]}
+        rows={[["Academic Council · 12 Mar 2026", "Research incentive policy", "Minutes v1 · sample", "Revise policy", <Status tone="warning">Implementation pending</Status>], ["IQAC · 04 Mar 2026", "Placement outcomes", "Minutes v2 · sample", "Publish summary", <Status tone="gold">Action overdue</Status>]]}
+      />
+      <div className="h-5" />
       <DataTable
         caption="Action items"
         columns={["Action", "Meeting", "Owner", "Due", "Status"]}
