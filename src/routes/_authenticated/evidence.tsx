@@ -20,7 +20,7 @@ function Page() {
         title="Accreditation & Ranking Evidence"
         description="Evidence is held against an exact agency, product and methodology version. Mappings remain proposed until reviewed."
       />
-      <PlaceholderNotice>Evidence files upload and are stored privately with a declared framework only. Agency mapping and scoring are not implemented; criterion rows below are sample labels.</PlaceholderNotice>
+      <PlaceholderNotice>Evidence files upload and are stored privately with a declared framework only. An approved Evidence_ID fact is linked to agency requirements only through explicit imported mapping rows, as candidates for review. Scoring is not implemented; criterion rows below are sample labels.</PlaceholderNotice>
       <DocumentUploads module="evidence" label="Evidence files" />
       <FactReview module="evidence" />
       <div className="mb-6 flex flex-wrap gap-2">

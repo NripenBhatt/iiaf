@@ -19,7 +19,7 @@ function Page() {
         title="Institutional Information"
         description="Profile, departments, programmes, faculty, policies, research, placements and institutional reports — preserved at source with extraction and review status."
       />
-      <PlaceholderNotice>Uploads are real and stored privately. Parsing, OCR and extraction are not built yet; the sample table below is illustrative only.</PlaceholderNotice>
+      <PlaceholderNotice>Uploads are stored privately and PDF (text layer), DOCX, XLSX, CSV and TXT can be processed into source-located text and proposed facts. Scans and images are marked OCR Required; OCR is not configured. The sample table below is illustrative only.</PlaceholderNotice>
       <DocumentUploads module="institutional" label="Institutional documents" />
       <FactReview module="institutional" />
       <Analytics page="institutional" />
