@@ -14,7 +14,7 @@ export const getImportInspection = createServerFn({ method: "POST" })
     const { default: inspection } = await import("@/data/master-inspection.json");
     const { data: runs, error: runError } = await context.supabase.from("master_import_runs").select("*").order("created_at", { ascending: false }).limit(30);
     if (runError) throw new Error("Unable to read import history");
-    return { ...inspection, runs: runs ?? [] };
+    return { ...inspection, notes: inspection.notes.map(note => note.startsWith("No database records imported.") ? "Mapping reviewed. Protected reference records, import runs and row-outcome logs now exist. See persisted run results; full import still requires separate approval." : note), runs: runs ?? [] };
   });
 
 export const startMasterImport = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
