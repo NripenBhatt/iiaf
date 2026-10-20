@@ -1,5 +1,5 @@
 /** Pure, deterministic package building so the same records always produce the same content hash. */
-export type EvidenceItem = { factId: string; documentId: string | null; filename: string; documentSha256: string | null; reportingPeriod: string | null; value: string; field: string | null; locator: unknown; method: string | null; integrity: string | null; factState: string | null; identificationStatus: string; usable: boolean; reasons: string[] };
+export type EvidenceItem = { factId: string; documentId: string | null; filename: string; documentSha256: string | null; reportingPeriod: string | null; value: string; field: string | null; locator: Record<string, string | number | boolean | null> | null; method: string | null; integrity: string | null; factState: string | null; identificationStatus: string; usable: boolean; reasons: string[] };
 export type Mapping = { mappingId: string; sourceRow: number; evidenceId: string; evidenceName: string; packageName: string; coverage: string; role: string; sourceMappingStatus: string; frameworkVersion: string | null; status: string; evidence: EvidenceItem[] };
 export type Retrieval = {
   organizationId: string; period: string;

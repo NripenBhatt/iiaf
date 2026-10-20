@@ -16,6 +16,7 @@ import { Route as AuthRouteImport } from './routes/auth'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as UnauthorizedRouteImport } from './routes/unauthorized'
 import { Route as AuthenticatedIndexRouteImport } from './routes/_authenticated/index'
+import { Route as AuthenticatedAgencyRequirementsRouteImport } from './routes/_authenticated/agency-requirements'
 import { Route as AuthenticatedAuditRouteImport } from './routes/_authenticated/audit'
 import { Route as AuthenticatedConversationRouteImport } from './routes/_authenticated/conversation'
 import { Route as AuthenticatedEvidenceRouteImport } from './routes/_authenticated/evidence'
@@ -64,6 +65,12 @@ const AuthenticatedIndexRoute = AuthenticatedIndexRouteImport.update({
   path: '/',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedAgencyRequirementsRoute =
+  AuthenticatedAgencyRequirementsRouteImport.update({
+    id: '/agency-requirements',
+    path: '/agency-requirements',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedAuditRoute = AuthenticatedAuditRouteImport.update({
   id: '/audit',
   path: '/audit',
@@ -141,6 +148,7 @@ export interface FileRoutesByFullPath {
   '/auth': typeof AuthRouteWithChildren
   '/reset-password': typeof ResetPasswordRoute
   '/unauthorized': typeof UnauthorizedRoute
+  '/agency-requirements': typeof AuthenticatedAgencyRequirementsRoute
   '/audit': typeof AuthenticatedAuditRoute
   '/conversation': typeof AuthenticatedConversationRoute
   '/evidence': typeof AuthenticatedEvidenceRoute
@@ -161,6 +169,7 @@ export interface FileRoutesByTo {
   '/auth': typeof AuthRouteWithChildren
   '/reset-password': typeof ResetPasswordRoute
   '/unauthorized': typeof UnauthorizedRoute
+  '/agency-requirements': typeof AuthenticatedAgencyRequirementsRoute
   '/audit': typeof AuthenticatedAuditRoute
   '/conversation': typeof AuthenticatedConversationRoute
   '/evidence': typeof AuthenticatedEvidenceRoute
@@ -184,6 +193,7 @@ export interface FileRoutesById {
   '/auth': typeof AuthRouteWithChildren
   '/reset-password': typeof ResetPasswordRoute
   '/unauthorized': typeof UnauthorizedRoute
+  '/_authenticated/agency-requirements': typeof AuthenticatedAgencyRequirementsRoute
   '/_authenticated/audit': typeof AuthenticatedAuditRoute
   '/_authenticated/conversation': typeof AuthenticatedConversationRoute
   '/_authenticated/evidence': typeof AuthenticatedEvidenceRoute
@@ -208,6 +218,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/reset-password'
     | '/unauthorized'
+    | '/agency-requirements'
     | '/audit'
     | '/conversation'
     | '/evidence'
@@ -228,6 +239,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/reset-password'
     | '/unauthorized'
+    | '/agency-requirements'
     | '/audit'
     | '/conversation'
     | '/evidence'
@@ -250,6 +262,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/reset-password'
     | '/unauthorized'
+    | '/_authenticated/agency-requirements'
     | '/_authenticated/audit'
     | '/_authenticated/conversation'
     | '/_authenticated/evidence'
@@ -324,6 +337,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof AuthenticatedIndexRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/agency-requirements': {
+      id: '/_authenticated/agency-requirements'
+      path: '/agency-requirements'
+      fullPath: '/agency-requirements'
+      preLoaderRoute: typeof AuthenticatedAgencyRequirementsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/audit': {
@@ -421,6 +441,7 @@ declare module '@tanstack/react-router' {
 }
 
 interface AuthenticatedRouteRouteChildren {
+  AuthenticatedAgencyRequirementsRoute: typeof AuthenticatedAgencyRequirementsRoute
   AuthenticatedAuditRoute: typeof AuthenticatedAuditRoute
   AuthenticatedConversationRoute: typeof AuthenticatedConversationRoute
   AuthenticatedEvidenceRoute: typeof AuthenticatedEvidenceRoute
@@ -437,6 +458,7 @@ interface AuthenticatedRouteRouteChildren {
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
+  AuthenticatedAgencyRequirementsRoute: AuthenticatedAgencyRequirementsRoute,
   AuthenticatedAuditRoute: AuthenticatedAuditRoute,
   AuthenticatedConversationRoute: AuthenticatedConversationRoute,
   AuthenticatedEvidenceRoute: AuthenticatedEvidenceRoute,
