@@ -20,6 +20,12 @@ export const getImportInspection = createServerFn({ method: "POST" })
 export const startMasterImport = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
   .inputValidator(z.object({ organizationId: z.string().uuid(), mode: z.enum(["sample", "full"]), approved: z.literal(true) }))
   .handler(async ({ context, data }) => {
+    if (data.mode === "full") {
+      const { default: inspection } = await import("@/data/master-inspection.json");
+      const { data: reviews, error: reviewError } = await context.supabase.from("held_record_reviews").select("source_sheet,source_row");
+      const reviewed = new Set((reviews ?? []).map(r => `${r.source_sheet}:${r.source_row}`));
+      if (reviewError || inspection.issues.some(i => !reviewed.has(`${i.sheet}:${i.row}`))) throw new Error("Full import locked until every held record has a recorded review decision.");
+    }
     const { importSource } = await import("./import-source.server");
     const source = await importSource();
     const { data: runId, error } = await context.supabase.rpc("begin_master_import", { _org: data.organizationId, _workbook: source.source, _sha: source.sha256, _mode: data.mode, _expected: data.mode === "sample" ? source.sampleCount : source.total, _approval: data.approved });
