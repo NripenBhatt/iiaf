@@ -20,7 +20,7 @@ describe("App routing", () => {
   it("preserves all eleven original destinations and adds workspace help", () => {
     const router = createRouter({ routeTree, context: { queryClient: new QueryClient() } });
     for (const path of ["/", "/institutional", "/meetings", "/evidence", "/relationships", "/conversation", "/reports", "/review", "/users", "/audit", "/settings", "/help"]) {
-      expect(router.matchRoutes(path).at(-1)?.routeId).toBe("/_authenticated" + path);
+      expect(router.matchRoutes(path).at(-1)?.routeId).toBe("/_authenticated" + path + (path === "/conversation" ? "/" : ""));
     }
   });
   it("does not offer company-only intelligence or chat to the university", () => {

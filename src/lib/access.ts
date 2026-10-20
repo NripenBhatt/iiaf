@@ -4,7 +4,8 @@ export const ROLE_LABELS = {
   department_head_dean: "Department Head or Dean", faculty_staff_uploader: "Faculty or Staff Uploader", read_only_decision_maker: "Read-only Decision-maker",
 } as const;
 export type AppRole = keyof typeof ROLE_LABELS;
-export function mayOpen(path: string, kind: string, roles: AppRole[]) {
+export function mayOpen(rawPath: string, kind: string, roles: AppRole[]) {
+  const path = rawPath.startsWith("/conversation/") ? "/conversation" : rawPath;
   if (!roles.length) return false;
   if (path === "/master-import" || path === "/agency-requirements") return kind === "internal" && roles.some(r => ["super_admin", "authorized_operator", "internal_reviewer"].includes(r));
   if (["/relationships", "/conversation"].includes(path)) return kind === "internal" && roles.some(r => ["super_admin", "authorized_operator"].includes(r));

@@ -12,3 +12,10 @@ describe("Phase 1 role rules",()=>{
   for(const r of Object.keys({super_admin:1,authorized_operator:1,internal_reviewer:1,university_administrator:1,registrar:1,iqac_manager:1,department_head_dean:1,faculty_staff_uploader:1,read_only_decision_maker:1}) as AppRole[]){expect(mayOpen("/master-import","university",[r])).toBe(false);expect(mayOpen("/agency-requirements","university",[r])).toBe(false);}
  });
 });
+import { mayOpen as mayOpenThread } from "@/lib/access";
+describe("conversation thread pages", () => {
+  it("follow the same rule as the Conversational Engine", () => {
+    expect(mayOpenThread("/conversation/abc", "internal", ["super_admin"])).toBe(true);
+    expect(mayOpenThread("/conversation/abc", "university", ["university_administrator"])).toBe(false);
+  });
+});

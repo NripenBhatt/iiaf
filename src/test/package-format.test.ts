@@ -30,4 +30,25 @@ describe("requirement package", () => {
     expect(md).toContain("DRAFT");
     expect(md).toContain("Registrar certification is not implemented");
   });
+
+  const field = (canonicalMapping: string | null, canonicalMappingStatus: string) => ({ id: "UGC-F-1", sourceRow: 2, label: "Evidence reference", dataType: "Text", unit: null, mandatory: "Yes", frameworkVersion: "v1", reportingPeriod: "", fieldLevel: "", versionLock: "", officialSource: "", canonicalMapping, canonicalMappingStatus });
+  it("populates a field only through an approved canonical mapping", () => {
+    const c = buildPackageContent({ ...base(), fields: [field("Evidence_ID", "approved")] });
+    expect(c.dataTable[0]!.value).toBe("EV-0001");
+  });
+  it("leaves a candidate-mapped field unpopulated", () => {
+    const c = buildPackageContent({ ...base(), fields: [field(null, "candidate")] });
+    expect(c.dataTable[0]!.value).toBeNull();
+    expect(c.dataTable[0]!.valueStatus).toContain("candidate, not approved");
+  });
+  it("keeps a value missing when no approved fact exists instead of inventing one", () => {
+    const c = buildPackageContent({ ...base([ev({ usable: false, reasons: ["Fact is not human-approved"] })]), fields: [field("Evidence_ID", "approved")] });
+    expect(c.dataTable[0]!.value).toBeNull();
+    expect(c.dataTable[0]!.valueStatus).toMatch(/^Missing/);
+  });
+  it("does not choose between conflicting approved values", () => {
+    const c = buildPackageContent({ ...base([ev(), ev({ factId: "f2", value: "EV-0002" })]), fields: [field("Evidence_ID", "approved")] });
+    expect(c.dataTable[0]!.value).toBeNull();
+    expect(c.dataTable[0]!.valueStatus).toContain("conflicting");
+  });
 });
