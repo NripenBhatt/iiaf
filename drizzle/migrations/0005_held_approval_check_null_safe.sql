@@ -1,0 +1,2 @@
+ALTER TABLE public.held_record_reviews DROP CONSTRAINT held_review_approval_requires_pass;
+ALTER TABLE public.held_record_reviews ADD CONSTRAINT held_review_approval_requires_pass CHECK (decision <> 'approve_for_import' OR coalesce(revalidation_result,'') = 'pass') NOT VALID;
