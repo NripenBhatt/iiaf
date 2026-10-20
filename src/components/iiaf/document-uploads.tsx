@@ -43,7 +43,7 @@ export function DocumentUploads({ module, label }: { module: UploadModule; label
     setBusy(true);
     try { const r = await process({ data: { id } }) as { status?: string; new_segments?: number; new_facts?: number; error?: string | null }; toast[r.status === "processing_failed" ? "error" : "success"](`${STATUS_LABELS[r.status as ProcessingStatus] ?? r.status}: ${r.new_segments ?? 0} new text segments, ${r.new_facts ?? 0} new proposed facts.${r.error ? " " + r.error : ""}`); }
     catch (e) { toast.error(e instanceof Error ? e.message : "Processing failed"); }
-    finally { setBusy(false); await cache.invalidateQueries({ queryKey: key }); }
+    finally { setBusy(false); await cache.invalidateQueries({ queryKey: key }); await cache.invalidateQueries({ queryKey: ["facts", workspace.id] }); }
   }
   function stage(name: string, s: string, ok?: boolean) { setProgress(p => p.map(x => x.name === name ? { name, stage: s, ok } : x)); }
   async function store(id: string, storageKey: string, file: File) {
