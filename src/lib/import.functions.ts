@@ -22,26 +22,26 @@ export const startMasterImport = createServerFn({ method: "POST" }).middleware([
   .handler(async ({ context, data }) => {
     const { importSource } = await import("./import-source.server");
     const source = await importSource();
-    const { data: runId, error } = await context.supabase.rpc("begin_master_import", { _org: data.organizationId, _workbook: source.source, _sha: source.sha256, _mode: data.mode, _expected: data.mode === "sample" ? source.sample.length : source.rows.length, _approval: data.approved });
+    const { data: runId, error } = await context.supabase.rpc("begin_master_import", { _org: data.organizationId, _workbook: source.source, _sha: source.sha256, _mode: data.mode, _expected: data.mode === "sample" ? source.sampleCount : source.total, _approval: data.approved });
     if (error || !runId) throw new Error("Import not permitted. A verified repeat sample is required before full import.");
-    return { runId, total: data.mode === "sample" ? source.sample.length : source.rows.length };
+    return { runId, total: data.mode === "sample" ? source.sampleCount : source.total };
   });
 export const processMasterBatch = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
   .inputValidator(z.object({ runId: z.string().uuid(), offset: z.number().int().min(0).max(40000) }))
   .handler(async ({ context, data }) => {
     const { data: run, error } = await context.supabase.from("master_import_runs").select("mode,state,source_sha256").eq("id", data.runId).single();
     if (error || run.state !== "running") throw new Error("Run is not available for processing");
-    const { importSource } = await import("./import-source.server");
+    const { importSource, importBatch } = await import("./import-source.server");
     const source = await importSource();
     if (run.source_sha256 !== source.sha256) throw new Error("Source identity mismatch");
-    const rows = run.mode === "sample" ? source.sample : source.rows;
-    const chunk = rows.slice(data.offset, data.offset + 100);
+    const total = run.mode === "sample" ? source.sampleCount : source.total;
+    const chunk = await importBatch(run.mode as "sample" | "full", data.offset);
     const { error: batchError } = await context.supabase.rpc("process_master_import", { _run: data.runId, _rows: JSON.parse(JSON.stringify(chunk)) });
     if (batchError) throw new Error("Batch did not complete; the run remains incomplete and can be resumed.");
     const nextOffset = data.offset + chunk.length;
-    if (nextOffset >= rows.length) {
+    if (nextOffset >= total) {
       const { data: result, error: finishError } = await context.supabase.rpc("finish_master_import", { _run: data.runId });
-      if (finishError) throw new Error("Final readback verification failed");
+      if (finishError || !result || typeof result !== "object" || Array.isArray(result) || result["readback_mismatches"] !== 0 || result["source_rows"] !== total || result["conflicts"] !== 0) throw new Error("Final readback verification failed; inspect the persisted run.");
       return { nextOffset, done: true, result };
     }
     return { nextOffset, done: false, result: null };
