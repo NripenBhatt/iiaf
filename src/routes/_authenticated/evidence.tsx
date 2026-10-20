@@ -4,7 +4,7 @@ import { Upload } from "lucide-react";
 import { pageHead } from "@/lib/seo";
 import { DataTable, PageHeader, PlaceholderNotice, PlannedButton, Status } from "@/components/iiaf/ui";
 
-export const Route = createFileRoute("/evidence")({
+export const Route = createFileRoute("/_authenticated/evidence")({
   head: () => pageHead("Accreditation & Ranking Evidence", "Demonstration evidence coverage and review states; official agency editions and mappings are unconfirmed."),
   component: Page,
 });

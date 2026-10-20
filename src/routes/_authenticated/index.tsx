@@ -6,7 +6,7 @@ import { DemoTag, PageHeader, Panel, Stat, Status } from "@/components/iiaf/ui";
 import { useWorkspace } from "@/components/iiaf/workspace";
 import { getNavGroups } from "@/components/iiaf/nav";
 
-export const Route = createFileRoute("/")({
+export const Route = createFileRoute("/_authenticated/")({
   head: () => pageHead("Overview", "Workspace overview of institutional information, evidence, reviews and outputs."),
   component: Overview,
 });

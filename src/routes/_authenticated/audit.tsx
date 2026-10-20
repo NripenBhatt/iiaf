@@ -3,7 +3,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { pageHead } from "@/lib/seo";
 import { DataTable, InternalOnly, PageHeader, PlaceholderNotice } from "@/components/iiaf/ui";
 
-export const Route = createFileRoute("/audit")({
+export const Route = createFileRoute("/_authenticated/audit")({
   head: () => pageHead("Audit & Activity", "Who did what, when, to which record."),
   component: Page,
 });

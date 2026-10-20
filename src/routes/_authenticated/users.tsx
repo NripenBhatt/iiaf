@@ -5,7 +5,7 @@ import { pageHead } from "@/lib/seo";
 import { DataTable, PageHeader, PlaceholderNotice, PlannedButton, Status } from "@/components/iiaf/ui";
 import { useWorkspace } from "@/components/iiaf/workspace";
 
-export const Route = createFileRoute("/users")({
+export const Route = createFileRoute("/_authenticated/users")({
   head: () => pageHead("Users & Permissions", "Roles, module access and workspace boundaries."),
   component: Page,
 });

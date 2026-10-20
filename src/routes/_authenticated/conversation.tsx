@@ -4,7 +4,7 @@ import { MessagesSquare, SendHorizontal } from "lucide-react";
 import { pageHead } from "@/lib/seo";
 import { EmptyState, InternalOnly, PageHeader, PlaceholderNotice } from "@/components/iiaf/ui";
 
-export const Route = createFileRoute("/conversation")({
+export const Route = createFileRoute("/_authenticated/conversation")({
   head: () => pageHead("Conversational Engine", "Ask cited questions across permitted institutional records."),
   component: Page,
 });

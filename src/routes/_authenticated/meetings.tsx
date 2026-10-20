@@ -4,7 +4,7 @@ import { Upload } from "lucide-react";
 import { pageHead } from "@/lib/seo";
 import { DataTable, PageHeader, PlaceholderNotice, PlannedButton, Stat, Status } from "@/components/iiaf/ui";
 
-export const Route = createFileRoute("/meetings")({
+export const Route = createFileRoute("/_authenticated/meetings")({
   head: () => pageHead("Meeting Information", "Notices, agendas, minutes, decisions and action items with owners and deadlines."),
   component: Page,
 });

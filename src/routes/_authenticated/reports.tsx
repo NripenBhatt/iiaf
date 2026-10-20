@@ -8,7 +8,7 @@ import { pageHead } from "@/lib/seo";
 import { DataTable, PageHeader, PlaceholderNotice, PlannedButton, Status } from "@/components/iiaf/ui";
 import { useWorkspace } from "@/components/iiaf/workspace";
 
-export const Route = createFileRoute("/reports")({
+export const Route = createFileRoute("/_authenticated/reports")({
   head: () => pageHead("Reports & Outputs", "Reports, profiles, meeting outputs and evidence dossiers with distinct release states."),
   component: Page,
 });

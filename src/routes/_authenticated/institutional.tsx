@@ -5,7 +5,7 @@ import { Upload } from "lucide-react";
 import { pageHead } from "@/lib/seo";
 import { DataTable, PageHeader, PlaceholderNotice, PlannedButton, Status } from "@/components/iiaf/ui";
 
-export const Route = createFileRoute("/institutional")({
+export const Route = createFileRoute("/_authenticated/institutional")({
   head: () => pageHead("Institutional Information", "Institution profile, departments, programmes, faculty, policies and reports."),
   component: Page,
 });

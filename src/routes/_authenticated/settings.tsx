@@ -3,7 +3,7 @@ import { pageHead } from "@/lib/seo";
 import { PageHeader, Panel, PlaceholderNotice } from "@/components/iiaf/ui";
 import { useWorkspace } from "@/components/iiaf/workspace";
 
-export const Route = createFileRoute("/settings")({
+export const Route = createFileRoute("/_authenticated/settings")({
   head: () => pageHead("Settings", "Workspace profile, frameworks and preferences."),
   component: Page,
 });
