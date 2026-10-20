@@ -31,7 +31,7 @@ export function DemoTag({ className }: { className?: string }) {
   return (
     <span
       className={cn(
-        "eyebrow inline-flex items-center rounded border border-gold/40 bg-gold-soft px-1.5 py-0.5 text-[10px] text-foreground",
+        "eyebrow inline-flex shrink-0 items-center whitespace-nowrap rounded border border-gold/40 bg-gold-soft px-1.5 py-0.5 text-[10px] text-foreground",
         className,
       )}
     >
