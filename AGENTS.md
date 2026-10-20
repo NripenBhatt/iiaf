@@ -10,8 +10,11 @@
 <!-- LOVABLE:END -->
 
 - App shell (sidebar, header, workspace switcher) lives in src/components/iiaf and wraps <Outlet /> in __root.tsx; pages reuse shared components from src/components/iiaf/ui.tsx so the design stays consistent.
-- Company-only modules are flagged `internalOnly` in src/components/iiaf/nav.ts; university workspaces hide them (UI only — real access control must be enforced server-side in a later phase).
+- Company-only modules remain flagged `internalOnly`; server authorization through authorizePage plus organization-scoped RLS protects access, while nav filtering is only presentation.
 - Work is delivered in phases; never start a later phase without explicit user authorization.
 - Page analytics use shared `analytics.tsx` renderers and `analytics-data.ts` fixtures with Recharts, so chart semantics and accessible equivalents remain consistent across workspaces.
-- Shared routes render workspace-specific content and centralized navigation; company-only routes also use the presentation-only InternalOnly guard, preventing accidental university presentation without implying backend authorization.
+- Original public addresses live under the _authenticated pathless layout with client-only validated session gating and server page authorization; public auth/reset/invitation routes render without the workspace shell.
 - Output fixtures have explicit institution, audience and lifecycle fields and are filtered through `visibleOutputs`, so every demo output view uses the same visibility rule.
+- Persistent foundation uses organizations, profiles, organization_memberships, user_roles and audit_events; roles never come from editable profiles or metadata, and app reads/writes use the authenticated RLS client.
+- First operator provisioning is a service-role-only one-time database operation for a confirmed account; ongoing roles use the authorized transactional set_member_role function with last-admin protection.
+- Server functions live in src/lib/*.functions.ts and use the generated bearer middleware; service-role access is reserved for trusted provisioning/tests, never ordinary application reads.
