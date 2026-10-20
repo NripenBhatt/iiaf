@@ -1,7 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { z } from "zod";
-import { importSource } from "./import-source";
 
 export const getImportInspection = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
@@ -21,6 +20,7 @@ export const getImportInspection = createServerFn({ method: "POST" })
 export const startMasterImport = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
   .inputValidator(z.object({ organizationId: z.string().uuid(), mode: z.enum(["sample", "full"]), approved: z.literal(true) }))
   .handler(async ({ context, data }) => {
+    const { importSource } = await import("./import-source.server");
     const source = await importSource();
     const { data: runId, error } = await context.supabase.rpc("begin_master_import", { _org: data.organizationId, _workbook: source.source, _sha: source.sha256, _mode: data.mode, _expected: data.mode === "sample" ? source.sample.length : source.rows.length, _approval: data.approved });
     if (error || !runId) throw new Error("Import not permitted. A verified repeat sample is required before full import.");
@@ -31,6 +31,7 @@ export const processMasterBatch = createServerFn({ method: "POST" }).middleware(
   .handler(async ({ context, data }) => {
     const { data: run, error } = await context.supabase.from("master_import_runs").select("mode,state,source_sha256").eq("id", data.runId).single();
     if (error || run.state !== "running") throw new Error("Run is not available for processing");
+    const { importSource } = await import("./import-source.server");
     const source = await importSource();
     if (run.source_sha256 !== source.sha256) throw new Error("Source identity mismatch");
     const rows = run.mode === "sample" ? source.sample : source.rows;

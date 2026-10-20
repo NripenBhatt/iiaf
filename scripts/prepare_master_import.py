@@ -1,4 +1,4 @@
-import json,sys,hashlib
+import json,sys,hashlib,gzip,base64
 from pathlib import Path
 from openpyxl import load_workbook
 source=Path(sys.argv[1]);report=json.loads(Path('src/data/master-inspection.json').read_text());w=load_workbook(source,read_only=True)
@@ -29,5 +29,6 @@ for r in allrows:
  if r['sheet']=='AGENCY_REQUIREMENT_MASTER' and r['row']==95:add(r['sheet'],r)
  if r['sheet']=='AGENCY_FIELD_MASTER' and r['fields'].get('Field_Level_Status')=='EXACT_ATOMIC_OFFICIAL_FIELD':add(r['sheet'],r);break
 sample=[r for r in allrows if (r['sheet'],r['row']) in selected]
-Path('src/data/master-import-payload.json').write_text(json.dumps({'source':report['source'],'sha256':report['sha256'],'rows':allrows,'sample':sample},ensure_ascii=False,default=str,separators=(',',':')))
-print('full',len(allrows),'sample',len(sample),'held',sum(r['disposition']=='held' for r in sample),'size',Path('src/data/master-import-payload.json').stat().st_size)
+raw=json.dumps({'source':report['source'],'sha256':report['sha256'],'rows':allrows,'sample':sample},ensure_ascii=False,default=str,separators=(',',':')).encode()
+Path('src/data/master-import-source.json').write_text(json.dumps({'gzipBase64':base64.b64encode(gzip.compress(raw)).decode()}))
+print('full',len(allrows),'sample',len(sample),'held',sum(r['disposition']=='held' for r in sample),'size',Path('src/data/master-import-source.json').stat().st_size)
