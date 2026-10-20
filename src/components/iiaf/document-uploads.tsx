@@ -15,7 +15,7 @@ import { ALLOWED_EXTENSIONS, STATUS_LABELS, UPLOAD_BUCKET, sha256Hex, validateSe
 
 const EVIDENCE_FRAMEWORKS = ["NAAC", "NIRF", "QS", "THE", "UI GreenMetric", "Other / not stated"];
 function categoriesFor(module: UploadModule) {
-  if (module === "evidence") return EVIDENCE_FRAMEWORKS.map(f => ({ code: `EVID-${f.split(" ")[0].toUpperCase()}`, name: `Declared framework: ${f}` }));
+  if (module === "evidence") return EVIDENCE_FRAMEWORKS.map(f => ({ code: `EVID-${(f.split(" ")[0] ?? f).toUpperCase()}`, name: `Declared framework: ${f}` }));
   return catalogue[module === "institutional" ? "institutional" : "meeting"].categories;
 }
 function typesFor(module: UploadModule, category: string) {
