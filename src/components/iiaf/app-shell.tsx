@@ -1,6 +1,6 @@
 import { Link, useRouterState } from "@tanstack/react-router";
 import type { ReactNode } from "react";
-import { ChevronsUpDown, Lock, Check } from "lucide-react";
+import { ChevronsUpDown, Lock, Check, Layers3 } from "lucide-react";
 import {
   Sidebar,
   SidebarContent,
@@ -23,7 +23,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { NAV_GROUPS } from "./nav";
+import { getNavGroups } from "./nav";
 import { WORKSPACES, useWorkspace } from "./workspace";
 import { cn } from "@/lib/utils";
 
@@ -37,8 +37,8 @@ function WorkspaceSwitcher() {
             className={cn(
               "flex size-8 shrink-0 items-center justify-center rounded-md font-mono text-xs font-semibold",
               workspace.kind === "internal"
-                ? "bg-sidebar-primary text-sidebar-primary-foreground"
-                : "bg-gold text-primary",
+                ? "bg-secondary text-secondary-foreground"
+                : "bg-success-soft text-success",
             )}
           >
             {workspace.short}
@@ -86,10 +86,11 @@ function AppSidebar() {
     <Sidebar collapsible="icon">
       <SidebarHeader className="gap-3 pt-4">
         <div className="flex items-center gap-2 px-2 group-data-[collapsible=icon]:hidden">
-          <span className="font-display text-2xl font-semibold tracking-tight text-sidebar-accent-foreground">
+          <Layers3 className="size-6 text-primary" />
+          <span className="font-display text-2xl font-bold text-sidebar-accent-foreground">
             IIAF
           </span>
-          <span className="eyebrow text-sidebar-primary">Phase 0</span>
+          <span className="ml-auto rounded border px-1.5 py-0.5 font-mono text-[9px] text-muted-foreground">PHASE 0</span>
         </div>
         <SidebarMenu>
           <SidebarMenuItem>
@@ -98,7 +99,7 @@ function AppSidebar() {
         </SidebarMenu>
       </SidebarHeader>
       <SidebarContent>
-        {NAV_GROUPS.map((g) => {
+        {getNavGroups(workspace.kind).map((g) => {
           const items = g.items.filter((i) => !(isUni && i.internalOnly));
           if (!items.length) return null;
           return (
@@ -144,17 +145,17 @@ export function AppShell({ children }: { children: ReactNode }) {
       <div className="flex min-h-screen w-full">
         <AppSidebar />
         <div className="flex min-w-0 flex-1 flex-col">
-          <header className="sticky top-0 z-10 flex h-14 items-center gap-3 border-b bg-background/85 px-4 backdrop-blur">
+          <header className="sticky top-0 z-10 flex h-14 items-center gap-3 border-b bg-card/95 px-4 backdrop-blur">
             <SidebarTrigger />
             <span className="h-5 w-px bg-border" />
             <span className="truncate text-sm text-muted-foreground">{workspace.name}</span>
-            <span className="ml-auto inline-flex items-center gap-2 rounded-full border border-gold/40 bg-gold-soft px-3 py-1 text-xs font-medium text-foreground">
+            <span className="ml-auto inline-flex items-center gap-2 rounded border border-gold/40 bg-gold-soft px-3 py-1 text-xs font-medium text-foreground">
               <span className="size-1.5 rounded-full bg-gold" />
               <span className="hidden sm:inline">Design preview · demonstration data</span>
               <span className="sm:hidden">Demo</span>
             </span>
           </header>
-          <main className="mx-auto w-full max-w-7xl flex-1 px-4 py-8 sm:px-8">{children}</main>
+          <main className="mx-auto w-full max-w-[1440px] flex-1 px-4 py-6 sm:px-7">{children}</main>
         </div>
       </div>
     </SidebarProvider>

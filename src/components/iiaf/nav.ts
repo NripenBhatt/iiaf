@@ -10,6 +10,7 @@ import {
   Users,
   History,
   Settings,
+  Bell,
   type LucideIcon,
 } from "lucide-react";
 
@@ -26,7 +27,8 @@ export interface NavItem {
     | "/review"
     | "/users"
     | "/audit"
-    | "/settings";
+    | "/settings"
+    | "/help";
   icon: LucideIcon;
   /** Company-only: hidden from university workspaces by design. */
   internalOnly?: boolean;
@@ -53,7 +55,7 @@ export const NAV_GROUPS: { label: string; items: NavItem[] }[] = [
   {
     label: "Assurance",
     items: [
-      { title: "Review & Certification", url: "/review", icon: BadgeCheck },
+      { title: "Review & Certification", url: "/review", icon: BadgeCheck, internalOnly: true },
       { title: "Audit & Activity", url: "/audit", icon: History, internalOnly: true },
     ],
   },
@@ -62,6 +64,18 @@ export const NAV_GROUPS: { label: string; items: NavItem[] }[] = [
     items: [
       { title: "Users & Permissions", url: "/users", icon: Users },
       { title: "Settings", url: "/settings", icon: Settings },
+      { title: "Help, Notifications & Activity", url: "/help", icon: Bell },
     ],
   },
 ];
+
+export function getNavGroups(kind: "internal" | "university") {
+  return NAV_GROUPS.map((group) => ({
+    ...group,
+    items: group.items.filter((item) => !(kind === "university" && item.internalOnly)).map((item) => ({
+      ...item,
+      title: kind === "university" && item.url === "/reports" ? "Reports & Released Outputs"
+        : kind === "university" && item.url === "/users" ? "University Users & Roles" : item.title,
+    })),
+  })).filter((group) => group.items.length > 0);
+}

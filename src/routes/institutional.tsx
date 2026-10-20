@@ -1,3 +1,5 @@
+import { InstitutionDomains } from "@/components/iiaf/institution-domains";
+import { Analytics } from "@/components/iiaf/analytics";
 import { createFileRoute } from "@tanstack/react-router";
 import { Upload } from "lucide-react";
 import { pageHead } from "@/lib/seo";
@@ -20,6 +22,8 @@ function Page() {
       <PlaceholderNotice>
         Uploading, parsing and extraction are not built yet. The table shows sample rows for layout review.
       </PlaceholderNotice>
+      <Analytics page="institutional" />
+      <InstitutionDomains />
       <DataTable
         caption="Source documents"
         columns={["Document", "Category", "Period", "Extraction", "Review"]}

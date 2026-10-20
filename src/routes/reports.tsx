@@ -1,3 +1,7 @@
+import { useState } from "react";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Analytics } from "@/components/iiaf/analytics";
+import { visibleOutputs } from "@/components/iiaf/output-data";
 import { createFileRoute } from "@tanstack/react-router";
 import { FilePlus2 } from "lucide-react";
 import { pageHead } from "@/lib/seo";
@@ -12,30 +16,28 @@ export const Route = createFileRoute("/reports")({
 function Page() {
   const { workspace } = useWorkspace();
   const isUni = workspace.kind === "university";
-  const rows = [
-    ["Annual Institutional Profile 2025–26", "Profile", "v3", <Status tone="success">Released</Status>, true],
-    ["NAAC Criterion 3 dossier", "Evidence dossier", "v1", <Status tone="warning">In review</Status>, false],
-    ["Leadership risk brief — Q1", "Internal analysis", "v2", <Status tone="teal">Generated</Status>, false],
-    ["IQAC meeting summary — Mar", "Meeting output", "v1", <Status tone="success">Released</Status>, true],
-  ] as const;
-  const visible = rows.filter((r) => !isUni || r[4]);
+  const [filter, setFilter] = useState("All");
+  const visible = visibleOutputs(isUni, workspace.id).filter(r => filter === "All" || r.state === filter);
 
   return (
     <>
       <PageHeader
         eyebrow="Output engine"
-        title="Reports & Outputs"
+        title={isUni ? "Reports & Released Outputs" : "Reports & Outputs"}
         description="Generated, approved, released, published and submitted are distinct states."
         actions={!isUni && <PlannedButton><FilePlus2 className="size-4" /> New report</PlannedButton>}
       />
       <PlaceholderNotice>
-        Report generation is not built. {isUni ? "University view lists only outputs marked as released (sample)." : "Company-only analyses are not shown to university workspaces."}
+        Report generation is not built. {isUni ? "University view contains institution-authorized sample drafts and review items, plus designated releases. It excludes company-only analysis." : "Company-only analyses are not shown to university workspaces."}
       </PlaceholderNotice>
+      <Analytics page="reports" />
+      <Tabs value={filter} onValueChange={setFilter} className="mb-4"><div className="overflow-x-auto"><TabsList className="h-auto bg-transparent p-0">{["All", "Draft", "In review", "Approved", "Released", "Published"].map(state => <TabsTrigger key={state} value={state} className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-secondary/30 data-[state=active]:shadow-none">{state}</TabsTrigger>)}</TabsList></div></Tabs>
       <DataTable
-        caption={isUni ? "Outputs released to your institution" : "All outputs"}
+        caption={isUni ? "Institution-authorized sample outputs" : "All outputs"}
         columns={["Output", "Type", "Version", "State"]}
-        rows={visible.map((r) => [r[0], r[1], <span className="font-mono text-xs">{r[2]}</span>, r[3]])}
+        rows={visible.map((r) => [r.title, r.category, <span className="font-mono text-xs">{r.version}</span>, <Status tone={r.state === "Released" || r.state === "Published" ? "success" : r.state === "In review" ? "warning" : "neutral"}>{r.state}</Status>])}
       />
+      {visible.length === 0 && <p className="border-x border-b bg-card p-5 text-sm text-muted-foreground">No sample outputs in this state.</p>}
     </>
   );
 }

@@ -13,6 +13,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuditRouteImport } from './routes/audit'
 import { Route as ConversationRouteImport } from './routes/conversation'
 import { Route as EvidenceRouteImport } from './routes/evidence'
+import { Route as HelpRouteImport } from './routes/help'
 import { Route as InstitutionalRouteImport } from './routes/institutional'
 import { Route as MeetingsRouteImport } from './routes/meetings'
 import { Route as RelationshipsRouteImport } from './routes/relationships'
@@ -39,6 +40,11 @@ const ConversationRoute = ConversationRouteImport.update({
 const EvidenceRoute = EvidenceRouteImport.update({
   id: '/evidence',
   path: '/evidence',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const HelpRoute = HelpRouteImport.update({
+  id: '/help',
+  path: '/help',
   getParentRoute: () => rootRouteImport,
 } as any)
 const InstitutionalRoute = InstitutionalRouteImport.update({
@@ -82,6 +88,7 @@ export interface FileRoutesByFullPath {
   '/audit': typeof AuditRoute
   '/conversation': typeof ConversationRoute
   '/evidence': typeof EvidenceRoute
+  '/help': typeof HelpRoute
   '/institutional': typeof InstitutionalRoute
   '/meetings': typeof MeetingsRoute
   '/relationships': typeof RelationshipsRoute
@@ -95,6 +102,7 @@ export interface FileRoutesByTo {
   '/audit': typeof AuditRoute
   '/conversation': typeof ConversationRoute
   '/evidence': typeof EvidenceRoute
+  '/help': typeof HelpRoute
   '/institutional': typeof InstitutionalRoute
   '/meetings': typeof MeetingsRoute
   '/relationships': typeof RelationshipsRoute
@@ -109,6 +117,7 @@ export interface FileRoutesById {
   '/audit': typeof AuditRoute
   '/conversation': typeof ConversationRoute
   '/evidence': typeof EvidenceRoute
+  '/help': typeof HelpRoute
   '/institutional': typeof InstitutionalRoute
   '/meetings': typeof MeetingsRoute
   '/relationships': typeof RelationshipsRoute
@@ -124,6 +133,7 @@ export interface FileRouteTypes {
     | '/audit'
     | '/conversation'
     | '/evidence'
+    | '/help'
     | '/institutional'
     | '/meetings'
     | '/relationships'
@@ -137,6 +147,7 @@ export interface FileRouteTypes {
     | '/audit'
     | '/conversation'
     | '/evidence'
+    | '/help'
     | '/institutional'
     | '/meetings'
     | '/relationships'
@@ -150,6 +161,7 @@ export interface FileRouteTypes {
     | '/audit'
     | '/conversation'
     | '/evidence'
+    | '/help'
     | '/institutional'
     | '/meetings'
     | '/relationships'
@@ -164,6 +176,7 @@ export interface RootRouteChildren {
   AuditRoute: typeof AuditRoute
   ConversationRoute: typeof ConversationRoute
   EvidenceRoute: typeof EvidenceRoute
+  HelpRoute: typeof HelpRoute
   InstitutionalRoute: typeof InstitutionalRoute
   MeetingsRoute: typeof MeetingsRoute
   RelationshipsRoute: typeof RelationshipsRoute
@@ -201,6 +214,13 @@ declare module '@tanstack/react-router' {
       path: '/evidence'
       fullPath: '/evidence'
       preLoaderRoute: typeof EvidenceRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/help': {
+      id: '/help'
+      path: '/help'
+      fullPath: '/help'
+      preLoaderRoute: typeof HelpRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/institutional': {
@@ -260,6 +280,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuditRoute: AuditRoute,
   ConversationRoute: ConversationRoute,
   EvidenceRoute: EvidenceRoute,
+  HelpRoute: HelpRoute,
   InstitutionalRoute: InstitutionalRoute,
   MeetingsRoute: MeetingsRoute,
   RelationshipsRoute: RelationshipsRoute,

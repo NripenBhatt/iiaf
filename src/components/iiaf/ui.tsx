@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import type { LucideIcon } from "lucide-react";
 import { Construction, Lock, Inbox } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useWorkspace } from "./workspace";
 
@@ -16,10 +17,10 @@ export function PageHeader({
   actions?: ReactNode;
 }) {
   return (
-    <div className="mb-8 flex flex-col gap-4 border-b pb-6 md:flex-row md:items-end md:justify-between">
+    <div className="mb-6 flex flex-col gap-4 border-b pb-5 md:flex-row md:items-end md:justify-between">
       <div className="max-w-2xl">
         <p className="eyebrow mb-2 text-teal">{eyebrow}</p>
-        <h1 className="text-3xl font-medium text-foreground sm:text-4xl">{title}</h1>
+        <h1 className="text-2xl font-semibold text-foreground sm:text-3xl">{title}</h1>
         <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{description}</p>
       </div>
       {actions && <div className="flex flex-wrap gap-2">{actions}</div>}
@@ -43,20 +44,21 @@ export function DemoTag({ className }: { className?: string }) {
 /** Disabled control that clearly says it is not functional yet. */
 export function PlannedButton({ children }: { children: ReactNode }) {
   return (
-    <button
+    <Button
+      variant="outline"
       disabled
       title="Not available in Phase 0"
       className="inline-flex cursor-not-allowed items-center gap-2 rounded-md border border-dashed border-input bg-card px-3 py-2 text-sm text-muted-foreground"
     >
       {children}
       <span className="eyebrow text-[9px]">Later phase</span>
-    </button>
+    </Button>
   );
 }
 
 export function PlaceholderNotice({ children }: { children: ReactNode }) {
   return (
-    <div className="mb-6 flex gap-3 rounded-lg border border-dashed border-input bg-muted/60 p-4 text-sm text-muted-foreground">
+    <div className="mb-6 flex gap-3 rounded-md border-l-4 border-l-gold border border-input bg-gold-soft/50 p-4 text-sm text-muted-foreground">
       <Construction className="mt-0.5 size-4 shrink-0 text-warning" />
       <div>
         <span className="font-medium text-foreground">Non-functional placeholder. </span>
@@ -80,7 +82,7 @@ export function Panel({
   className?: string;
 }) {
   return (
-    <section className={cn("rounded-xl border bg-card shadow-card", className)}>
+    <section className={cn("rounded-md border bg-card shadow-card", className)}>
       {title && (
         <div className="flex items-start justify-between gap-3 border-b px-5 py-4">
           <div>
@@ -105,12 +107,12 @@ export function Stat({
   hint?: string;
 }) {
   return (
-    <div className="rounded-xl border bg-card p-5 shadow-card">
+    <div className="rounded-md border bg-card p-5 shadow-card">
       <div className="flex items-center justify-between">
         <p className="eyebrow text-muted-foreground">{label}</p>
         <DemoTag />
       </div>
-      <p className="mt-3 font-display text-4xl font-medium text-foreground">{value}</p>
+      <p className="mt-3 font-display text-3xl font-semibold text-foreground">{value}</p>
       {hint && <p className="mt-1 text-xs text-muted-foreground">{hint}</p>}
     </div>
   );
@@ -131,7 +133,7 @@ export function Status({ tone = "neutral", children }: { tone?: Tone; children: 
   return (
     <span
       className={cn(
-        "inline-flex items-center gap-1.5 whitespace-nowrap rounded-full px-2 py-0.5 text-xs font-medium",
+        "inline-flex items-center gap-1.5 whitespace-nowrap rounded px-2 py-0.5 text-xs font-medium",
         toneClass[tone],
       )}
     >
@@ -151,7 +153,7 @@ export function DataTable({
   caption?: string;
 }) {
   return (
-    <div className="overflow-x-auto rounded-xl border bg-card shadow-card">
+    <div className="overflow-x-auto rounded-md border bg-card shadow-card">
       {caption && (
         <div className="flex items-center justify-between border-b px-5 py-3">
           <p className="text-sm font-semibold">{caption}</p>
@@ -160,7 +162,7 @@ export function DataTable({
       )}
       <table className="w-full min-w-[640px] text-sm">
         <thead>
-          <tr className="border-b bg-muted/50 text-left">
+          <tr className="border-b bg-secondary/40 text-left">
             {columns.map((c) => (
               <th key={c} className="eyebrow px-5 py-2.5 font-normal text-muted-foreground">
                 {c}
@@ -194,7 +196,7 @@ export function EmptyState({
   children: ReactNode;
 }) {
   return (
-    <div className="hatch flex flex-col items-center rounded-xl border border-dashed px-6 py-14 text-center">
+    <div className="hatch flex flex-col items-center rounded-md border border-dashed px-6 py-14 text-center">
       <span className="flex size-12 items-center justify-center rounded-full border bg-card shadow-card">
         <Icon className="size-5 text-teal" />
       </span>
