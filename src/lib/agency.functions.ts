@@ -8,7 +8,7 @@ type Fields = Record<string, unknown>;
 const str = (v: unknown) => (v === null || v === undefined ? "" : String(v));
 const COMPANY = ["super_admin", "authorized_operator", "internal_reviewer"];
 
-async function requireCompanyRole(supabase: any, userId: string, org: string) {
+export async function requireCompanyRole(supabase: any, userId: string, org: string) {
   const { data: m } = await supabase.from("organization_memberships").select("id,organizations(kind)").eq("user_id", userId).eq("organization_id", org).eq("active", true).maybeSingle();
   if (!m || m.organizations?.kind !== "internal") throw new Error("Access denied");
   const { data: roles } = await supabase.from("user_roles").select("role").eq("membership_id", m.id);
@@ -19,24 +19,28 @@ export const listAgencyCatalogue = createServerFn({ method: "POST" }).middleware
   .inputValidator(z.object({ organizationId: z.string().uuid() }))
   .handler(async ({ context, data }) => {
     await requireCompanyRole(context.supabase, context.userId, data.organizationId);
-    const { data: rows, error } = await context.supabase.from("master_reference_records").select("id,source_sheet,source_identifier,source_row,source_fields")
+    return catalogue(context.supabase, data.organizationId);
+  });
+
+export async function catalogue(supabase: any, org: string) {
+    const { data: rows, error } = await supabase.from("master_reference_records").select("id,source_sheet,source_identifier,source_row,source_fields")
       .in("source_sheet", ["AGENCY_MASTER", "AGENCY_REQUIREMENT_MASTER", "EVIDENCE_REQUIREMENT_MAPPING", "AGENCY_FIELD_MASTER"]).limit(20000);
     if (error) throw new Error("Unable to read imported agency records");
-    const { data: rels } = await context.supabase.from("relationships").select("target_id,status").eq("organization_id", data.organizationId).eq("relation_type", "MAPS_TO_REQUIREMENT");
-    const { data: runs } = await context.supabase.from("master_import_runs").select("mode,state").eq("mode", "full").eq("state", "verified");
-    const all = rows ?? [];
+    const { data: rels } = await supabase.from("relationships").select("target_id,status").eq("organization_id", org).eq("relation_type", "MAPS_TO_REQUIREMENT");
+    const { data: runs } = await supabase.from("master_import_runs").select("mode,state").eq("mode", "full").eq("state", "verified");
+    const all = (rows ?? []) as any[];
     const agencies = all.filter(r => r.source_sheet === "AGENCY_MASTER").map(r => { const f = r.source_fields as Fields; return { id: r.source_identifier, name: str(f["Agency_Name"]), authority: str(f["Authority"]), type: str(f["Agency_Type"]), frameworkVersion: str(f["Framework_Version"]) || null, versionLock: str(f["Version_Lock_Status"]) }; });
     const requirements = all.filter(r => r.source_sheet === "AGENCY_REQUIREMENT_MASTER").map(r => {
       const f = r.source_fields as Fields; const id = r.source_identifier;
       const maps = all.filter(m => m.source_sheet === "EVIDENCE_REQUIREMENT_MAPPING" && str((m.source_fields as Fields)["Requirement_ID"]) === id).length;
       const fields = all.filter(m => m.source_sheet === "AGENCY_FIELD_MASTER" && str((m.source_fields as Fields)["Requirement_ID"]) === id);
-      const linked = (rels ?? []).filter(l => l.target_id === r.id);
+      const linked = ((rels ?? []) as any[]).filter(l => l.target_id === r.id);
       return { recordId: r.id, id, agencyId: str(f["Agency_ID"]), metric: str(f["Metric"]), level: str(f["Level"]), pillar: str(f["Parameter_Pillar"]), subparameter: str(f["Subparameter_Indicator"]),
         version: Array.from(new Set(fields.map(x => str((x.source_fields as Fields)["Framework_Version"])).filter(Boolean))).join("; ") || str(f["Agency_Version_Edition"]) || "Not stated in source",
-        versionLock: str(f["Version_Lock_Status"]), sourceMappings: maps, approvedLinks: linked.filter(l => l.status === "approved").length, candidateLinks: linked.filter(l => l.status === "candidate").length, fieldCount: fields.length };
+        versionLock: str(f["Version_Lock_Status"]), sourceMappings: maps, approvedLinks: linked.filter((l: any) => l.status === "approved").length, candidateLinks: linked.filter((l: any) => l.status === "candidate").length, fieldCount: fields.length };
     });
     return { agencies, requirements, fullImportVerified: (runs ?? []).length > 0 };
-  });
+}
 
 /** Retrieves everything known for one requirement. Only approved, trusted, same-organization, same-period chains count as usable evidence. */
 export async function retrieve(supabase: any, org: string, recordId: string, period: string): Promise<Retrieval> {
@@ -82,12 +86,13 @@ export async function retrieve(supabase: any, org: string, recordId: string, per
     });
     return { mappingId: m.source_identifier, sourceRow: m.source_row, evidenceId: str(f["Evidence_ID"]), evidenceName: ev ? str(ev.source_fields["Evidence_Record"] ?? ev.source_fields["Evidence_Name"] ?? ev.source_fields["Package_Name"]) : "", packageName: str(f["Package_Name"]), coverage: str(f["Coverage_Type"]), role: str(f["Evidence_Role"]), sourceMappingStatus: str(f["Mapping_Status"]), frameworkVersion: str(f["Framework_Version"]) || null, status, evidence };
   });
+  const { data: cfm } = await supabase.from("canonical_field_mappings").select("agency_field_id,canonical_field,status").eq("organization_id", org).eq("requirement_identifier", rid).in("status", ["approved", "candidate"]);
   const rf = req.source_fields as Fields;
   return {
     organizationId: org, period,
     agency: { id: str(rf["Agency_ID"]), name: str(rf["Agency"]), authority: str((agencyRow?.source_fields as Fields | undefined)?.["Authority"]) },
     requirement: { recordId, id: rid, sourceRow: req.source_row, workbook: req.source_workbook, workbookSha256: req.source_sha256, metric: str(rf["Metric"]), level: str(rf["Level"]), pillar: str(rf["Parameter_Pillar"]), description: str(rf["Requirement_Description"]), officialLabel: str(rf["Official_Label"]), mandatory: str(rf["Mandatory"]), validationRule: str(rf["Validation_Rule"]), missingValueRule: str(rf["Missing_Value_Rule"]), mismatchRule: str(rf["Mismatch_Rule"]), reportingPeriodRule: str(rf["Reporting_Period_Rule"]), versionLock: str(rf["Version_Lock_Status"]), humanVerification: str(rf["Human_Verification_Required"]), notes: str(rf["Notes"]), officialSource: str(rf["Official_Source"]) },
-    fields: (fieldRows ?? []).map((x: any) => { const f = x.source_fields as Fields; return { id: x.source_identifier, sourceRow: x.source_row, label: str(f["Official_Field_Label"]), dataType: str(f["Data_Type"]), unit: str(f["Unit"]) || null, mandatory: str(f["Mandatory_Status"]), frameworkVersion: str(f["Framework_Version"]), reportingPeriod: str(f["Reporting_Period"]), fieldLevel: str(f["Field_Level_Status"]), versionLock: str(f["Version_Lock_Status"]), officialSource: str(f["Official_Source"]), canonicalMapping: null as string | null }; }),
+    fields: (fieldRows ?? []).map((x: any) => { const f = x.source_fields as Fields; return { id: x.source_identifier, sourceRow: x.source_row, label: str(f["Official_Field_Label"]), dataType: str(f["Data_Type"]), unit: str(f["Unit"]) || null, mandatory: str(f["Mandatory_Status"]), frameworkVersion: str(f["Framework_Version"]), reportingPeriod: str(f["Reporting_Period"]), fieldLevel: str(f["Field_Level_Status"]), versionLock: str(f["Version_Lock_Status"]), officialSource: str(f["Official_Source"]), canonicalMapping: null as string | null, canonicalMappingStatus: "missing" }; }).map((f: any) => { const ms = (cfm ?? []).filter((c: any) => c.agency_field_id === f.id); const a = ms.find((c: any) => c.status === "approved"); return { ...f, canonicalMapping: a?.canonical_field ?? null, canonicalMappingStatus: a ? "approved" : ms.some((c: any) => c.status === "candidate") ? "candidate" : "missing" }; }),
     mappings,
     conflicts: (conflicts ?? []).map((c: any) => ({ from: c.source_label, to: c.target_label, status: c.status })),
   };
@@ -108,17 +113,48 @@ export const generatePackage = createServerFn({ method: "POST" }).middleware([re
   .inputValidator(z.object({ organizationId: z.string().uuid(), recordId: z.string().uuid(), period: z.string().trim().max(40).default("") }))
   .handler(async ({ context, data }) => {
     await requireCompanyRole(context.supabase, context.userId, data.organizationId);
-    const content = buildPackageContent(await retrieve(context.supabase, data.organizationId, data.recordId, data.period));
-    const sha = await sha256Hex(new TextEncoder().encode(JSON.stringify(content)).buffer as ArrayBuffer);
-    const { data: saved, error } = await context.supabase.rpc("save_evidence_package", { _org: data.organizationId, _req: data.recordId, _period: data.period, _content: JSON.parse(JSON.stringify(content)), _sha: sha });
-    if (error) throw new Error(error.code === "42501" ? "Your role cannot generate packages." : error.message);
-    return saved as { id: string; version: number; unchanged: boolean };
+    return savePackage(context.supabase, data.organizationId, data.recordId, data.period);
   });
+
+/** The single package-generation path used by the explorer and the Conversational Engine. */
+export async function savePackage(supabase: any, org: string, recordId: string, period: string) {
+    const content = buildPackageContent(await retrieve(supabase, org, recordId, period));
+    const sha = await sha256Hex(new TextEncoder().encode(JSON.stringify(content)).buffer as ArrayBuffer);
+    const { data: saved, error } = await supabase.rpc("save_evidence_package", { _org: org, _req: recordId, _period: period, _content: JSON.parse(JSON.stringify(content)), _sha: sha });
+    if (error) throw new Error(error.code === "42501" ? "Your role cannot generate packages." : error.message);
+    return { ...(saved as { id: string; version: number; unchanged: boolean }), sha256: sha, content };
+}
 
 export const reviewPackage = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
   .inputValidator(z.object({ id: z.string().uuid(), decision: z.enum(["reviewed", "changes_requested"]), sha: z.string().regex(/^[0-9a-f]{64}$/), note: z.string().trim().min(5).max(1000) }))
   .handler(async ({ context, data }) => {
     const { error } = await context.supabase.rpc("review_evidence_package", { _pkg: data.id, _decision: data.decision, _sha: data.sha, _note: data.note });
     if (error) throw new Error(error.code === "42501" ? "Only a Super Admin or Internal Reviewer can review packages." : error.message);
+    return { ok: true };
+  });
+
+export const listFieldMappings = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
+  .inputValidator(z.object({ organizationId: z.string().uuid(), requirementId: z.string().min(1).max(80) }))
+  .handler(async ({ context, data }) => {
+    await requireCompanyRole(context.supabase, context.userId, data.organizationId);
+    const { data: rows, error } = await context.supabase.from("canonical_field_mappings").select("id,agency_field_id,canonical_field,status,basis,rationale,proposed_by,proposed_at,reviewer_id,reviewed_at,review_note")
+      .eq("organization_id", data.organizationId).eq("requirement_identifier", data.requirementId).order("proposed_at", { ascending: false });
+    if (error) throw new Error("Unable to read field mappings");
+    return rows ?? [];
+  });
+
+export const proposeFieldMapping = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
+  .inputValidator(z.object({ organizationId: z.string().uuid(), fieldId: z.string().min(1).max(80), canonicalField: z.string().min(1).max(80), rationale: z.string().trim().min(5).max(1000) }))
+  .handler(async ({ context, data }) => {
+    const { error } = await context.supabase.rpc("propose_field_mapping", { _org: data.organizationId, _field: data.fieldId, _canonical: data.canonicalField, _rationale: data.rationale });
+    if (error) throw new Error(error.code === "42501" ? "Your role cannot propose field mappings." : error.message);
+    return { ok: true };
+  });
+
+export const reviewFieldMapping = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
+  .inputValidator(z.object({ id: z.string().uuid(), decision: z.enum(["approved", "rejected"]), note: z.string().trim().min(5).max(1000) }))
+  .handler(async ({ context, data }) => {
+    const { error } = await context.supabase.rpc("review_field_mapping", { _id: data.id, _decision: data.decision, _note: data.note });
+    if (error) throw new Error(error.code === "42501" ? "Only a Super Admin or Internal Reviewer can approve or reject field mappings." : error.message);
     return { ok: true };
   });

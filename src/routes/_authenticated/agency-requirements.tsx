@@ -3,7 +3,9 @@ import { useServerFn } from "@tanstack/react-start";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
-import { Download, FileText } from "lucide-react";
+import { FileText } from "lucide-react";
+import { FieldMappings } from "@/components/iiaf/field-mappings";
+import { PackageDownloads } from "@/components/iiaf/package-actions";
 import { pageHead } from "@/lib/seo";
 import { DataTable, InternalOnly, PageHeader, Panel, Status } from "@/components/iiaf/ui";
 import { useWorkspace } from "@/components/iiaf/workspace";
@@ -11,7 +13,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { listAgencyCatalogue, getRequirementEvidence, generatePackage, reviewPackage } from "@/lib/agency.functions";
 import { getDocumentLink } from "@/lib/documents.functions";
-import { locatorText, packageMarkdown, type PackageContent } from "@/lib/package-format";
+import { locatorText, type PackageContent } from "@/lib/package-format";
 
 export const Route = createFileRoute("/_authenticated/agency-requirements")({
   head: () => pageHead("Agency Requirement Explorer", "Browse imported agency requirements, retrieve approved evidence with exact source locators, and generate draft requirement packages."),
@@ -77,18 +79,13 @@ function RequirementDetail({ recordId, period, setPeriod }: { recordId: string; 
     try { await review({ data: { id: current.id, decision, sha: current.content_sha256, note } }); toast.success("Review recorded against this exact content hash."); setNote(""); await cache.invalidateQueries({ queryKey: key }); }
     catch (e) { toast.error(e instanceof Error ? e.message : "Review failed"); } finally { setBusy(false); }
   }
-  function download(p: NonNullable<typeof current>) {
-    const md = packageMarkdown(p.content as unknown as PackageContent, { version: p.version, sha256: p.content_sha256, generatedAt: new Date(p.generated_at).toISOString(), status: p.status });
-    const url = URL.createObjectURL(new Blob([md], { type: "text/markdown;charset=utf-8" }));
-    const a = document.createElement("a"); a.href = url; a.download = `IIAF_${r.requirement.id}_${period || "all-periods"}_v${p.version}_DRAFT.md`; a.click(); URL.revokeObjectURL(url);
-  }
   return <div className="space-y-6 border-t pt-6">
     <div className="flex flex-wrap items-end justify-between gap-3">
       <div><p className="eyebrow text-muted-foreground">{r.agency.name} · {r.requirement.level}</p><h2 className="text-xl font-semibold">{r.requirement.id} — {r.requirement.metric}</h2><p className="mt-1 text-xs text-muted-foreground">Source: {r.requirement.workbook} row {r.requirement.sourceRow}</p></div>
       <label className="text-xs">Reporting period filter<Input className="mt-1 w-48" placeholder="e.g. 2025-26 (blank = all)" defaultValue={period} onBlur={e => setPeriod(e.target.value.trim())} /></label>
     </div>
     <Panel title="Requirement as imported"><dl className="grid gap-2 text-xs md:grid-cols-2">{([["Description", r.requirement.description], ["Official label", r.requirement.officialLabel], ["Mandatory", r.requirement.mandatory], ["Validation rule", r.requirement.validationRule], ["Missing value rule", r.requirement.missingValueRule], ["Mismatch rule", r.requirement.mismatchRule], ["Reporting period rule", r.requirement.reportingPeriodRule], ["Version lock", r.requirement.versionLock], ["Human verification", r.requirement.humanVerification], ["Notes", r.requirement.notes]] as const).map(([k, v]) => <div key={k}><dt className="text-muted-foreground">{k}</dt><dd>{v || "Not stated in source"}</dd></div>)}</dl></Panel>
-    <DataTable live caption={`Required data fields · ${r.fields.length}`} columns={["Field", "Type / unit", "Version", "Canonical mapping"]} rows={r.fields.map(f => [<div className="text-xs"><p className="font-mono">{f.id}</p><p>{f.label}</p></div>, <span className="text-xs">{f.dataType}{f.unit ? ` · ${f.unit}` : ""} · {f.mandatory}</span>, <div className="text-xs"><p>{f.frameworkVersion}</p><p className="text-muted-foreground">{f.fieldLevel} · {f.versionLock}</p></div>, <Status tone="warning">No canonical field mapping</Status>])} />
+    <FieldMappings organizationId={workspace.id} requirementId={r.requirement.id} fields={r.fields} roles={workspace.roles} onChange={() => void cache.invalidateQueries({ queryKey: key })} />
     <DataTable live caption={`Evidence mappings · ${r.mappings.length}`} columns={["Mapping (source row)", "Evidence template", "Status", "Retrieved evidence & locators"]} rows={r.mappings.map(m => [
       <div className="text-xs"><p className="font-mono">{m.mappingId}</p><p className="text-muted-foreground">row {m.sourceRow} · {m.coverage} · {m.role}</p><p className="text-muted-foreground">Framework version: {m.frameworkVersion ?? "not stated"}</p></div>,
       <div className="max-w-xs text-xs"><p className="font-mono">{m.evidenceId}</p><p>{m.evidenceName}</p></div>,
@@ -97,7 +94,7 @@ function RequirementDetail({ recordId, period, setPeriod }: { recordId: string; 
     {r.conflicts.length > 0 && <Panel title="Conflicting values">{r.conflicts.map((c, i) => <p key={i} className="text-sm">{c.from} ↔ {c.to} · {c.status}</p>)}</Panel>}
     <Panel title="Draft requirement package">
       <div className="space-y-3 text-sm">
-        <div className="flex flex-wrap gap-2"><Button disabled={busy} onClick={() => void generate()}>Generate draft package</Button>{current && <Button variant="outline" onClick={() => download(current)}><Download /> Download v{current.version}</Button>}</div>
+        <div className="flex flex-wrap gap-2"><Button disabled={busy} onClick={() => void generate()}>Generate draft package</Button>{current && <PackageDownloads content={current.content as unknown as PackageContent} meta={{ version: current.version, sha256: current.content_sha256, generatedAt: new Date(current.generated_at).toISOString(), status: current.status }} baseName={`IIAF_${r.requirement.id}_${period || "all-periods"}`} />}</div>
         {current ? <PackageReview pkg={current} reviews={data.reviews.filter(x => x.package_id === current.id)} /> : <p className="text-muted-foreground">No package generated for this requirement and period.</p>}
         {current && canReview && current.status === "draft" && <div className="space-y-2"><Input aria-label="Package review note" placeholder="Review note (required)" value={note} onChange={e => setNote(e.target.value)} /><div className="flex gap-2"><Button size="sm" disabled={busy || note.trim().length < 5} onClick={() => void decide("reviewed")}>Mark reviewed</Button><Button size="sm" variant="outline" disabled={busy || note.trim().length < 5} onClick={() => void decide("changes_requested")}>Request changes</Button></div></div>}
         {data.packages.filter(p => p.status === "superseded").length > 0 && <p className="text-xs text-muted-foreground">Earlier versions superseded (reviews invalidated): {data.packages.filter(p => p.status === "superseded").map(p => `v${p.version}`).join(", ")}</p>}

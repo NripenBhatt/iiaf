@@ -5,7 +5,7 @@ export type Retrieval = {
   organizationId: string; period: string;
   agency: { id: string; name: string; authority: string };
   requirement: { recordId: string; id: string; sourceRow: number; workbook: string; workbookSha256: string; metric: string; level: string; pillar: string; description: string; officialLabel: string; mandatory: string; validationRule: string; missingValueRule: string; mismatchRule: string; reportingPeriodRule: string; versionLock: string; humanVerification: string; notes: string; officialSource: string };
-  fields: { id: string; sourceRow: number; label: string; dataType: string; unit: string | null; mandatory: string; frameworkVersion: string; reportingPeriod: string; fieldLevel: string; versionLock: string; officialSource: string; canonicalMapping: string | null }[];
+  fields: { id: string; sourceRow: number; label: string; dataType: string; unit: string | null; mandatory: string; frameworkVersion: string; reportingPeriod: string; fieldLevel: string; versionLock: string; officialSource: string; canonicalMapping: string | null; canonicalMappingStatus: string }[];
   mappings: Mapping[];
   conflicts: { from: string; to: string; status: string }[];
 };
@@ -30,7 +30,14 @@ export function buildPackageContent(r: Retrieval) {
     if (!m.frameworkVersion) issues.push(`${m.mappingId}: framework version not stated in the mapping row.`);
     for (const e of m.evidence.filter(x => !x.usable)) issues.push(`${m.mappingId} · ${e.filename}: excluded — ${e.reasons.join("; ")}.`);
   }
-  for (const f of r.fields) if (!f.canonicalMapping) issues.push(`${f.id} (${f.label}): no canonical institutional field mapping is established; value not populated.`);
+  const table = r.fields.map(f => {
+    const vals = f.canonicalMapping ? [...new Set(usable.filter(e => e.field === f.canonicalMapping).map(e => e.value.trim()).filter(Boolean))].sort() : [];
+    const value = vals.length === 1 ? vals[0] : null;
+    const valueStatus = !f.canonicalMapping ? (f.canonicalMappingStatus === "candidate" ? "Not populated — canonical mapping is a candidate, not approved" : "Not populated — no approved canonical field mapping")
+      : vals.length === 0 ? `Missing — no approved, trusted fact for ${f.canonicalMapping}` : vals.length > 1 ? `Unresolved — conflicting approved values (${vals.join(" / ")})` : `Populated from approved fact via ${f.canonicalMapping}`;
+    if (!value) issues.push(`${f.id} (${f.label}): ${valueStatus}.`);
+    return { fieldId: f.id, label: f.label, dataType: f.dataType, unit: f.unit, mandatory: f.mandatory, canonicalField: f.canonicalMapping, value, valueStatus, sourceRow: f.sourceRow };
+  });
   if (r.requirement.versionLock && !/VERIFIED/i.test(r.requirement.versionLock)) issues.push(`Requirement version lock: ${r.requirement.versionLock}.`);
   for (const c of r.conflicts) issues.push(`Conflict (${c.status}): ${c.from} vs ${c.to}.`);
   if (!usable.length) issues.push("No approved, trusted evidence is available for this requirement and period.");
@@ -41,7 +48,7 @@ export function buildPackageContent(r: Retrieval) {
     methodology: versions.length ? versions : ["Not stated in imported records"],
     requirement: r.requirement,
     reportingPeriod: r.period || "All periods (no filter applied)",
-    dataTable: r.fields.map(f => ({ fieldId: f.id, label: f.label, dataType: f.dataType, unit: f.unit, mandatory: f.mandatory, value: null as string | null, valueStatus: "Not populated — no canonical field mapping", sourceRow: f.sourceRow })),
+    dataTable: table,
     evidenceIndex: usable.map((e, i) => ({ number: i + 1, mappingId: e.mappingId, evidenceId: e.evidenceId, field: e.field, value: e.value, attachment: attachmentNo(e.documentId), filename: e.filename, locator: locatorText(e.locator), method: e.method })),
     attachments,
     issues,

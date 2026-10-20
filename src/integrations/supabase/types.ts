@@ -14,6 +14,103 @@ export type Database = {
   }
   public: {
     Tables: {
+      assistant_messages: {
+        Row: {
+          created_at: string
+          id: string
+          organization_id: string
+          parts: Json
+          role: string
+          thread_id: string
+          ui_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          organization_id: string
+          parts: Json
+          role: string
+          thread_id: string
+          ui_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          organization_id?: string
+          parts?: Json
+          role?: string
+          thread_id?: string
+          ui_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "assistant_messages_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "assistant_messages_thread_id_fkey"
+            columns: ["thread_id"]
+            isOneToOne: false
+            referencedRelation: "assistant_threads"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "assistant_messages_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      assistant_threads: {
+        Row: {
+          created_at: string
+          id: string
+          organization_id: string
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          organization_id: string
+          title?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          organization_id?: string
+          title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "assistant_threads_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "assistant_threads_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       audit_events: {
         Row: {
           actor_id: string | null
@@ -55,6 +152,76 @@ export type Database = {
             columns: ["organization_id"]
             isOneToOne: false
             referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      canonical_field_mappings: {
+        Row: {
+          agency_field_id: string
+          basis: string
+          canonical_field: string
+          id: string
+          organization_id: string
+          proposed_at: string
+          proposed_by: string
+          rationale: string
+          requirement_identifier: string
+          review_note: string | null
+          reviewed_at: string | null
+          reviewer_id: string | null
+          status: string
+        }
+        Insert: {
+          agency_field_id: string
+          basis?: string
+          canonical_field: string
+          id?: string
+          organization_id: string
+          proposed_at?: string
+          proposed_by: string
+          rationale: string
+          requirement_identifier: string
+          review_note?: string | null
+          reviewed_at?: string | null
+          reviewer_id?: string | null
+          status?: string
+        }
+        Update: {
+          agency_field_id?: string
+          basis?: string
+          canonical_field?: string
+          id?: string
+          organization_id?: string
+          proposed_at?: string
+          proposed_by?: string
+          rationale?: string
+          requirement_identifier?: string
+          review_note?: string | null
+          reviewed_at?: string | null
+          reviewer_id?: string | null
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "canonical_field_mappings_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "canonical_field_mappings_proposed_by_fkey"
+            columns: ["proposed_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "canonical_field_mappings_reviewer_id_fkey"
+            columns: ["reviewer_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
         ]
@@ -1207,6 +1374,15 @@ export type Database = {
         Args: { _rows: Json; _run: string }
         Returns: number
       }
+      propose_field_mapping: {
+        Args: {
+          _canonical: string
+          _field: string
+          _org: string
+          _rationale: string
+        }
+        Returns: string
+      }
       record_document_access: { Args: { _id: string }; Returns: undefined }
       record_security_event: {
         Args: { _event: string; _org: string }
@@ -1244,6 +1420,10 @@ export type Database = {
           _value: string
         }
         Returns: Json
+      }
+      review_field_mapping: {
+        Args: { _decision: string; _id: string; _note: string }
+        Returns: undefined
       }
       review_relationship: {
         Args: { _decision: string; _note: string; _rel: string }

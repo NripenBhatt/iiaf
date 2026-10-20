@@ -29,7 +29,11 @@ import { Route as AuthenticatedReportsRouteImport } from './routes/_authenticate
 import { Route as AuthenticatedReviewRouteImport } from './routes/_authenticated/review'
 import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticated/settings'
 import { Route as AuthenticatedUsersRouteImport } from './routes/_authenticated/users'
+import { Route as ApiAssistantRouteImport } from './routes/api/assistant'
+import { Route as ApiTranscribeRouteImport } from './routes/api/transcribe'
 import { Route as AuthCallbackRouteImport } from './routes/auth.callback'
+import { Route as AuthenticatedConversationIndexRouteImport } from './routes/_authenticated/conversation.index'
+import { Route as AuthenticatedConversationThreadIdRouteImport } from './routes/_authenticated/conversation.$threadId'
 
 const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
   id: '/_authenticated',
@@ -135,11 +139,33 @@ const AuthenticatedUsersRoute = AuthenticatedUsersRouteImport.update({
   path: '/users',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const ApiAssistantRoute = ApiAssistantRouteImport.update({
+  id: '/api/assistant',
+  path: '/api/assistant',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiTranscribeRoute = ApiTranscribeRouteImport.update({
+  id: '/api/transcribe',
+  path: '/api/transcribe',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AuthCallbackRoute = AuthCallbackRouteImport.update({
   id: '/callback',
   path: '/callback',
   getParentRoute: () => AuthRoute,
 } as any)
+const AuthenticatedConversationIndexRoute =
+  AuthenticatedConversationIndexRouteImport.update({
+    id: '/',
+    path: '/',
+    getParentRoute: () => AuthenticatedConversationRoute,
+  } as any)
+const AuthenticatedConversationThreadIdRoute =
+  AuthenticatedConversationThreadIdRouteImport.update({
+    id: '/$threadId',
+    path: '/$threadId',
+    getParentRoute: () => AuthenticatedConversationRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof AuthenticatedIndexRoute
@@ -150,7 +176,7 @@ export interface FileRoutesByFullPath {
   '/unauthorized': typeof UnauthorizedRoute
   '/agency-requirements': typeof AuthenticatedAgencyRequirementsRoute
   '/audit': typeof AuthenticatedAuditRoute
-  '/conversation': typeof AuthenticatedConversationRoute
+  '/conversation': typeof AuthenticatedConversationRouteWithChildren
   '/evidence': typeof AuthenticatedEvidenceRoute
   '/help': typeof AuthenticatedHelpRoute
   '/institutional': typeof AuthenticatedInstitutionalRoute
@@ -161,7 +187,11 @@ export interface FileRoutesByFullPath {
   '/review': typeof AuthenticatedReviewRoute
   '/settings': typeof AuthenticatedSettingsRoute
   '/users': typeof AuthenticatedUsersRoute
+  '/api/assistant': typeof ApiAssistantRoute
+  '/api/transcribe': typeof ApiTranscribeRoute
   '/auth/callback': typeof AuthCallbackRoute
+  '/conversation/$threadId': typeof AuthenticatedConversationThreadIdRoute
+  '/conversation/': typeof AuthenticatedConversationIndexRoute
 }
 export interface FileRoutesByTo {
   '/accept-invitation': typeof AcceptInvitationRoute
@@ -171,7 +201,6 @@ export interface FileRoutesByTo {
   '/unauthorized': typeof UnauthorizedRoute
   '/agency-requirements': typeof AuthenticatedAgencyRequirementsRoute
   '/audit': typeof AuthenticatedAuditRoute
-  '/conversation': typeof AuthenticatedConversationRoute
   '/evidence': typeof AuthenticatedEvidenceRoute
   '/help': typeof AuthenticatedHelpRoute
   '/institutional': typeof AuthenticatedInstitutionalRoute
@@ -182,8 +211,12 @@ export interface FileRoutesByTo {
   '/review': typeof AuthenticatedReviewRoute
   '/settings': typeof AuthenticatedSettingsRoute
   '/users': typeof AuthenticatedUsersRoute
+  '/api/assistant': typeof ApiAssistantRoute
+  '/api/transcribe': typeof ApiTranscribeRoute
   '/auth/callback': typeof AuthCallbackRoute
   '/': typeof AuthenticatedIndexRoute
+  '/conversation/$threadId': typeof AuthenticatedConversationThreadIdRoute
+  '/conversation': typeof AuthenticatedConversationIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -195,7 +228,7 @@ export interface FileRoutesById {
   '/unauthorized': typeof UnauthorizedRoute
   '/_authenticated/agency-requirements': typeof AuthenticatedAgencyRequirementsRoute
   '/_authenticated/audit': typeof AuthenticatedAuditRoute
-  '/_authenticated/conversation': typeof AuthenticatedConversationRoute
+  '/_authenticated/conversation': typeof AuthenticatedConversationRouteWithChildren
   '/_authenticated/evidence': typeof AuthenticatedEvidenceRoute
   '/_authenticated/help': typeof AuthenticatedHelpRoute
   '/_authenticated/institutional': typeof AuthenticatedInstitutionalRoute
@@ -206,8 +239,12 @@ export interface FileRoutesById {
   '/_authenticated/review': typeof AuthenticatedReviewRoute
   '/_authenticated/settings': typeof AuthenticatedSettingsRoute
   '/_authenticated/users': typeof AuthenticatedUsersRoute
+  '/api/assistant': typeof ApiAssistantRoute
+  '/api/transcribe': typeof ApiTranscribeRoute
   '/auth/callback': typeof AuthCallbackRoute
   '/_authenticated/': typeof AuthenticatedIndexRoute
+  '/_authenticated/conversation/$threadId': typeof AuthenticatedConversationThreadIdRoute
+  '/_authenticated/conversation/': typeof AuthenticatedConversationIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -231,7 +268,11 @@ export interface FileRouteTypes {
     | '/review'
     | '/settings'
     | '/users'
+    | '/api/assistant'
+    | '/api/transcribe'
     | '/auth/callback'
+    | '/conversation/$threadId'
+    | '/conversation/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/accept-invitation'
@@ -241,7 +282,6 @@ export interface FileRouteTypes {
     | '/unauthorized'
     | '/agency-requirements'
     | '/audit'
-    | '/conversation'
     | '/evidence'
     | '/help'
     | '/institutional'
@@ -252,8 +292,12 @@ export interface FileRouteTypes {
     | '/review'
     | '/settings'
     | '/users'
+    | '/api/assistant'
+    | '/api/transcribe'
     | '/auth/callback'
     | '/'
+    | '/conversation/$threadId'
+    | '/conversation'
   id:
     | '__root__'
     | '/_authenticated'
@@ -275,8 +319,12 @@ export interface FileRouteTypes {
     | '/_authenticated/review'
     | '/_authenticated/settings'
     | '/_authenticated/users'
+    | '/api/assistant'
+    | '/api/transcribe'
     | '/auth/callback'
     | '/_authenticated/'
+    | '/_authenticated/conversation/$threadId'
+    | '/_authenticated/conversation/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -286,6 +334,8 @@ export interface RootRouteChildren {
   AuthRoute: typeof AuthRouteWithChildren
   ResetPasswordRoute: typeof ResetPasswordRoute
   UnauthorizedRoute: typeof UnauthorizedRoute
+  ApiAssistantRoute: typeof ApiAssistantRoute
+  ApiTranscribeRoute: typeof ApiTranscribeRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -430,6 +480,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedUsersRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/api/assistant': {
+      id: '/api/assistant'
+      path: '/api/assistant'
+      fullPath: '/api/assistant'
+      preLoaderRoute: typeof ApiAssistantRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/transcribe': {
+      id: '/api/transcribe'
+      path: '/api/transcribe'
+      fullPath: '/api/transcribe'
+      preLoaderRoute: typeof ApiTranscribeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/auth/callback': {
       id: '/auth/callback'
       path: '/callback'
@@ -437,13 +501,44 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthCallbackRouteImport
       parentRoute: typeof AuthRoute
     }
+    '/_authenticated/conversation/': {
+      id: '/_authenticated/conversation/'
+      path: '/'
+      fullPath: '/conversation/'
+      preLoaderRoute: typeof AuthenticatedConversationIndexRouteImport
+      parentRoute: typeof AuthenticatedConversationRoute
+    }
+    '/_authenticated/conversation/$threadId': {
+      id: '/_authenticated/conversation/$threadId'
+      path: '/$threadId'
+      fullPath: '/conversation/$threadId'
+      preLoaderRoute: typeof AuthenticatedConversationThreadIdRouteImport
+      parentRoute: typeof AuthenticatedConversationRoute
+    }
   }
 }
+
+interface AuthenticatedConversationRouteChildren {
+  AuthenticatedConversationThreadIdRoute: typeof AuthenticatedConversationThreadIdRoute
+  AuthenticatedConversationIndexRoute: typeof AuthenticatedConversationIndexRoute
+}
+
+const AuthenticatedConversationRouteChildren: AuthenticatedConversationRouteChildren =
+  {
+    AuthenticatedConversationThreadIdRoute:
+      AuthenticatedConversationThreadIdRoute,
+    AuthenticatedConversationIndexRoute: AuthenticatedConversationIndexRoute,
+  }
+
+const AuthenticatedConversationRouteWithChildren =
+  AuthenticatedConversationRoute._addFileChildren(
+    AuthenticatedConversationRouteChildren,
+  )
 
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedAgencyRequirementsRoute: typeof AuthenticatedAgencyRequirementsRoute
   AuthenticatedAuditRoute: typeof AuthenticatedAuditRoute
-  AuthenticatedConversationRoute: typeof AuthenticatedConversationRoute
+  AuthenticatedConversationRoute: typeof AuthenticatedConversationRouteWithChildren
   AuthenticatedEvidenceRoute: typeof AuthenticatedEvidenceRoute
   AuthenticatedHelpRoute: typeof AuthenticatedHelpRoute
   AuthenticatedInstitutionalRoute: typeof AuthenticatedInstitutionalRoute
@@ -460,7 +555,7 @@ interface AuthenticatedRouteRouteChildren {
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAgencyRequirementsRoute: AuthenticatedAgencyRequirementsRoute,
   AuthenticatedAuditRoute: AuthenticatedAuditRoute,
-  AuthenticatedConversationRoute: AuthenticatedConversationRoute,
+  AuthenticatedConversationRoute: AuthenticatedConversationRouteWithChildren,
   AuthenticatedEvidenceRoute: AuthenticatedEvidenceRoute,
   AuthenticatedHelpRoute: AuthenticatedHelpRoute,
   AuthenticatedInstitutionalRoute: AuthenticatedInstitutionalRoute,
@@ -494,6 +589,8 @@ const rootRouteChildren: RootRouteChildren = {
   AuthRoute: AuthRouteWithChildren,
   ResetPasswordRoute: ResetPasswordRoute,
   UnauthorizedRoute: UnauthorizedRoute,
+  ApiAssistantRoute: ApiAssistantRoute,
+  ApiTranscribeRoute: ApiTranscribeRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
