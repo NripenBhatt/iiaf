@@ -59,35 +59,245 @@ export type Database = {
           },
         ]
       }
-      held_record_reviews: {
+      document_processing_jobs: {
+        Row: {
+          document_id: string
+          error: string | null
+          fact_count: number
+          finished_at: string | null
+          id: string
+          organization_id: string
+          processor: string | null
+          processor_version: string | null
+          segment_count: number
+          started_at: string
+          started_by: string
+          state: string
+        }
+        Insert: {
+          document_id: string
+          error?: string | null
+          fact_count?: number
+          finished_at?: string | null
+          id?: string
+          organization_id: string
+          processor?: string | null
+          processor_version?: string | null
+          segment_count?: number
+          started_at?: string
+          started_by: string
+          state?: string
+        }
+        Update: {
+          document_id?: string
+          error?: string | null
+          fact_count?: number
+          finished_at?: string | null
+          id?: string
+          organization_id?: string
+          processor?: string | null
+          processor_version?: string | null
+          segment_count?: number
+          started_at?: string
+          started_by?: string
+          state?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "document_processing_jobs_document_id_fkey"
+            columns: ["document_id"]
+            isOneToOne: false
+            referencedRelation: "uploaded_documents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "document_processing_jobs_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "document_processing_jobs_started_by_fkey"
+            columns: ["started_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      document_segments: {
+        Row: {
+          cell_ref: string | null
+          content: string
+          document_id: string
+          extracted_at: string
+          id: string
+          job_id: string
+          locator: Json
+          locator_key: string
+          method: string
+          method_version: string
+          organization_id: string
+          page_number: number | null
+          seq: number
+          sheet_name: string | null
+        }
+        Insert: {
+          cell_ref?: string | null
+          content: string
+          document_id: string
+          extracted_at?: string
+          id?: string
+          job_id: string
+          locator: Json
+          locator_key: string
+          method: string
+          method_version: string
+          organization_id: string
+          page_number?: number | null
+          seq: number
+          sheet_name?: string | null
+        }
+        Update: {
+          cell_ref?: string | null
+          content?: string
+          document_id?: string
+          extracted_at?: string
+          id?: string
+          job_id?: string
+          locator?: Json
+          locator_key?: string
+          method?: string
+          method_version?: string
+          organization_id?: string
+          page_number?: number | null
+          seq?: number
+          sheet_name?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "document_segments_document_id_fkey"
+            columns: ["document_id"]
+            isOneToOne: false
+            referencedRelation: "uploaded_documents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "document_segments_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "document_processing_jobs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "document_segments_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      fact_reviews: {
         Row: {
           created_at: string
           decision: string
+          fact_id: string
+          id: string
+          note: string | null
+          organization_id: string
+          previous_state: string
+          reviewer_id: string
+          value: string | null
+        }
+        Insert: {
+          created_at?: string
+          decision: string
+          fact_id: string
+          id?: string
+          note?: string | null
+          organization_id: string
+          previous_state: string
+          reviewer_id: string
+          value?: string | null
+        }
+        Update: {
+          created_at?: string
+          decision?: string
+          fact_id?: string
+          id?: string
+          note?: string | null
+          organization_id?: string
+          previous_state?: string
+          reviewer_id?: string
+          value?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fact_reviews_fact_id_fkey"
+            columns: ["fact_id"]
+            isOneToOne: false
+            referencedRelation: "proposed_facts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fact_reviews_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fact_reviews_reviewer_id_fkey"
+            columns: ["reviewer_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      held_record_reviews: {
+        Row: {
+          affected_fields: string | null
+          correction: string | null
+          created_at: string
+          decision: string
           explanation: string
+          finding: string | null
           id: string
           organization_id: string
+          revalidation_result: string | null
           reviewer_id: string
           source_identifier: string
           source_row: number
           source_sheet: string
         }
         Insert: {
+          affected_fields?: string | null
+          correction?: string | null
           created_at?: string
           decision: string
           explanation: string
+          finding?: string | null
           id?: string
           organization_id: string
+          revalidation_result?: string | null
           reviewer_id?: string
           source_identifier: string
           source_row: number
           source_sheet: string
         }
         Update: {
+          affected_fields?: string | null
+          correction?: string | null
           created_at?: string
           decision?: string
           explanation?: string
+          finding?: string | null
           id?: string
           organization_id?: string
+          revalidation_result?: string | null
           reviewer_id?: string
           source_identifier?: string
           source_row?: number
@@ -408,6 +618,249 @@ export type Database = {
         }
         Relationships: []
       }
+      proposed_facts: {
+        Row: {
+          canonical_field: string | null
+          confidence: number | null
+          created_at: string
+          document_id: string
+          extracted_value: string
+          id: string
+          locator: Json
+          locator_key: string
+          method: string
+          method_version: string
+          organization_id: string
+          review_note: string | null
+          reviewed_at: string | null
+          reviewed_value: string | null
+          reviewer_id: string | null
+          segment_id: string
+          source_label: string
+          spec_source: string | null
+          state: string
+          validation_issues: Json
+        }
+        Insert: {
+          canonical_field?: string | null
+          confidence?: number | null
+          created_at?: string
+          document_id: string
+          extracted_value: string
+          id?: string
+          locator: Json
+          locator_key: string
+          method: string
+          method_version: string
+          organization_id: string
+          review_note?: string | null
+          reviewed_at?: string | null
+          reviewed_value?: string | null
+          reviewer_id?: string | null
+          segment_id: string
+          source_label: string
+          spec_source?: string | null
+          state?: string
+          validation_issues?: Json
+        }
+        Update: {
+          canonical_field?: string | null
+          confidence?: number | null
+          created_at?: string
+          document_id?: string
+          extracted_value?: string
+          id?: string
+          locator?: Json
+          locator_key?: string
+          method?: string
+          method_version?: string
+          organization_id?: string
+          review_note?: string | null
+          reviewed_at?: string | null
+          reviewed_value?: string | null
+          reviewer_id?: string | null
+          segment_id?: string
+          source_label?: string
+          spec_source?: string | null
+          state?: string
+          validation_issues?: Json
+        }
+        Relationships: [
+          {
+            foreignKeyName: "proposed_facts_document_id_fkey"
+            columns: ["document_id"]
+            isOneToOne: false
+            referencedRelation: "uploaded_documents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "proposed_facts_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "proposed_facts_reviewer_id_fkey"
+            columns: ["reviewer_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "proposed_facts_segment_id_fkey"
+            columns: ["segment_id"]
+            isOneToOne: false
+            referencedRelation: "document_segments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      relationships: {
+        Row: {
+          confidence: number | null
+          created_at: string
+          created_by: string | null
+          id: string
+          organization_id: string
+          provenance: Json
+          relation_type: string
+          review_note: string | null
+          reviewed_at: string | null
+          reviewer_id: string | null
+          rule_id: string
+          rule_version: string
+          source_id: string
+          source_label: string
+          source_type: string
+          status: string
+          target_id: string
+          target_label: string
+          target_type: string
+        }
+        Insert: {
+          confidence?: number | null
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          organization_id: string
+          provenance: Json
+          relation_type: string
+          review_note?: string | null
+          reviewed_at?: string | null
+          reviewer_id?: string | null
+          rule_id: string
+          rule_version: string
+          source_id: string
+          source_label: string
+          source_type: string
+          status?: string
+          target_id: string
+          target_label: string
+          target_type: string
+        }
+        Update: {
+          confidence?: number | null
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          organization_id?: string
+          provenance?: Json
+          relation_type?: string
+          review_note?: string | null
+          reviewed_at?: string | null
+          reviewer_id?: string | null
+          rule_id?: string
+          rule_version?: string
+          source_id?: string
+          source_label?: string
+          source_type?: string
+          status?: string
+          target_id?: string
+          target_label?: string
+          target_type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "relationships_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "relationships_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "relationships_reviewer_id_fkey"
+            columns: ["reviewer_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      rule_runs: {
+        Row: {
+          actor_id: string | null
+          created_at: string
+          created_count: number
+          existing_count: number
+          gaps: Json
+          id: string
+          input_ref: Json
+          organization_id: string
+          rule_id: string
+          rule_version: string
+          trigger_event: string
+        }
+        Insert: {
+          actor_id?: string | null
+          created_at?: string
+          created_count?: number
+          existing_count?: number
+          gaps?: Json
+          id?: string
+          input_ref: Json
+          organization_id: string
+          rule_id: string
+          rule_version: string
+          trigger_event: string
+        }
+        Update: {
+          actor_id?: string | null
+          created_at?: string
+          created_count?: number
+          existing_count?: number
+          gaps?: Json
+          id?: string
+          input_ref?: Json
+          organization_id?: string
+          rule_id?: string
+          rule_version?: string
+          trigger_event?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "rule_runs_actor_id_fkey"
+            columns: ["actor_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "rule_runs_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       uploaded_documents: {
         Row: {
           attempts: number
@@ -563,6 +1016,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      apply_fact_rules: { Args: { _fact: string }; Returns: Json }
       begin_master_import: {
         Args: {
           _approval: boolean
@@ -574,9 +1028,22 @@ export type Database = {
         }
         Returns: string
       }
+      begin_processing: { Args: { _doc: string }; Returns: string }
       bootstrap_operator: { Args: { _user: string }; Returns: string }
       can_manage: { Args: { _org: string }; Returns: boolean }
       can_read_org: { Args: { _org: string }; Returns: boolean }
+      complete_processing: {
+        Args: {
+          _error: string
+          _facts: Json
+          _job: string
+          _processor: string
+          _segments: Json
+          _status: string
+          _version: string
+        }
+        Returns: Json
+      }
       finalize_document: {
         Args: {
           _detected_mime: string
@@ -596,6 +1063,7 @@ export type Database = {
         Args: { _id: string; _reason: string }
         Returns: undefined
       }
+      may_review_facts: { Args: { _org: string }; Returns: boolean }
       may_upload: { Args: { _org: string }; Returns: boolean }
       process_master_import: {
         Args: { _rows: Json; _run: string }
@@ -621,7 +1089,24 @@ export type Database = {
         }
         Returns: Json
       }
+      relationship_endpoint_exists: {
+        Args: { _id: string; _org: string; _type: string }
+        Returns: boolean
+      }
       retry_document: { Args: { _id: string }; Returns: string }
+      review_fact: {
+        Args: {
+          _decision: string
+          _fact: string
+          _note: string
+          _value: string
+        }
+        Returns: Json
+      }
+      review_relationship: {
+        Args: { _decision: string; _note: string; _rel: string }
+        Returns: undefined
+      }
       set_member_role: {
         Args: {
           _active?: boolean

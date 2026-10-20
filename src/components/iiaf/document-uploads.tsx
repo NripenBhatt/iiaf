@@ -11,7 +11,8 @@ import catalogue from "@/data/upload-catalogue.json";
 import { DataTable, Status } from "./ui";
 import { useWorkspace } from "./workspace";
 import { listDocuments, registerDocument, finalizeDocument, markDocumentFailed, retryDocument, getDocumentLink } from "@/lib/documents.functions";
-import { ALLOWED_EXTENSIONS, STATUS_LABELS, UPLOAD_BUCKET, sha256Hex, validateSelection, type ProcessingStatus, type UploadModule } from "@/lib/upload-rules";
+import { processDocument } from "@/lib/intelligence.functions";
+import { ALLOWED_EXTENSIONS, STATUS_LABELS, isStored, UPLOAD_BUCKET, sha256Hex, validateSelection, type ProcessingStatus, type UploadModule } from "@/lib/upload-rules";
 
 const EVIDENCE_FRAMEWORKS = ["NAAC", "NIRF", "QS", "THE", "UI GreenMetric", "Other / not stated"];
 function categoriesFor(module: UploadModule) {
@@ -22,13 +23,13 @@ function typesFor(module: UploadModule, category: string) {
   if (module === "evidence") return [];
   return catalogue[module === "institutional" ? "institutional" : "meeting"].documentTypes.filter(t => t.category === category);
 }
-const tone = (s: string) => s === "awaiting_processing" ? "teal" : s === "uploading" ? "neutral" : "danger";
+const tone = (s: string) => s === "extracted" ? "success" : s === "needs_review" || s === "ocr_required" ? "warning" : isStored(s) ? "teal" : s === "uploading" ? "neutral" : "danger";
 const blank = { declared_purpose: "", department_or_owner: "", reporting_period: "", document_date_raw: "", document_version_or_status: "", language: "" };
 
 export function DocumentUploads({ module, label }: { module: UploadModule; label: string }) {
   const { workspace } = useWorkspace(); const cache = useQueryClient();
   const list = useServerFn(listDocuments); const register = useServerFn(registerDocument); const finalize = useServerFn(finalizeDocument);
-  const fail = useServerFn(markDocumentFailed); const retry = useServerFn(retryDocument); const link = useServerFn(getDocumentLink);
+  const process = useServerFn(processDocument); const fail = useServerFn(markDocumentFailed); const retry = useServerFn(retryDocument); const link = useServerFn(getDocumentLink);
   const key = ["documents", workspace.id, module];
   const { data, isLoading, error } = useQuery({ queryKey: key, queryFn: () => list({ data: { organizationId: workspace.id, module } }) });
   const [files, setFiles] = useState<File[]>([]); const [category, setCategory] = useState(""); const [docType, setDocType] = useState("UNKNOWN");
@@ -38,6 +39,12 @@ export function DocumentUploads({ module, label }: { module: UploadModule; label
   const categories = categoriesFor(module); const types = typesFor(module, category);
   const selectionErrors = files.flatMap(f => validateSelection(f).map(e => `${f.name}: ${e}`));
 
+  async function runProcessing(id: string) {
+    setBusy(true);
+    try { const r = await process({ data: { id } }) as { status?: string; new_segments?: number; new_facts?: number; error?: string | null }; toast[r.status === "processing_failed" ? "error" : "success"](`${STATUS_LABELS[r.status as ProcessingStatus] ?? r.status}: ${r.new_segments ?? 0} new text segments, ${r.new_facts ?? 0} new proposed facts.${r.error ? " " + r.error : ""}`); }
+    catch (e) { toast.error(e instanceof Error ? e.message : "Processing failed"); }
+    finally { setBusy(false); await cache.invalidateQueries({ queryKey: key }); await cache.invalidateQueries({ queryKey: ["facts", workspace.id] }); }
+  }
   function stage(name: string, s: string, ok?: boolean) { setProgress(p => p.map(x => x.name === name ? { name, stage: s, ok } : x)); }
   async function store(id: string, storageKey: string, file: File) {
     const { error: upErr } = await supabase.storage.from(UPLOAD_BUCKET).upload(storageKey, file, { contentType: file.type || "application/octet-stream", upsert: false });
@@ -100,13 +107,13 @@ export function DocumentUploads({ module, label }: { module: UploadModule; label
     </div> : data && <p className="border-l-4 border-border bg-muted p-3 text-sm">Your role in this workspace can view uploaded documents but cannot upload.</p>}
     <input ref={retryInput} type="file" className="hidden" aria-label="Choose original file for retry" onChange={e => { const f = e.target.files?.[0]; if (f) void retryWith(f); e.target.value = ""; }} />
     {error ? <p role="alert" className="text-sm text-destructive">Uploaded documents could not be loaded.</p> : isLoading ? <p className="text-sm text-muted-foreground">Loading uploaded documents…</p> :
-      <DataTable caption={`Uploaded ${label.toLowerCase()} · ${data?.documents.length ?? 0} files`} columns={["Document", "Category / type", "Period / date", "Status", "Actions"]}
+      <DataTable live caption={`Uploaded ${label.toLowerCase()} · ${data?.documents.length ?? 0} files`} columns={["Document", "Category / type", "Period / date", "Status", "Actions"]}
         rows={(data?.documents ?? []).map(d => [
           <div className="max-w-xs"><p className="break-all font-medium">{d.original_filename}</p><p className="mt-1 text-xs text-muted-foreground">{(d.file_size_bytes / 1024).toFixed(0)} KB · {d.detected_mime_type ?? "not verified"} · {new Date(d.created_at).toLocaleString()}</p><p className="mt-1 break-all font-mono text-[10px] text-muted-foreground">ID {d.id} · SHA-256 {d.sha256_hash.slice(0, 16)}…</p></div>,
           <div className="text-xs"><p>{d.category_code}</p><p className="text-muted-foreground">{d.document_type_id}</p></div>,
           <div className="text-xs"><p>{d.reporting_period ?? "Not stated"}</p><p className="text-muted-foreground">{d.document_date_raw ?? ""}</p></div>,
-          <div className="space-y-1"><Status tone={tone(d.processing_status)}>{STATUS_LABELS[d.processing_status as ProcessingStatus] ?? d.processing_status}</Status>{d.duplicateOf.length > 0 && <p className="text-xs text-muted-foreground">Duplicate candidate: same content as {d.duplicateOf.join(", ")}</p>}{(d.validation_errors as string[]).map(e => <p key={e} className="max-w-xs text-xs text-destructive">{e}</p>)}<p className="text-xs text-muted-foreground">Extraction not started</p></div>,
-          <div className="flex flex-wrap gap-2">{d.processing_status === "awaiting_processing" && <Button size="sm" variant="outline" onClick={() => void open(d.id)}><Download /> Download</Button>}{d.processing_status === "upload_failed" && d.uploader_id === data?.userId && data?.canUpload && <Button size="sm" variant="outline" disabled={busy} onClick={() => { setRetryId(d.id); retryInput.current?.click(); }}><RotateCcw /> Retry</Button>}</div>,
+          <div className="space-y-1"><Status tone={tone(d.processing_status)}>{STATUS_LABELS[d.processing_status as ProcessingStatus] ?? d.processing_status}</Status>{d.duplicateOf.length > 0 && <p className="text-xs text-muted-foreground">Duplicate candidate: same content as {d.duplicateOf.join(", ")}</p>}{(d.validation_errors as string[]).map(e => <p key={e} className="max-w-xs text-xs text-destructive">{e}</p>)}<p className="text-xs text-muted-foreground">Extraction: {d.extraction_status.replaceAll("_", " ")}</p></div>,
+          <div className="flex flex-wrap gap-2">{isStored(d.processing_status) && <Button size="sm" variant="outline" onClick={() => void open(d.id)}><Download /> Download</Button>}{isStored(d.processing_status) && data?.canUpload && <Button size="sm" variant="outline" disabled={busy} onClick={() => void runProcessing(d.id)}>{d.processing_status === "awaiting_processing" ? "Process" : "Re-run processing"}</Button>}{(d.processing_status === "needs_review" || d.processing_status === "extracted") && <Button size="sm" variant="ghost" asChild><a href="#fact-review">Review facts</a></Button>}{d.processing_status === "upload_failed" && d.uploader_id === data?.userId && data?.canUpload && <Button size="sm" variant="outline" disabled={busy} onClick={() => { setRetryId(d.id); retryInput.current?.click(); }}><RotateCcw /> Retry</Button>}</div>,
         ])} />}
   </section>;
 }

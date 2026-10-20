@@ -1,0 +1,229 @@
+{
+ "source": "IIAF_Relationship_Engine_Rule_Model_v2_1.xlsx",
+ "fields": [
+  {
+   "field": "Institution_ID",
+   "label": "Institution identity",
+   "applies": "All",
+   "spec": "INST_CATEGORY_METADATA_FIELDS",
+   "note": "Scope and access control"
+  },
+  {
+   "field": "Department_or_Owner",
+   "label": "Department/owner",
+   "applies": "All",
+   "spec": "INST_CATEGORY_METADATA_FIELDS",
+   "note": "Allow central-office records without department"
+  },
+  {
+   "field": "Document_Date",
+   "label": "Document issue/create date",
+   "applies": "All",
+   "spec": "INST_CATEGORY_METADATA_FIELDS",
+   "note": "Different from upload timestamp"
+  },
+  {
+   "field": "Reporting_Period",
+   "label": "Reporting period",
+   "applies": "All",
+   "spec": "INST_CATEGORY_METADATA_FIELDS",
+   "note": "Allow academic/financial/calendar year"
+  },
+  {
+   "field": "Document_Version",
+   "label": "Version/edition",
+   "applies": "All",
+   "spec": "INST_CATEGORY_METADATA_FIELDS",
+   "note": "Preserve amendments"
+  },
+  {
+   "field": "Event_Date_Range",
+   "label": "Event date/range",
+   "applies": "INST-03;INST-04",
+   "spec": "INST_CATEGORY_METADATA_FIELDS",
+   "note": "Do not assume upload date is event date"
+  },
+  {
+   "field": "Organising_Unit",
+   "label": "Organising department/centre",
+   "applies": "INST-03;INST-04",
+   "spec": "INST_CATEGORY_METADATA_FIELDS",
+   "note": "Can be multiple units"
+  },
+  {
+   "field": "Event_Type",
+   "label": "Seminar/conference/workshop/webinar/etc.",
+   "applies": "INST-03;INST-04",
+   "spec": "INST_CATEGORY_METADATA_FIELDS",
+   "note": "Controlled vocabulary with Other"
+  },
+  {
+   "field": "Issuing_Authority",
+   "label": "Issuing authority",
+   "applies": "INST-20;INST-21",
+   "spec": "INST_CATEGORY_METADATA_FIELDS",
+   "note": "Preserve original wording"
+  },
+  {
+   "field": "Approval_Status",
+   "label": "Draft/approved/issued/unknown",
+   "applies": "INST-20;INST-21",
+   "spec": "INST_CATEGORY_METADATA_FIELDS",
+   "note": "Never infer approval from appearance alone"
+  },
+  {
+   "field": "Research_Output_Type",
+   "label": "Publication/project/patent/grant/etc.",
+   "applies": "INST-14;INST-15;INST-16",
+   "spec": "INST_CATEGORY_METADATA_FIELDS",
+   "note": "Category-specific schema applies"
+  },
+  {
+   "field": "Facility_Location",
+   "label": "Campus/building/department",
+   "applies": "INST-18",
+   "spec": "INST_CATEGORY_METADATA_FIELDS",
+   "note": "Support multiple locations"
+  },
+  {
+   "field": "Financial_Year",
+   "label": "Financial reporting year",
+   "applies": "INST-19",
+   "spec": "INST_CATEGORY_METADATA_FIELDS",
+   "note": "Sensitive access classification required"
+  },
+  {
+   "field": "Publication_URL",
+   "label": "URL if applicable",
+   "applies": "INST-24",
+   "spec": "INST_CATEGORY_METADATA_FIELDS",
+   "note": "Capture URL and date accessed"
+  },
+  {
+   "field": "Meeting_ID",
+   "label": "Meeting reference",
+   "applies": "All",
+   "spec": "MEET_MEETING_METADATA_FIELDS",
+   "note": "If not in source, allow a local intake ID but do not claim it is official"
+  },
+  {
+   "field": "Meeting_Type",
+   "label": "Governing body/committee type",
+   "applies": "All",
+   "spec": "MEET_MEETING_METADATA_FIELDS",
+   "note": "Senate, Executive Council, Academic Council, Board of Studies, committee, department, administrative, other"
+  },
+  {
+   "field": "Meeting_Date",
+   "label": "Date of meeting",
+   "applies": "All",
+   "spec": "MEET_MEETING_METADATA_FIELDS",
+   "note": "Separate from notice/approval/upload date"
+  },
+  {
+   "field": "Meeting_Number",
+   "label": "Meeting number/reference",
+   "applies": "All",
+   "spec": "MEET_MEETING_METADATA_FIELDS",
+   "note": "Preserve original format"
+  },
+  {
+   "field": "Organising_Office",
+   "label": "Office/department",
+   "applies": "All",
+   "spec": "MEET_MEETING_METADATA_FIELDS",
+   "note": "May be multiple units"
+  },
+  {
+   "field": "Chairperson",
+   "label": "Chair",
+   "applies": "All",
+   "spec": "MEET_MEETING_METADATA_FIELDS",
+   "note": "Do not infer from attendance list"
+  },
+  {
+   "field": "Secretary_Convener",
+   "label": "Secretary/convener",
+   "applies": "All",
+   "spec": "MEET_MEETING_METADATA_FIELDS",
+   "note": "Preserve source role/title"
+  },
+  {
+   "field": "Venue_Mode",
+   "label": "Venue or online mode",
+   "applies": "All",
+   "spec": "MEET_MEETING_METADATA_FIELDS",
+   "note": "Physical/hybrid/online/unknown"
+  },
+  {
+   "field": "Document_Type",
+   "label": "Notice/agenda/minutes/decision/action/etc.",
+   "applies": "All",
+   "spec": "MEET_MEETING_METADATA_FIELDS",
+   "note": "Controls category-specific schema"
+  },
+  {
+   "field": "Record_Status",
+   "label": "Draft/approved/issued/signed/unclassified",
+   "applies": "All",
+   "spec": "MEET_MEETING_METADATA_FIELDS",
+   "note": "Do not infer formal approval"
+  },
+  {
+   "field": "Approval_Date",
+   "label": "Approval date",
+   "applies": "All",
+   "spec": "MEET_MEETING_METADATA_FIELDS",
+   "note": "Only if explicit"
+  },
+  {
+   "field": "Approving_Authority",
+   "label": "Approving body/authority",
+   "applies": "All",
+   "spec": "MEET_MEETING_METADATA_FIELDS",
+   "note": "Keep separate from author"
+  },
+  {
+   "field": "Confidentiality_Class",
+   "label": "Classification",
+   "applies": "All",
+   "spec": "MEET_MEETING_METADATA_FIELDS",
+   "note": "Restrict minutes and personnel/disciplinary records"
+  },
+  {
+   "field": "Agenda_Item_Reference",
+   "label": "Agenda item number/title",
+   "applies": "MEET-02;MEET-05;MEET-06",
+   "spec": "MEET_MEETING_METADATA_FIELDS",
+   "note": "Preserve ordering and numbering"
+  },
+  {
+   "field": "Decision_or_Action_Reference",
+   "label": "Decision/action reference",
+   "applies": "MEET-08;MEET-09;MEET-10;MEET-11",
+   "spec": "MEET_MEETING_METADATA_FIELDS",
+   "note": "Intake reference only; no relationship engine"
+  },
+  {
+   "field": "Owner_and_Due_Date",
+   "label": "Owner and due date",
+   "applies": "MEET-09;MEET-10;MEET-11;MEET-12",
+   "spec": "MEET_MEETING_METADATA_FIELDS",
+   "note": "Do not infer ambiguous owners or deadlines"
+  },
+  {
+   "field": "Superseded_Record_Version",
+   "label": "Original version reference",
+   "applies": "MEET-13",
+   "spec": "MEET_MEETING_METADATA_FIELDS",
+   "note": "Preserve amendment history"
+  },
+  {
+   "field": "Evidence_ID",
+   "label": "Evidence ID",
+   "applies": "All",
+   "spec": "SOURCE_EVIDENCE_MASTER",
+   "note": "Must equal an imported EVIDENCE_MASTER identifier exactly"
+  }
+ ]
+}
