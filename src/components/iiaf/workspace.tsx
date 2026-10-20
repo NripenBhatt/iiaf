@@ -1,4 +1,9 @@
 import { createContext, useContext, useState, type ReactNode } from "react";
+import { useRouter, useNavigate } from "@tanstack/react-router";
+import { selectOrganization } from "@/lib/workspace-selection";
+import { recordSessionEvent } from "@/lib/session.functions";
+import type { AppRole } from "@/lib/access";
+import type { getAccess } from "@/lib/security.functions";
 
 export type WorkspaceKind = "internal" | "university";
 
@@ -8,39 +13,31 @@ export interface Workspace {
   name: string;
   short: string;
   caption: string;
+  roles: AppRole[];
 }
-
-// Demonstration workspaces only — no tenant data or access control exists in Phase 0.
-export const WORKSPACES: Workspace[] = [
-  {
-    id: "rr",
-    kind: "internal",
-    name: "Rafts and Rivers",
-    short: "RR",
-    caption: "Internal operator workspace",
-  },
-  {
-    id: "demo-uni",
-    kind: "university",
-    name: "Demo University (sample)",
-    short: "DU",
-    caption: "University workspace · illustrative",
-  },
-];
 
 interface Ctx {
   workspace: Workspace;
-  setWorkspaceId: (id: string) => void;
+  workspaces: Workspace[];
+  userId: string;
+  displayName: string;
+  setWorkspaceId: (id: string) => Promise<void>;
 }
 
 const WorkspaceContext = createContext<Ctx | null>(null);
 
-export function WorkspaceProvider({ children }: { children: ReactNode }) {
-  const [id, setWorkspaceId] = useState("rr");
-  const workspace = WORKSPACES.find((w) => w.id === id) ?? WORKSPACES[0];
-  if (!workspace) throw new Error("No demonstration workspace configured");
+export function WorkspaceProvider({ children, access, initialWorkspace }: { children: ReactNode; access: Awaited<ReturnType<typeof getAccess>>; initialWorkspace: Workspace }) {
+  const router = useRouter(); const navigate = useNavigate();
+  const [id, setId] = useState(initialWorkspace.id);
+  const workspace = access.workspaces.find(w => w.id === id) ?? initialWorkspace;
+  async function setWorkspaceId(nextId: string) {
+    if (!access.workspaces.some(w => w.id === nextId)) return;
+    selectOrganization(nextId); setId(nextId);
+    await recordSessionEvent({ data: { organizationId: nextId, event: "workspace.selected" } });
+    await router.invalidate(); await navigate({ to: "/" });
+  }
   return (
-    <WorkspaceContext.Provider value={{ workspace, setWorkspaceId }}>
+    <WorkspaceContext.Provider value={{ workspace, workspaces: access.workspaces, userId: access.userId, displayName: access.displayName, setWorkspaceId }}>
       {children}
     </WorkspaceContext.Provider>
   );

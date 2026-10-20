@@ -4,6 +4,7 @@ import {
   Link,
   createRootRouteWithContext,
   useRouter,
+  useRouterState,
   HeadContent,
   Scripts,
   type ErrorComponentProps,
@@ -14,6 +15,8 @@ import appCss from "../styles.css?url";
 import { WorkspaceProvider } from "../components/iiaf/workspace";
 import { AppShell } from "../components/iiaf/app-shell";
 import { reportLovableError } from "../lib/lovable-error-reporting";
+import { supabase } from "@/integrations/supabase/client";
+import { Toaster } from "@/components/ui/sonner";
 
 function NotFoundComponent() {
   return (
@@ -121,15 +124,26 @@ function RootShell({ children }: { children: ReactNode }) {
 
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
+  const router = useRouter();
+  const access = useRouterState({ select: state => state.matches.find(m => m.routeId === "/_authenticated")?.context });
+  useEffect(() => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(event => {
+      if (!["SIGNED_IN", "SIGNED_OUT", "USER_UPDATED"].includes(event)) return;
+      void router.invalidate();
+      if (event !== "SIGNED_OUT") void queryClient.invalidateQueries();
+    });
+    return () => subscription.unsubscribe();
+  }, [router, queryClient]);
 
   return (
     <QueryClientProvider client={queryClient}>
       {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
-      <WorkspaceProvider>
+      {access && "access" in access && "workspace" in access ? <WorkspaceProvider access={access.access} initialWorkspace={access.workspace}>
         <AppShell>
           <Outlet />
         </AppShell>
-      </WorkspaceProvider>
+      </WorkspaceProvider> : <Outlet />}
+      <Toaster />
     </QueryClientProvider>
   );
 }
