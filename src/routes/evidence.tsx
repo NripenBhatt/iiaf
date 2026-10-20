@@ -1,0 +1,44 @@
+import { createFileRoute } from "@tanstack/react-router";
+import { Upload } from "lucide-react";
+import { pageHead } from "@/lib/seo";
+import { DataTable, PageHeader, PlaceholderNotice, PlannedButton, Status } from "@/components/iiaf/ui";
+
+export const Route = createFileRoute("/evidence")({
+  head: () => pageHead("Accreditation & Ranking Evidence", "Evidence mapped to NAAC, NIRF, QS, THE and other framework criteria."),
+  component: Page,
+});
+
+const frameworks = ["NAAC", "NIRF", "QS", "THE", "UI GreenMetric"];
+
+function Page() {
+  return (
+    <>
+      <PageHeader
+        eyebrow="Upload engine · Evidence"
+        title="Accreditation & Ranking Evidence"
+        description="Evidence is held against an exact agency, product and methodology version. Mappings remain proposed until reviewed."
+        actions={<PlannedButton><Upload className="size-4" /> Upload evidence</PlannedButton>}
+      />
+      <PlaceholderNotice>
+        Agency mapping and scoring are not implemented. Criterion IDs shown are sample labels only, not verified official mappings.
+      </PlaceholderNotice>
+      <div className="mb-6 flex flex-wrap gap-2">
+        {frameworks.map((f, i) => (
+          <span key={f} className={i === 0 ? "rounded-full bg-primary px-3 py-1 text-xs font-medium text-primary-foreground" : "rounded-full border bg-card px-3 py-1 text-xs text-muted-foreground"}>
+            {f}
+          </span>
+        ))}
+      </div>
+      <DataTable
+        caption="NAAC · sample methodology edition"
+        columns={["Criterion", "Evidence", "Source", "Mapping", "Review"]}
+        rows={[
+          ["3.2.1", "Extramural research grants", "Finance ledger 2024–25", <Status tone="gold">Proposed</Status>, <Status tone="warning">In review</Status>],
+          ["2.4.2", "Faculty with PhD", "Faculty roster", <Status tone="success">Approved</Status>, <Status tone="success">Verified</Status>],
+          ["5.2.1", "Placement of outgoing students", "Placement report 2025", <Status tone="gold">Proposed</Status>, <Status>Not started</Status>],
+          ["7.1.3", "Waste management facilities", "—", <Status tone="danger">Gap</Status>, <Status>No evidence</Status>],
+        ]}
+      />
+    </>
+  );
+}
