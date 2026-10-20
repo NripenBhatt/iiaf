@@ -1,3 +1,4 @@
+import { Administration } from "@/components/iiaf/administration";
 import { PermissionSummary, universityRoles } from "@/components/iiaf/permission-summary";
 import { createFileRoute } from "@tanstack/react-router";
 import { UserPlus } from "lucide-react";
@@ -25,13 +26,8 @@ function Page() {
         description={`People and roles in ${workspace.name}.`}
         actions={<PlannedButton><UserPlus className="size-4" /> Invite user</PlannedButton>}
       />
-      <PlaceholderNotice>No sign-in or permission checks exist yet. Users shown are fictional.</PlaceholderNotice>
+      <Administration view="users" />
       <PermissionSummary />
-      <DataTable
-        caption="Members"
-        columns={["Name", "Role", "Module access", "Status"]}
-        rows={workspace.kind === "internal" ? internal : uni}
-      />
     </>
   );
 }
