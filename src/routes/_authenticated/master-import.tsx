@@ -16,7 +16,7 @@ function inspectionOptions() {
   return queryOptions({ queryKey: ["master-inspection", organizationId], queryFn: () => getImportInspection({ data: { organizationId } }) });
 }
 export const Route = createFileRoute("/_authenticated/master-import")({
-  head: () => pageHead("Master Data Import", "Actual IIAF master-workbook inventory, proposed field mappings and controlled-import validation; awaiting review before data writes."),
+  head: () => pageHead("Master Data Import", "Actual IIAF master-workbook inventory, reviewed mappings, controlled sample results and separately approved full imports."),
   loader: ({ context }) => context.queryClient.ensureQueryData(inspectionOptions()),
   component: MasterImport,
 });
