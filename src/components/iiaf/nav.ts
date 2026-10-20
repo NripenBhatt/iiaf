@@ -11,6 +11,7 @@ import {
   History,
   Settings,
   Bell,
+  Database,
   type LucideIcon,
 } from "lucide-react";
 
@@ -28,6 +29,7 @@ export interface NavItem {
     | "/users"
     | "/audit"
     | "/settings"
+    | "/master-import"
     | "/help";
   icon: LucideIcon;
   /** Company-only: hidden from university workspaces by design. */
@@ -63,6 +65,7 @@ export const NAV_GROUPS: { label: string; items: NavItem[] }[] = [
     label: "Administration",
     items: [
       { title: "Users & Permissions", url: "/users", icon: Users },
+      { title: "Master Data Import", url: "/master-import", icon: Database, internalOnly: true },
       { title: "Settings", url: "/settings", icon: Settings },
       { title: "Help, Notifications & Activity", url: "/help", icon: Bell },
     ],

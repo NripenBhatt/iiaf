@@ -21,6 +21,7 @@ import { Route as AuthenticatedConversationRouteImport } from './routes/_authent
 import { Route as AuthenticatedEvidenceRouteImport } from './routes/_authenticated/evidence'
 import { Route as AuthenticatedHelpRouteImport } from './routes/_authenticated/help'
 import { Route as AuthenticatedInstitutionalRouteImport } from './routes/_authenticated/institutional'
+import { Route as AuthenticatedMasterImportRouteImport } from './routes/_authenticated/master-import'
 import { Route as AuthenticatedMeetingsRouteImport } from './routes/_authenticated/meetings'
 import { Route as AuthenticatedRelationshipsRouteImport } from './routes/_authenticated/relationships'
 import { Route as AuthenticatedReportsRouteImport } from './routes/_authenticated/reports'
@@ -90,6 +91,12 @@ const AuthenticatedInstitutionalRoute =
     path: '/institutional',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedMasterImportRoute =
+  AuthenticatedMasterImportRouteImport.update({
+    id: '/master-import',
+    path: '/master-import',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedMeetingsRoute = AuthenticatedMeetingsRouteImport.update({
   id: '/meetings',
   path: '/meetings',
@@ -139,6 +146,7 @@ export interface FileRoutesByFullPath {
   '/evidence': typeof AuthenticatedEvidenceRoute
   '/help': typeof AuthenticatedHelpRoute
   '/institutional': typeof AuthenticatedInstitutionalRoute
+  '/master-import': typeof AuthenticatedMasterImportRoute
   '/meetings': typeof AuthenticatedMeetingsRoute
   '/relationships': typeof AuthenticatedRelationshipsRoute
   '/reports': typeof AuthenticatedReportsRoute
@@ -158,6 +166,7 @@ export interface FileRoutesByTo {
   '/evidence': typeof AuthenticatedEvidenceRoute
   '/help': typeof AuthenticatedHelpRoute
   '/institutional': typeof AuthenticatedInstitutionalRoute
+  '/master-import': typeof AuthenticatedMasterImportRoute
   '/meetings': typeof AuthenticatedMeetingsRoute
   '/relationships': typeof AuthenticatedRelationshipsRoute
   '/reports': typeof AuthenticatedReportsRoute
@@ -180,6 +189,7 @@ export interface FileRoutesById {
   '/_authenticated/evidence': typeof AuthenticatedEvidenceRoute
   '/_authenticated/help': typeof AuthenticatedHelpRoute
   '/_authenticated/institutional': typeof AuthenticatedInstitutionalRoute
+  '/_authenticated/master-import': typeof AuthenticatedMasterImportRoute
   '/_authenticated/meetings': typeof AuthenticatedMeetingsRoute
   '/_authenticated/relationships': typeof AuthenticatedRelationshipsRoute
   '/_authenticated/reports': typeof AuthenticatedReportsRoute
@@ -203,6 +213,7 @@ export interface FileRouteTypes {
     | '/evidence'
     | '/help'
     | '/institutional'
+    | '/master-import'
     | '/meetings'
     | '/relationships'
     | '/reports'
@@ -222,6 +233,7 @@ export interface FileRouteTypes {
     | '/evidence'
     | '/help'
     | '/institutional'
+    | '/master-import'
     | '/meetings'
     | '/relationships'
     | '/reports'
@@ -243,6 +255,7 @@ export interface FileRouteTypes {
     | '/_authenticated/evidence'
     | '/_authenticated/help'
     | '/_authenticated/institutional'
+    | '/_authenticated/master-import'
     | '/_authenticated/meetings'
     | '/_authenticated/relationships'
     | '/_authenticated/reports'
@@ -348,6 +361,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedInstitutionalRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/master-import': {
+      id: '/_authenticated/master-import'
+      path: '/master-import'
+      fullPath: '/master-import'
+      preLoaderRoute: typeof AuthenticatedMasterImportRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/meetings': {
       id: '/_authenticated/meetings'
       path: '/meetings'
@@ -406,6 +426,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedEvidenceRoute: typeof AuthenticatedEvidenceRoute
   AuthenticatedHelpRoute: typeof AuthenticatedHelpRoute
   AuthenticatedInstitutionalRoute: typeof AuthenticatedInstitutionalRoute
+  AuthenticatedMasterImportRoute: typeof AuthenticatedMasterImportRoute
   AuthenticatedMeetingsRoute: typeof AuthenticatedMeetingsRoute
   AuthenticatedRelationshipsRoute: typeof AuthenticatedRelationshipsRoute
   AuthenticatedReportsRoute: typeof AuthenticatedReportsRoute
@@ -421,6 +442,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedEvidenceRoute: AuthenticatedEvidenceRoute,
   AuthenticatedHelpRoute: AuthenticatedHelpRoute,
   AuthenticatedInstitutionalRoute: AuthenticatedInstitutionalRoute,
+  AuthenticatedMasterImportRoute: AuthenticatedMasterImportRoute,
   AuthenticatedMeetingsRoute: AuthenticatedMeetingsRoute,
   AuthenticatedRelationshipsRoute: AuthenticatedRelationshipsRoute,
   AuthenticatedReportsRoute: AuthenticatedReportsRoute,

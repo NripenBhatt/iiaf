@@ -18,3 +18,4 @@
 - Persistent foundation uses organizations, profiles, organization_memberships, user_roles and audit_events; roles never come from editable profiles or metadata, and app reads/writes use the authenticated RLS client.
 - First operator provisioning is a service-role-only one-time database operation for a confirmed account; ongoing roles use the authorized transactional set_member_role function with last-admin protection.
 - Server functions live in src/lib/*.functions.ts and use the generated bearer middleware; service-role access is reserved for trusted provisioning/tests, never ordinary application reads.
+- Master workbook inspection is generated offline by a read-only script; its exact report is served only through an authenticated company-role check. Proposed import mappings preserve source columns in JSON and do not imply executed imports or approved agency bindings.
