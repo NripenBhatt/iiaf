@@ -6,7 +6,7 @@ import { Analytics } from "@/components/iiaf/analytics";
 import { PageHeader, PlaceholderNotice, Panel, Status, DemoTag } from "@/components/iiaf/ui";
 import { useWorkspace } from "@/components/iiaf/workspace";
 import { Button } from "@/components/ui/button";
-export const Route = createFileRoute("/help")({ head: () => pageHead("Help, Notifications & Activity", "Workspace help, illustrative notices and institution-scoped activity."), component: Page });
+export const Route = createFileRoute("/_authenticated/help")({ head: () => pageHead("Help, Notifications & Activity", "Workspace help, illustrative notices and institution-scoped activity."), component: Page });
 function Page() {
   const { workspace } = useWorkspace();
   const [read, setRead] = useState(false);

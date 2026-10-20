@@ -1,9 +1,10 @@
+import { Administration } from "@/components/iiaf/administration";
 import { Analytics } from "@/components/iiaf/analytics";
 import { createFileRoute } from "@tanstack/react-router";
 import { pageHead } from "@/lib/seo";
 import { DataTable, InternalOnly, PageHeader, PlaceholderNotice } from "@/components/iiaf/ui";
 
-export const Route = createFileRoute("/audit")({
+export const Route = createFileRoute("/_authenticated/audit")({
   head: () => pageHead("Audit & Activity", "Who did what, when, to which record."),
   component: Page,
 });
@@ -11,9 +12,10 @@ export const Route = createFileRoute("/audit")({
 function Page() {
   return (
     <>
-      <PageHeader eyebrow="Assurance · Internal" title="Audit & Activity" description="Illustrative operator activity across the platform; no real audit events are stored." />
+      <PageHeader eyebrow="Assurance · Internal" title="Audit & Activity" description="Persisted security and administrative events; analytical examples remain labelled samples." />
       <InternalOnly>
-        <PlaceholderNotice>No events are recorded yet. Entries below are sample rows.</PlaceholderNotice>
+        <Administration view="audit" />
+        <PlaceholderNotice>The analytical charts and workflow entries below are samples; document workflows are not implemented.</PlaceholderNotice>
         <Analytics page="audit" />
         <DataTable
           caption="Activity log"

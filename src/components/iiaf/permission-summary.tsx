@@ -1,8 +1,9 @@
+import { ROLE_LABELS, mayOpen, mayManage, type AppRole } from "@/lib/access";
 import { DataTable, DemoTag } from "./ui";
 import { useWorkspace } from "./workspace";
 export const universityRoles = ["University Administrator", "Registrar", "IQAC Manager", "Department Head / Dean", "Faculty / Staff Uploader", "Read-only Decision-maker"];
 export function PermissionSummary() {
   const { workspace } = useWorkspace();
-  const roles = workspace.kind === "university" ? universityRoles : ["Company Administrator", "Operator Analyst", "Reviewer", "Output Approver"];
-  return <div className="mb-6"><div className="mb-3 flex flex-wrap items-center gap-2"><h2 className="font-sans text-sm font-semibold">Illustrative role matrix</h2><DemoTag /><span className="text-xs text-muted-foreground">Proposed responsibilities only · no permissions enforced</span></div><DataTable columns={["Role", "Read", "Contribute", "Review", "Release / certify"]} rows={roles.map((role, i) => [role, "Institution scope", i === roles.length - 1 ? "—" : "Assigned modules", i === 1 || i === 2 ? "Proposed" : "—", role === "Registrar" ? "Formal authority required" : "Not granted by this preview"])} /></div>;
+  const roles = (Object.keys(ROLE_LABELS) as AppRole[]).filter(r => workspace.kind === "internal" ? ["super_admin","authorized_operator","internal_reviewer"].includes(r) : !["super_admin","authorized_operator","internal_reviewer"].includes(r));
+  return <div className="my-6"><h2 className="mb-3 font-sans text-sm font-semibold">Phase 1 permission matrix</h2><DataTable columns={["Role", "Records", "Administration", "Intelligence", "Security audit", "Later workflows"]} rows={roles.map(role=>[ROLE_LABELS[role], role === "authorized_operator" || role === "super_admin" ? "Organization records across portfolio" : "Authorized organization only", mayManage([role]) ? "Manage organization & memberships" : "Own profile only", mayOpen("/relationships",workspace.kind,[role]) ? "Internal sample screens" : "Not granted", mayOpen("/audit",workspace.kind,[role]) ? "Read organization audit" : role === "university_administrator" ? "Own organization events" : "Not granted", "Upload / mapping / approval / release not implemented"])} /></div>;
 }

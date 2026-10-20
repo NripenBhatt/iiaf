@@ -3,7 +3,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { pageHead } from "@/lib/seo";
 import { DataTable, InternalOnly, PageHeader, Panel, PlaceholderNotice, Status } from "@/components/iiaf/ui";
 
-export const Route = createFileRoute("/relationships")({
+export const Route = createFileRoute("/_authenticated/relationships")({
   head: () => pageHead("Relationship Intelligence", "Connections between facts, documents, evidence, meetings and outputs."),
   component: Page,
 });

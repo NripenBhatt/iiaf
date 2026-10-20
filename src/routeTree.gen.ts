@@ -9,127 +9,185 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as IndexRouteImport } from './routes/index'
-import { Route as AuditRouteImport } from './routes/audit'
-import { Route as ConversationRouteImport } from './routes/conversation'
-import { Route as EvidenceRouteImport } from './routes/evidence'
-import { Route as HelpRouteImport } from './routes/help'
-import { Route as InstitutionalRouteImport } from './routes/institutional'
-import { Route as MeetingsRouteImport } from './routes/meetings'
-import { Route as RelationshipsRouteImport } from './routes/relationships'
-import { Route as ReportsRouteImport } from './routes/reports'
-import { Route as ReviewRouteImport } from './routes/review'
-import { Route as SettingsRouteImport } from './routes/settings'
-import { Route as UsersRouteImport } from './routes/users'
+import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
+import { Route as AccessPendingRouteImport } from './routes/access-pending'
+import { Route as AuthRouteImport } from './routes/auth'
+import { Route as ResetPasswordRouteImport } from './routes/reset-password'
+import { Route as UnauthorizedRouteImport } from './routes/unauthorized'
+import { Route as AuthenticatedIndexRouteImport } from './routes/_authenticated/index'
+import { Route as AuthenticatedAuditRouteImport } from './routes/_authenticated/audit'
+import { Route as AuthenticatedConversationRouteImport } from './routes/_authenticated/conversation'
+import { Route as AuthenticatedEvidenceRouteImport } from './routes/_authenticated/evidence'
+import { Route as AuthenticatedHelpRouteImport } from './routes/_authenticated/help'
+import { Route as AuthenticatedInstitutionalRouteImport } from './routes/_authenticated/institutional'
+import { Route as AuthenticatedMeetingsRouteImport } from './routes/_authenticated/meetings'
+import { Route as AuthenticatedRelationshipsRouteImport } from './routes/_authenticated/relationships'
+import { Route as AuthenticatedReportsRouteImport } from './routes/_authenticated/reports'
+import { Route as AuthenticatedReviewRouteImport } from './routes/_authenticated/review'
+import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticated/settings'
+import { Route as AuthenticatedUsersRouteImport } from './routes/_authenticated/users'
+import { Route as AuthCallbackRouteImport } from './routes/auth.callback'
 
-const IndexRoute = IndexRouteImport.update({
+const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
+  id: '/_authenticated',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AccessPendingRoute = AccessPendingRouteImport.update({
+  id: '/access-pending',
+  path: '/access-pending',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthRoute = AuthRouteImport.update({
+  id: '/auth',
+  path: '/auth',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ResetPasswordRoute = ResetPasswordRouteImport.update({
+  id: '/reset-password',
+  path: '/reset-password',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const UnauthorizedRoute = UnauthorizedRouteImport.update({
+  id: '/unauthorized',
+  path: '/unauthorized',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthenticatedIndexRoute = AuthenticatedIndexRouteImport.update({
   id: '/',
   path: '/',
-  getParentRoute: () => rootRouteImport,
+  getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
-const AuditRoute = AuditRouteImport.update({
+const AuthenticatedAuditRoute = AuthenticatedAuditRouteImport.update({
   id: '/audit',
   path: '/audit',
-  getParentRoute: () => rootRouteImport,
+  getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
-const ConversationRoute = ConversationRouteImport.update({
-  id: '/conversation',
-  path: '/conversation',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const EvidenceRoute = EvidenceRouteImport.update({
+const AuthenticatedConversationRoute =
+  AuthenticatedConversationRouteImport.update({
+    id: '/conversation',
+    path: '/conversation',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedEvidenceRoute = AuthenticatedEvidenceRouteImport.update({
   id: '/evidence',
   path: '/evidence',
-  getParentRoute: () => rootRouteImport,
+  getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
-const HelpRoute = HelpRouteImport.update({
+const AuthenticatedHelpRoute = AuthenticatedHelpRouteImport.update({
   id: '/help',
   path: '/help',
-  getParentRoute: () => rootRouteImport,
+  getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
-const InstitutionalRoute = InstitutionalRouteImport.update({
-  id: '/institutional',
-  path: '/institutional',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const MeetingsRoute = MeetingsRouteImport.update({
+const AuthenticatedInstitutionalRoute =
+  AuthenticatedInstitutionalRouteImport.update({
+    id: '/institutional',
+    path: '/institutional',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedMeetingsRoute = AuthenticatedMeetingsRouteImport.update({
   id: '/meetings',
   path: '/meetings',
-  getParentRoute: () => rootRouteImport,
+  getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
-const RelationshipsRoute = RelationshipsRouteImport.update({
-  id: '/relationships',
-  path: '/relationships',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ReportsRoute = ReportsRouteImport.update({
+const AuthenticatedRelationshipsRoute =
+  AuthenticatedRelationshipsRouteImport.update({
+    id: '/relationships',
+    path: '/relationships',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedReportsRoute = AuthenticatedReportsRouteImport.update({
   id: '/reports',
   path: '/reports',
-  getParentRoute: () => rootRouteImport,
+  getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
-const ReviewRoute = ReviewRouteImport.update({
+const AuthenticatedReviewRoute = AuthenticatedReviewRouteImport.update({
   id: '/review',
   path: '/review',
-  getParentRoute: () => rootRouteImport,
+  getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
-const SettingsRoute = SettingsRouteImport.update({
+const AuthenticatedSettingsRoute = AuthenticatedSettingsRouteImport.update({
   id: '/settings',
   path: '/settings',
-  getParentRoute: () => rootRouteImport,
+  getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
-const UsersRoute = UsersRouteImport.update({
+const AuthenticatedUsersRoute = AuthenticatedUsersRouteImport.update({
   id: '/users',
   path: '/users',
-  getParentRoute: () => rootRouteImport,
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthCallbackRoute = AuthCallbackRouteImport.update({
+  id: '/callback',
+  path: '/callback',
+  getParentRoute: () => AuthRoute,
 } as any)
 
 export interface FileRoutesByFullPath {
-  '/': typeof IndexRoute
-  '/audit': typeof AuditRoute
-  '/conversation': typeof ConversationRoute
-  '/evidence': typeof EvidenceRoute
-  '/help': typeof HelpRoute
-  '/institutional': typeof InstitutionalRoute
-  '/meetings': typeof MeetingsRoute
-  '/relationships': typeof RelationshipsRoute
-  '/reports': typeof ReportsRoute
-  '/review': typeof ReviewRoute
-  '/settings': typeof SettingsRoute
-  '/users': typeof UsersRoute
+  '/': typeof AuthenticatedIndexRoute
+  '/access-pending': typeof AccessPendingRoute
+  '/auth': typeof AuthRouteWithChildren
+  '/reset-password': typeof ResetPasswordRoute
+  '/unauthorized': typeof UnauthorizedRoute
+  '/audit': typeof AuthenticatedAuditRoute
+  '/conversation': typeof AuthenticatedConversationRoute
+  '/evidence': typeof AuthenticatedEvidenceRoute
+  '/help': typeof AuthenticatedHelpRoute
+  '/institutional': typeof AuthenticatedInstitutionalRoute
+  '/meetings': typeof AuthenticatedMeetingsRoute
+  '/relationships': typeof AuthenticatedRelationshipsRoute
+  '/reports': typeof AuthenticatedReportsRoute
+  '/review': typeof AuthenticatedReviewRoute
+  '/settings': typeof AuthenticatedSettingsRoute
+  '/users': typeof AuthenticatedUsersRoute
+  '/auth/callback': typeof AuthCallbackRoute
 }
 export interface FileRoutesByTo {
-  '/': typeof IndexRoute
-  '/audit': typeof AuditRoute
-  '/conversation': typeof ConversationRoute
-  '/evidence': typeof EvidenceRoute
-  '/help': typeof HelpRoute
-  '/institutional': typeof InstitutionalRoute
-  '/meetings': typeof MeetingsRoute
-  '/relationships': typeof RelationshipsRoute
-  '/reports': typeof ReportsRoute
-  '/review': typeof ReviewRoute
-  '/settings': typeof SettingsRoute
-  '/users': typeof UsersRoute
+  '/access-pending': typeof AccessPendingRoute
+  '/auth': typeof AuthRouteWithChildren
+  '/reset-password': typeof ResetPasswordRoute
+  '/unauthorized': typeof UnauthorizedRoute
+  '/audit': typeof AuthenticatedAuditRoute
+  '/conversation': typeof AuthenticatedConversationRoute
+  '/evidence': typeof AuthenticatedEvidenceRoute
+  '/help': typeof AuthenticatedHelpRoute
+  '/institutional': typeof AuthenticatedInstitutionalRoute
+  '/meetings': typeof AuthenticatedMeetingsRoute
+  '/relationships': typeof AuthenticatedRelationshipsRoute
+  '/reports': typeof AuthenticatedReportsRoute
+  '/review': typeof AuthenticatedReviewRoute
+  '/settings': typeof AuthenticatedSettingsRoute
+  '/users': typeof AuthenticatedUsersRoute
+  '/auth/callback': typeof AuthCallbackRoute
+  '/': typeof AuthenticatedIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
-  '/': typeof IndexRoute
-  '/audit': typeof AuditRoute
-  '/conversation': typeof ConversationRoute
-  '/evidence': typeof EvidenceRoute
-  '/help': typeof HelpRoute
-  '/institutional': typeof InstitutionalRoute
-  '/meetings': typeof MeetingsRoute
-  '/relationships': typeof RelationshipsRoute
-  '/reports': typeof ReportsRoute
-  '/review': typeof ReviewRoute
-  '/settings': typeof SettingsRoute
-  '/users': typeof UsersRoute
+  '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
+  '/access-pending': typeof AccessPendingRoute
+  '/auth': typeof AuthRouteWithChildren
+  '/reset-password': typeof ResetPasswordRoute
+  '/unauthorized': typeof UnauthorizedRoute
+  '/_authenticated/audit': typeof AuthenticatedAuditRoute
+  '/_authenticated/conversation': typeof AuthenticatedConversationRoute
+  '/_authenticated/evidence': typeof AuthenticatedEvidenceRoute
+  '/_authenticated/help': typeof AuthenticatedHelpRoute
+  '/_authenticated/institutional': typeof AuthenticatedInstitutionalRoute
+  '/_authenticated/meetings': typeof AuthenticatedMeetingsRoute
+  '/_authenticated/relationships': typeof AuthenticatedRelationshipsRoute
+  '/_authenticated/reports': typeof AuthenticatedReportsRoute
+  '/_authenticated/review': typeof AuthenticatedReviewRoute
+  '/_authenticated/settings': typeof AuthenticatedSettingsRoute
+  '/_authenticated/users': typeof AuthenticatedUsersRoute
+  '/auth/callback': typeof AuthCallbackRoute
+  '/_authenticated/': typeof AuthenticatedIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/access-pending'
+    | '/auth'
+    | '/reset-password'
+    | '/unauthorized'
     | '/audit'
     | '/conversation'
     | '/evidence'
@@ -141,9 +199,13 @@ export interface FileRouteTypes {
     | '/review'
     | '/settings'
     | '/users'
+    | '/auth/callback'
   fileRoutesByTo: FileRoutesByTo
   to:
-    | '/'
+    | '/access-pending'
+    | '/auth'
+    | '/reset-password'
+    | '/unauthorized'
     | '/audit'
     | '/conversation'
     | '/evidence'
@@ -155,139 +217,218 @@ export interface FileRouteTypes {
     | '/review'
     | '/settings'
     | '/users'
+    | '/auth/callback'
+    | '/'
   id:
     | '__root__'
-    | '/'
-    | '/audit'
-    | '/conversation'
-    | '/evidence'
-    | '/help'
-    | '/institutional'
-    | '/meetings'
-    | '/relationships'
-    | '/reports'
-    | '/review'
-    | '/settings'
-    | '/users'
+    | '/_authenticated'
+    | '/access-pending'
+    | '/auth'
+    | '/reset-password'
+    | '/unauthorized'
+    | '/_authenticated/audit'
+    | '/_authenticated/conversation'
+    | '/_authenticated/evidence'
+    | '/_authenticated/help'
+    | '/_authenticated/institutional'
+    | '/_authenticated/meetings'
+    | '/_authenticated/relationships'
+    | '/_authenticated/reports'
+    | '/_authenticated/review'
+    | '/_authenticated/settings'
+    | '/_authenticated/users'
+    | '/auth/callback'
+    | '/_authenticated/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
-  IndexRoute: typeof IndexRoute
-  AuditRoute: typeof AuditRoute
-  ConversationRoute: typeof ConversationRoute
-  EvidenceRoute: typeof EvidenceRoute
-  HelpRoute: typeof HelpRoute
-  InstitutionalRoute: typeof InstitutionalRoute
-  MeetingsRoute: typeof MeetingsRoute
-  RelationshipsRoute: typeof RelationshipsRoute
-  ReportsRoute: typeof ReportsRoute
-  ReviewRoute: typeof ReviewRoute
-  SettingsRoute: typeof SettingsRoute
-  UsersRoute: typeof UsersRoute
+  AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
+  AccessPendingRoute: typeof AccessPendingRoute
+  AuthRoute: typeof AuthRouteWithChildren
+  ResetPasswordRoute: typeof ResetPasswordRoute
+  UnauthorizedRoute: typeof UnauthorizedRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/': {
-      id: '/'
+    '/_authenticated': {
+      id: '/_authenticated'
+      path: ''
+      fullPath: '/'
+      preLoaderRoute: typeof AuthenticatedRouteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/access-pending': {
+      id: '/access-pending'
+      path: '/access-pending'
+      fullPath: '/access-pending'
+      preLoaderRoute: typeof AccessPendingRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/auth': {
+      id: '/auth'
+      path: '/auth'
+      fullPath: '/auth'
+      preLoaderRoute: typeof AuthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/reset-password': {
+      id: '/reset-password'
+      path: '/reset-password'
+      fullPath: '/reset-password'
+      preLoaderRoute: typeof ResetPasswordRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/unauthorized': {
+      id: '/unauthorized'
+      path: '/unauthorized'
+      fullPath: '/unauthorized'
+      preLoaderRoute: typeof UnauthorizedRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated/': {
+      id: '/_authenticated/'
       path: '/'
       fullPath: '/'
-      preLoaderRoute: typeof IndexRouteImport
-      parentRoute: typeof rootRouteImport
+      preLoaderRoute: typeof AuthenticatedIndexRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/audit': {
-      id: '/audit'
+    '/_authenticated/audit': {
+      id: '/_authenticated/audit'
       path: '/audit'
       fullPath: '/audit'
-      preLoaderRoute: typeof AuditRouteImport
-      parentRoute: typeof rootRouteImport
+      preLoaderRoute: typeof AuthenticatedAuditRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/conversation': {
-      id: '/conversation'
+    '/_authenticated/conversation': {
+      id: '/_authenticated/conversation'
       path: '/conversation'
       fullPath: '/conversation'
-      preLoaderRoute: typeof ConversationRouteImport
-      parentRoute: typeof rootRouteImport
+      preLoaderRoute: typeof AuthenticatedConversationRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/evidence': {
-      id: '/evidence'
+    '/_authenticated/evidence': {
+      id: '/_authenticated/evidence'
       path: '/evidence'
       fullPath: '/evidence'
-      preLoaderRoute: typeof EvidenceRouteImport
-      parentRoute: typeof rootRouteImport
+      preLoaderRoute: typeof AuthenticatedEvidenceRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/help': {
-      id: '/help'
+    '/_authenticated/help': {
+      id: '/_authenticated/help'
       path: '/help'
       fullPath: '/help'
-      preLoaderRoute: typeof HelpRouteImport
-      parentRoute: typeof rootRouteImport
+      preLoaderRoute: typeof AuthenticatedHelpRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/institutional': {
-      id: '/institutional'
+    '/_authenticated/institutional': {
+      id: '/_authenticated/institutional'
       path: '/institutional'
       fullPath: '/institutional'
-      preLoaderRoute: typeof InstitutionalRouteImport
-      parentRoute: typeof rootRouteImport
+      preLoaderRoute: typeof AuthenticatedInstitutionalRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/meetings': {
-      id: '/meetings'
+    '/_authenticated/meetings': {
+      id: '/_authenticated/meetings'
       path: '/meetings'
       fullPath: '/meetings'
-      preLoaderRoute: typeof MeetingsRouteImport
-      parentRoute: typeof rootRouteImport
+      preLoaderRoute: typeof AuthenticatedMeetingsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/relationships': {
-      id: '/relationships'
+    '/_authenticated/relationships': {
+      id: '/_authenticated/relationships'
       path: '/relationships'
       fullPath: '/relationships'
-      preLoaderRoute: typeof RelationshipsRouteImport
-      parentRoute: typeof rootRouteImport
+      preLoaderRoute: typeof AuthenticatedRelationshipsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/reports': {
-      id: '/reports'
+    '/_authenticated/reports': {
+      id: '/_authenticated/reports'
       path: '/reports'
       fullPath: '/reports'
-      preLoaderRoute: typeof ReportsRouteImport
-      parentRoute: typeof rootRouteImport
+      preLoaderRoute: typeof AuthenticatedReportsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/review': {
-      id: '/review'
+    '/_authenticated/review': {
+      id: '/_authenticated/review'
       path: '/review'
       fullPath: '/review'
-      preLoaderRoute: typeof ReviewRouteImport
-      parentRoute: typeof rootRouteImport
+      preLoaderRoute: typeof AuthenticatedReviewRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/settings': {
-      id: '/settings'
+    '/_authenticated/settings': {
+      id: '/_authenticated/settings'
       path: '/settings'
       fullPath: '/settings'
-      preLoaderRoute: typeof SettingsRouteImport
-      parentRoute: typeof rootRouteImport
+      preLoaderRoute: typeof AuthenticatedSettingsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/users': {
-      id: '/users'
+    '/_authenticated/users': {
+      id: '/_authenticated/users'
       path: '/users'
       fullPath: '/users'
-      preLoaderRoute: typeof UsersRouteImport
-      parentRoute: typeof rootRouteImport
+      preLoaderRoute: typeof AuthenticatedUsersRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/auth/callback': {
+      id: '/auth/callback'
+      path: '/callback'
+      fullPath: '/auth/callback'
+      preLoaderRoute: typeof AuthCallbackRouteImport
+      parentRoute: typeof AuthRoute
     }
   }
 }
 
+interface AuthenticatedRouteRouteChildren {
+  AuthenticatedAuditRoute: typeof AuthenticatedAuditRoute
+  AuthenticatedConversationRoute: typeof AuthenticatedConversationRoute
+  AuthenticatedEvidenceRoute: typeof AuthenticatedEvidenceRoute
+  AuthenticatedHelpRoute: typeof AuthenticatedHelpRoute
+  AuthenticatedInstitutionalRoute: typeof AuthenticatedInstitutionalRoute
+  AuthenticatedMeetingsRoute: typeof AuthenticatedMeetingsRoute
+  AuthenticatedRelationshipsRoute: typeof AuthenticatedRelationshipsRoute
+  AuthenticatedReportsRoute: typeof AuthenticatedReportsRoute
+  AuthenticatedReviewRoute: typeof AuthenticatedReviewRoute
+  AuthenticatedSettingsRoute: typeof AuthenticatedSettingsRoute
+  AuthenticatedUsersRoute: typeof AuthenticatedUsersRoute
+  AuthenticatedIndexRoute: typeof AuthenticatedIndexRoute
+}
+
+const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
+  AuthenticatedAuditRoute: AuthenticatedAuditRoute,
+  AuthenticatedConversationRoute: AuthenticatedConversationRoute,
+  AuthenticatedEvidenceRoute: AuthenticatedEvidenceRoute,
+  AuthenticatedHelpRoute: AuthenticatedHelpRoute,
+  AuthenticatedInstitutionalRoute: AuthenticatedInstitutionalRoute,
+  AuthenticatedMeetingsRoute: AuthenticatedMeetingsRoute,
+  AuthenticatedRelationshipsRoute: AuthenticatedRelationshipsRoute,
+  AuthenticatedReportsRoute: AuthenticatedReportsRoute,
+  AuthenticatedReviewRoute: AuthenticatedReviewRoute,
+  AuthenticatedSettingsRoute: AuthenticatedSettingsRoute,
+  AuthenticatedUsersRoute: AuthenticatedUsersRoute,
+  AuthenticatedIndexRoute: AuthenticatedIndexRoute,
+}
+
+const AuthenticatedRouteRouteWithChildren =
+  AuthenticatedRouteRoute._addFileChildren(AuthenticatedRouteRouteChildren)
+
+interface AuthRouteChildren {
+  AuthCallbackRoute: typeof AuthCallbackRoute
+}
+
+const AuthRouteChildren: AuthRouteChildren = {
+  AuthCallbackRoute: AuthCallbackRoute,
+}
+
+const AuthRouteWithChildren = AuthRoute._addFileChildren(AuthRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
-  IndexRoute: IndexRoute,
-  AuditRoute: AuditRoute,
-  ConversationRoute: ConversationRoute,
-  EvidenceRoute: EvidenceRoute,
-  HelpRoute: HelpRoute,
-  InstitutionalRoute: InstitutionalRoute,
-  MeetingsRoute: MeetingsRoute,
-  RelationshipsRoute: RelationshipsRoute,
-  ReportsRoute: ReportsRoute,
-  ReviewRoute: ReviewRoute,
-  SettingsRoute: SettingsRoute,
-  UsersRoute: UsersRoute,
+  AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
+  AccessPendingRoute: AccessPendingRoute,
+  AuthRoute: AuthRouteWithChildren,
+  ResetPasswordRoute: ResetPasswordRoute,
+  UnauthorizedRoute: UnauthorizedRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

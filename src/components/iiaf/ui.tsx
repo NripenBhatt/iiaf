@@ -212,9 +212,7 @@ export function InternalOnly({ children }: { children: ReactNode }) {
   if (workspace.kind === "internal") return <>{children}</>;
   return (
     <EmptyState icon={Lock} title="Not available in this workspace">
-      This module is reserved for the Rafts and Rivers internal workspace. University access may
-      be enabled later through explicit permissions. (UI preview only — no access control is
-      enforced in Phase 0.)
+      This module is reserved for the Rafts and Rivers internal workspace. University access is not granted to this module.
     </EmptyState>
   );
 }

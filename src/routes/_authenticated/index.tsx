@@ -4,9 +4,10 @@ import { ArrowUpRight } from "lucide-react";
 import { pageHead } from "@/lib/seo";
 import { DemoTag, PageHeader, Panel, Stat, Status } from "@/components/iiaf/ui";
 import { useWorkspace } from "@/components/iiaf/workspace";
+import { mayOpen } from "@/lib/access";
 import { getNavGroups } from "@/components/iiaf/nav";
 
-export const Route = createFileRoute("/")({
+export const Route = createFileRoute("/_authenticated/")({
   head: () => pageHead("Overview", "Workspace overview of institutional information, evidence, reviews and outputs."),
   component: Overview,
 });
@@ -15,12 +16,12 @@ function Overview() {
   const { workspace } = useWorkspace();
   const isUni = workspace.kind === "university";
   const modules = getNavGroups(workspace.kind).flatMap((g) => g.items).filter(
-    (i) => i.url !== "/" && !(isUni && i.internalOnly),
+    (i) => i.url !== "/" && !(isUni && i.internalOnly) && mayOpen(i.url,workspace.kind,workspace.roles),
   );
 
   return (
     <div className="space-y-8">
-      <PageHeader eyebrow={isUni ? "University workspace · demonstration" : "Operator workspace · demonstration"} title={isUni ? "University Overview" : "Rafts and Rivers Overview"} description={isUni ? "Demo University · institutional records, evidence, actions and designated outputs." : "Institutional portfolio, evidence coverage and operational review priorities."} />
+      <PageHeader eyebrow={isUni ? "University workspace · demonstration" : "Operator workspace · demonstration"} title={isUni ? "University Overview" : "Rafts and Rivers Overview"} description={isUni ? `${workspace.name} · sample institutional records, evidence, actions and designated outputs.` : "Institutional portfolio, evidence coverage and operational review priorities."} />
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <Stat label="Source documents" value={isUni ? "340" : "1,284"} hint="Illustrative count" />
         <Stat label="Evidence items" value={isUni ? "84" : "312"} hint={isUni ? "Institution sample inventory" : "Across 4 frameworks"} />

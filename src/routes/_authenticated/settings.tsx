@@ -1,9 +1,10 @@
+import { Administration } from "@/components/iiaf/administration";
 import { createFileRoute } from "@tanstack/react-router";
 import { pageHead } from "@/lib/seo";
 import { PageHeader, Panel, PlaceholderNotice } from "@/components/iiaf/ui";
 import { useWorkspace } from "@/components/iiaf/workspace";
 
-export const Route = createFileRoute("/settings")({
+export const Route = createFileRoute("/_authenticated/settings")({
   head: () => pageHead("Settings", "Workspace profile, frameworks and preferences."),
   component: Page,
 });
@@ -22,7 +23,8 @@ function Page() {
   return (
     <>
       <PageHeader eyebrow="Administration" title="Settings" description="Workspace profile and configuration." />
-      <PlaceholderNotice>Settings are read-only in Phase 0 and cannot be saved.</PlaceholderNotice>
+      <Administration view="settings" />
+      <PlaceholderNotice>Academic year and agency framework settings below remain illustrative.</PlaceholderNotice>
       <div className="grid gap-6 lg:grid-cols-2">
         <Panel title="Workspace">
           <Row k="Name" v={workspace.name} />

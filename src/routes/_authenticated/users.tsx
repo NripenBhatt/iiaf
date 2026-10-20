@@ -1,3 +1,4 @@
+import { Administration } from "@/components/iiaf/administration";
 import { PermissionSummary, universityRoles } from "@/components/iiaf/permission-summary";
 import { createFileRoute } from "@tanstack/react-router";
 import { UserPlus } from "lucide-react";
@@ -5,7 +6,7 @@ import { pageHead } from "@/lib/seo";
 import { DataTable, PageHeader, PlaceholderNotice, PlannedButton, Status } from "@/components/iiaf/ui";
 import { useWorkspace } from "@/components/iiaf/workspace";
 
-export const Route = createFileRoute("/users")({
+export const Route = createFileRoute("/_authenticated/users")({
   head: () => pageHead("Users & Permissions", "Roles, module access and workspace boundaries."),
   component: Page,
 });
@@ -25,13 +26,8 @@ function Page() {
         description={`People and roles in ${workspace.name}.`}
         actions={<PlannedButton><UserPlus className="size-4" /> Invite user</PlannedButton>}
       />
-      <PlaceholderNotice>No sign-in or permission checks exist yet. Users shown are fictional.</PlaceholderNotice>
+      <Administration view="users" />
       <PermissionSummary />
-      <DataTable
-        caption="Members"
-        columns={["Name", "Role", "Module access", "Status"]}
-        rows={workspace.kind === "internal" ? internal : uni}
-      />
     </>
   );
 }
