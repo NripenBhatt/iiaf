@@ -70,7 +70,7 @@ export function DocumentUploads({ module, label }: { module: UploadModule; label
     finally { setRetryId(null); setBusy(false); await cache.invalidateQueries({ queryKey: key }); }
   }
   async function open(id: string) {
-    try { const { url } = await link({ data: { id } }); window.open(url, "_blank", "noopener"); }
+    try { const { url } = await link({ data: { id } }); const a = document.createElement("a"); a.href = url; a.target = "_blank"; a.rel = "noopener"; a.click(); }
     catch (e) { toast.error(e instanceof Error ? e.message : "Download denied"); }
   }
 
