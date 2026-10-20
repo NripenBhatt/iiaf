@@ -1,0 +1,1 @@
+REVOKE EXECUTE ON FUNCTION public.apply_fact_rules(uuid), public.relationship_endpoint_exists(uuid,text,uuid), public.validate_relationship() FROM PUBLIC, anon, authenticated;

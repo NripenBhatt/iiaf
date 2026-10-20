@@ -43,6 +43,13 @@
       "when": 1792502421611,
       "tag": "0005_held_approval_check_null_safe",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1792502492217,
+      "tag": "0006_revoke_internal_rule_functions",
+      "breakpoints": true
     }
   ]
 }
