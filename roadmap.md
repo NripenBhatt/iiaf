@@ -8,8 +8,8 @@
 - [x] Deliver schema, permissions, test results, setup steps and limitations; stop before Phase 2.
 
 # Phase 2 controlled master import
-- [ ] Inspect actual workbook inventory, identifiers, references and validation issues.
-- [ ] Provide a protected import preview, exact field mappings and downloadable inspection summary.
-- [ ] Review proposed mapping before data writes.
-- [ ] Add minimum approved staging/import records and run a representative sample with idempotency and access tests.
-- [ ] Enable approved full import only after review and passing sample; verify persisted results and deliver acceptance report.
+- [x] Inspect actual workbook inventory, identifiers, references and validation issues.
+- [x] Provide a protected import preview, exact field mappings and downloadable inspection summary.
+- [ ] Review proposed mapping before data writes — waiting for user review of the preview and plan.
+- [ ] Add minimum approved staging/import records and run a representative sample with idempotency and access tests — blocked on mapping review.
+- [ ] Enable approved full import only after review and passing sample; verify persisted results and deliver acceptance report — blocked on review and passing sample.
