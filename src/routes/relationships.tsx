@@ -8,11 +8,11 @@ export const Route = createFileRoute("/relationships")({
 });
 
 const nodes = [
-  { label: "Fact: ₹4.2 Cr grants", x: 12, y: 30 },
-  { label: "Finance ledger", x: 10, y: 75 },
+  { label: "Grants fact", x: 16, y: 30 },
+  { label: "Ledger", x: 14, y: 75 },
   { label: "NAAC 3.2.1", x: 50, y: 18 },
-  { label: "Council decision", x: 52, y: 78 },
-  { label: "Annual report", x: 86, y: 45 },
+  { label: "Council decision", x: 50, y: 78 },
+  { label: "Report", x: 84, y: 45 },
 ];
 
 function Page() {
@@ -27,9 +27,9 @@ function Page() {
         <PlaceholderNotice>No relationship rules run yet. The diagram is a static illustration.</PlaceholderNotice>
         <div className="grid gap-6 lg:grid-cols-5">
           <Panel title="Illustrative graph" className="lg:col-span-3">
-            <div className="hatch relative h-72 rounded-lg border">
+            <div className="hatch relative h-72 overflow-hidden rounded-lg border">
               <svg className="absolute inset-0 size-full" aria-hidden>
-                {[[0, 2], [1, 0], [2, 4], [3, 4], [0, 3]].map(([a, b], i) => (
+                {([[0, 2], [1, 0], [2, 4], [3, 4], [0, 3]] as const).map(([a, b], i) => (
                   <line key={i} x1={`${nodes[a].x}%`} y1={`${nodes[a].y}%`} x2={`${nodes[b].x}%`} y2={`${nodes[b].y}%`} className="stroke-teal" strokeWidth={1.5} strokeDasharray={i === 4 ? "4 4" : undefined} />
                 ))}
               </svg>
