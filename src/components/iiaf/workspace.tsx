@@ -36,8 +36,8 @@ interface Ctx {
 const WorkspaceContext = createContext<Ctx | null>(null);
 
 export function WorkspaceProvider({ children }: { children: ReactNode }) {
-  const [id, setWorkspaceId] = useState(WORKSPACES[0].id);
-  const workspace = WORKSPACES.find((w) => w.id === id) ?? WORKSPACES[0];
+  const [id, setWorkspaceId] = useState("rr");
+  const workspace = WORKSPACES.find((w) => w.id === id) ?? WORKSPACES[0]!;
   return (
     <WorkspaceContext.Provider value={{ workspace, setWorkspaceId }}>
       {children}
