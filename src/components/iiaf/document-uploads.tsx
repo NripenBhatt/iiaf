@@ -33,7 +33,7 @@ export function DocumentUploads({ module, label }: { module: UploadModule; label
   const { data, isLoading, error } = useQuery({ queryKey: key, queryFn: () => list({ data: { organizationId: workspace.id, module } }) });
   const [files, setFiles] = useState<File[]>([]); const [category, setCategory] = useState(""); const [docType, setDocType] = useState("UNKNOWN");
   const [meta, setMeta] = useState(blank); const [busy, setBusy] = useState(false);
-  const [progress, setProgress] = useState<{ name: string; stage: string; ok?: boolean }[]>([]);
+  const [progress, setProgress] = useState<{ name: string; stage: string; ok?: boolean | undefined }[]>([]);
   const retryInput = useRef<HTMLInputElement>(null); const [retryId, setRetryId] = useState<string | null>(null);
   const categories = categoriesFor(module); const types = typesFor(module, category);
   const selectionErrors = files.flatMap(f => validateSelection(f).map(e => `${f.name}: ${e}`));
