@@ -14,4 +14,4 @@
 - [x] Add minimum approved staging/import records and run a representative sample with idempotency and two-university access tests.
 - [x] Enable separately approved full import after verified sample, with persisted results and downloadable row outcomes.
 - [ ] Execute and verify full import — waiting for separate authorized operator approval in the import page.
-- [ ] Deliver current Phase 2 acceptance and limitations report.
+- [x] Deliver current Phase 2 acceptance and limitations report.
