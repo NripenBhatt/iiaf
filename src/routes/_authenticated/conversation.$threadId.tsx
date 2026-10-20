@@ -130,9 +130,12 @@ function Dictation({ organizationId, onText }: { organizationId: string; onText:
       const res = await fetch("/api/transcribe", { method: "POST", body: form, headers: data.session ? { Authorization: `Bearer ${data.session.access_token}` } : {}, signal: abort.current.signal });
       if (!res.ok || !res.body) { const j = await res.json().catch(() => null) as { error?: string | { message?: string } } | null; const m = typeof j?.error === "string" ? j.error : j?.error?.message; throw new Error(res.status === 402 ? "AI credits are exhausted." : res.status === 429 ? "Transcription is busy; retry shortly." : m || "Transcription failed."); }
       let final = ""; let acc = "";
-      const parser = createParser({ onEvent: ev => { try { const d = JSON.parse(ev.data); if (d.type === "transcript.text.delta") { acc += d.delta; setPartial(acc); } if (d.type === "transcript.text.done") final = d.text; if (d.type === "error") throw new Error(d.error?.message ?? "Transcription failed"); } catch (err) { if (err instanceof Error && err.message !== "Unexpected end of JSON input") throw err; } } });
+      let failure = "";
+      const parser = createParser({ onEvent: ev => { if (ev.data === "[DONE]") return; let d: { type?: string; delta?: string; text?: string; error?: { message?: string } }; try { d = JSON.parse(ev.data); } catch { return; }
+        if (d.type === "transcript.text.delta") { acc += d.delta ?? ""; setPartial(acc); } else if (d.type === "transcript.text.done") final = d.text ?? ""; else if (d.type === "error") failure = d.error?.message ?? "Transcription failed"; } });
       const reader = res.body.pipeThrough(new TextDecoderStream()).getReader();
       for (;;) { const { done, value } = await reader.read(); if (done) break; parser.feed(value); }
+      if (failure) throw new Error(failure);
       const t = (final || acc).trim();
       if (!t) throw new Error("No speech was recognised. Try again closer to the microphone, or type.");
       onText(t); setLast(null); toast.success("Transcript added — review and edit it before sending.");
