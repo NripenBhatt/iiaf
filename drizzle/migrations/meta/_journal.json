@@ -15,6 +15,20 @@
       "when": 1792497416789,
       "tag": "0001_phase2_controlled_master_import",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1792499820886,
+      "tag": "0002_phase2_closure_phase3_uploads",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1792500141409,
+      "tag": "0003_audit_failure_outcome",
+      "breakpoints": true
     }
   ]
 }

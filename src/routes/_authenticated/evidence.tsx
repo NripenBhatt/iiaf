@@ -1,8 +1,8 @@
 import { Analytics } from "@/components/iiaf/analytics";
 import { createFileRoute } from "@tanstack/react-router";
-import { Upload } from "lucide-react";
 import { pageHead } from "@/lib/seo";
-import { DataTable, PageHeader, PlaceholderNotice, PlannedButton, Status } from "@/components/iiaf/ui";
+import { DocumentUploads } from "@/components/iiaf/document-uploads";
+import { DataTable, PageHeader, PlaceholderNotice, Status } from "@/components/iiaf/ui";
 
 export const Route = createFileRoute("/_authenticated/evidence")({
   head: () => pageHead("Accreditation & Ranking Evidence", "Demonstration evidence coverage and review states; official agency editions and mappings are unconfirmed."),
@@ -18,11 +18,9 @@ function Page() {
         eyebrow="Upload engine · Evidence"
         title="Accreditation & Ranking Evidence"
         description="Evidence is held against an exact agency, product and methodology version. Mappings remain proposed until reviewed."
-        actions={<PlannedButton><Upload className="size-4" /> Upload evidence</PlannedButton>}
       />
-      <PlaceholderNotice>
-        Agency mapping and scoring are not implemented. Criterion IDs shown are sample labels only, not verified official mappings.
-      </PlaceholderNotice>
+      <PlaceholderNotice>Evidence files upload and are stored privately with a declared framework only. Agency mapping and scoring are not implemented; criterion rows below are sample labels.</PlaceholderNotice>
+      <DocumentUploads module="evidence" label="Evidence files" />
       <div className="mb-6 flex flex-wrap gap-2">
         {frameworks.map((f, i) => (
           <span key={f} className={i === 0 ? "rounded-full bg-primary px-3 py-1 text-xs font-medium text-primary-foreground" : "rounded-full border bg-card px-3 py-1 text-xs text-muted-foreground"}>

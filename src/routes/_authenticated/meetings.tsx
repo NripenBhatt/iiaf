@@ -1,8 +1,8 @@
 import { Analytics } from "@/components/iiaf/analytics";
 import { createFileRoute } from "@tanstack/react-router";
-import { Upload } from "lucide-react";
 import { pageHead } from "@/lib/seo";
-import { DataTable, PageHeader, PlaceholderNotice, PlannedButton, Stat, Status } from "@/components/iiaf/ui";
+import { DocumentUploads } from "@/components/iiaf/document-uploads";
+import { DataTable, PageHeader, PlaceholderNotice, Stat, Status } from "@/components/iiaf/ui";
 
 export const Route = createFileRoute("/_authenticated/meetings")({
   head: () => pageHead("Meeting Information", "Notices, agendas, minutes, decisions and action items with owners and deadlines."),
@@ -16,9 +16,9 @@ function Page() {
         eyebrow="Upload engine · Meetings"
         title="Meeting Information"
         description="Agenda, discussion, decision, action and completion proof are kept as separate records."
-        actions={<PlannedButton><Upload className="size-4" /> Upload meeting record</PlannedButton>}
       />
-      <PlaceholderNotice>Meeting capture and action tracking are planned for a later phase.</PlaceholderNotice>
+      <PlaceholderNotice>Meeting files upload and are stored privately. Meeting capture, decisions and action tracking are not extracted yet; figures below are samples.</PlaceholderNotice>
+      <DocumentUploads module="meeting" label="Meeting records" />
       <div className="mb-6 grid gap-4 sm:grid-cols-3">
         <Stat label="Meetings this term" value="14" />
         <Stat label="Open actions" value="38" />

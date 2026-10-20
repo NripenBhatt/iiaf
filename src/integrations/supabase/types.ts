@@ -59,6 +59,57 @@ export type Database = {
           },
         ]
       }
+      held_record_reviews: {
+        Row: {
+          created_at: string
+          decision: string
+          explanation: string
+          id: string
+          organization_id: string
+          reviewer_id: string
+          source_identifier: string
+          source_row: number
+          source_sheet: string
+        }
+        Insert: {
+          created_at?: string
+          decision: string
+          explanation: string
+          id?: string
+          organization_id: string
+          reviewer_id?: string
+          source_identifier: string
+          source_row: number
+          source_sheet: string
+        }
+        Update: {
+          created_at?: string
+          decision?: string
+          explanation?: string
+          id?: string
+          organization_id?: string
+          reviewer_id?: string
+          source_identifier?: string
+          source_row?: number
+          source_sheet?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "held_record_reviews_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "held_record_reviews_reviewer_id_fkey"
+            columns: ["reviewer_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       master_import_outcomes: {
         Row: {
           created_at: string
@@ -357,6 +408,114 @@ export type Database = {
         }
         Relationships: []
       }
+      uploaded_documents: {
+        Row: {
+          attempts: number
+          category_code: string
+          created_at: string
+          declared_mime_type: string | null
+          declared_purpose: string | null
+          department_or_owner: string | null
+          detected_mime_type: string | null
+          document_date_raw: string | null
+          document_type_id: string
+          document_version_or_status: string | null
+          extraction_status: string
+          file_extension: string
+          file_size_bytes: number
+          id: string
+          language: string | null
+          module: string
+          organization_id: string
+          original_filename: string
+          processing_status: string
+          reporting_period: string | null
+          schema_version: string
+          sha256_hash: string
+          storage_object_key: string
+          updated_at: string
+          upload_id: string
+          uploaded_at: string | null
+          uploader_id: string
+          validation_errors: Json
+        }
+        Insert: {
+          attempts?: number
+          category_code: string
+          created_at?: string
+          declared_mime_type?: string | null
+          declared_purpose?: string | null
+          department_or_owner?: string | null
+          detected_mime_type?: string | null
+          document_date_raw?: string | null
+          document_type_id?: string
+          document_version_or_status?: string | null
+          extraction_status?: string
+          file_extension: string
+          file_size_bytes: number
+          id?: string
+          language?: string | null
+          module: string
+          organization_id: string
+          original_filename: string
+          processing_status?: string
+          reporting_period?: string | null
+          schema_version?: string
+          sha256_hash: string
+          storage_object_key: string
+          updated_at?: string
+          upload_id?: string
+          uploaded_at?: string | null
+          uploader_id: string
+          validation_errors?: Json
+        }
+        Update: {
+          attempts?: number
+          category_code?: string
+          created_at?: string
+          declared_mime_type?: string | null
+          declared_purpose?: string | null
+          department_or_owner?: string | null
+          detected_mime_type?: string | null
+          document_date_raw?: string | null
+          document_type_id?: string
+          document_version_or_status?: string | null
+          extraction_status?: string
+          file_extension?: string
+          file_size_bytes?: number
+          id?: string
+          language?: string | null
+          module?: string
+          organization_id?: string
+          original_filename?: string
+          processing_status?: string
+          reporting_period?: string | null
+          schema_version?: string
+          sha256_hash?: string
+          storage_object_key?: string
+          updated_at?: string
+          upload_id?: string
+          uploaded_at?: string | null
+          uploader_id?: string
+          validation_errors?: Json
+        }
+        Relationships: [
+          {
+            foreignKeyName: "uploaded_documents_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "uploaded_documents_uploader_id_fkey"
+            columns: ["uploader_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_roles: {
         Row: {
           created_at: string
@@ -418,20 +577,51 @@ export type Database = {
       bootstrap_operator: { Args: { _user: string }; Returns: string }
       can_manage: { Args: { _org: string }; Returns: boolean }
       can_read_org: { Args: { _org: string }; Returns: boolean }
+      finalize_document: {
+        Args: {
+          _detected_mime: string
+          _errors: Json
+          _id: string
+          _sha: string
+        }
+        Returns: string
+      }
       finish_master_import: { Args: { _run: string }; Returns: Json }
       is_member: { Args: { _org: string }; Returns: boolean }
       is_operator: {
         Args: { _roles: Database["public"]["Enums"]["app_role"][] }
         Returns: boolean
       }
+      mark_document_failed: {
+        Args: { _id: string; _reason: string }
+        Returns: undefined
+      }
+      may_upload: { Args: { _org: string }; Returns: boolean }
       process_master_import: {
         Args: { _rows: Json; _run: string }
         Returns: number
       }
+      record_document_access: { Args: { _id: string }; Returns: undefined }
       record_security_event: {
         Args: { _event: string; _org: string }
         Returns: undefined
       }
+      register_document: {
+        Args: {
+          _category: string
+          _ext: string
+          _filename: string
+          _meta: Json
+          _mime: string
+          _module: string
+          _org: string
+          _sha: string
+          _size: number
+          _type: string
+        }
+        Returns: Json
+      }
+      retry_document: { Args: { _id: string }; Returns: string }
       set_member_role: {
         Args: {
           _active?: boolean

@@ -1,9 +1,9 @@
 import { InstitutionDomains } from "@/components/iiaf/institution-domains";
 import { Analytics } from "@/components/iiaf/analytics";
 import { createFileRoute } from "@tanstack/react-router";
-import { Upload } from "lucide-react";
 import { pageHead } from "@/lib/seo";
-import { DataTable, PageHeader, PlaceholderNotice, PlannedButton, Status } from "@/components/iiaf/ui";
+import { DocumentUploads } from "@/components/iiaf/document-uploads";
+import { DataTable, PageHeader, PlaceholderNotice, Status } from "@/components/iiaf/ui";
 
 export const Route = createFileRoute("/_authenticated/institutional")({
   head: () => pageHead("Institutional Information", "Institution profile, departments, programmes, faculty, policies and reports."),
@@ -17,11 +17,9 @@ function Page() {
         eyebrow="Upload engine · Information"
         title="Institutional Information"
         description="Profile, departments, programmes, faculty, policies, research, placements and institutional reports — preserved at source with extraction and review status."
-        actions={<PlannedButton><Upload className="size-4" /> Upload documents</PlannedButton>}
       />
-      <PlaceholderNotice>
-        Uploading, parsing and extraction are not built yet. The table shows sample rows for layout review.
-      </PlaceholderNotice>
+      <PlaceholderNotice>Uploads are real and stored privately. Parsing, OCR and extraction are not built yet; the sample table below is illustrative only.</PlaceholderNotice>
+      <DocumentUploads module="institutional" label="Institutional documents" />
       <Analytics page="institutional" />
       <InstitutionDomains />
       <DataTable
