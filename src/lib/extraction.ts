@@ -179,11 +179,11 @@ function pptx(bytes: Uint8Array): Extraction {
 
 /** Legacy DOC (OLE compound file): text via the validated word-extractor library. */
 async function doc(bytes: Uint8Array): Promise<Extraction> {
-  const B = (globalThis as { Buffer?: { from(b: Uint8Array): unknown } }).Buffer;
+  const B = (globalThis as { Buffer?: typeof import("node:buffer").Buffer }).Buffer;
   if (!B) return { status: "needs_review", method: "doc-ole", segments: [], error: "Legacy .doc extraction is unavailable in this runtime; convert the file to DOCX or PDF and upload again." };
   const WordExtractor = (await import("word-extractor")).default;
-  const extracted = await new WordExtractor().extract(B.from(bytes) as never);
-  const segments = (extracted.getBody() as string).split(/\r?\n/).map((l: string, i: number) => ({ l: l.replace(/\s+/g, " ").trim(), i })).filter((x: { l: string }) => x.l)
+  const extracted = await new WordExtractor().extract(B.from(bytes));
+  const segments = extracted.getBody().split(/\r?\n/).map((l, i) => ({ l: l.replace(/\s+/g, " ").trim(), i })).filter(x => x.l)
     .map((x, n) => ({ seq: n, locator_key: `l${x.i + 1}`, locator: { line: x.i + 1 }, page: null, sheet: null, cell: null, content: x.l }));
   return { status: segments.length ? "extracted" : "needs_review", method: "doc-ole", segments: segments.slice(0, MAX_SEGMENTS), error: segments.length ? null : "DOC contains no extractable text." };
 }
