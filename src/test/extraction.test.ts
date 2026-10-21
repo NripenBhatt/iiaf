@@ -88,6 +88,12 @@ describe("document extraction", () => {
 });
 
 describe("fact validation", () => {
+  it("marks bounded extraction partial instead of silently claiming completeness", async () => {
+    const r = await extract("txt", enc(Array.from({ length: 2001 }, (_, i) => `Line ${i}`).join("\n")));
+    expect(r.status).toBe("needs_review");
+    expect(r.segments).toHaveLength(2000);
+    expect(r.error).toContain("Partial extraction");
+  });
   it("does not mistake a URL scheme for a fact label", async () => {
     const r = await extract("txt", enc("https://aiflucknow.in/idea-to-enterprise\nPublication_URL: https://aiflucknow.in/idea-to-enterprise"));
     expect(proposeFacts(r.segments)).toHaveLength(1);
