@@ -3,7 +3,7 @@ import fieldSpec from "@/data/fact-fields.json";
 
 /** Extraction output is untrusted data: it is stored and displayed, never executed or interpreted as instructions. */
 export const PROCESSOR = "iiaf-extractor";
-export const PROCESSOR_VERSION = "1.2.0";
+export const PROCESSOR_VERSION = "1.3.0";
 export const MAX_SEGMENTS = 2000;
 /** Added to every proposed fact whose text came from OCR rather than an embedded text layer. */
 export const OCR_CAUTION = "Recognised by OCR from an image or scanned page; verify against the original before approving.";
@@ -151,6 +151,61 @@ function xlsx(bytes: Uint8Array): Extraction {
   return { status: segments.length ? "extracted" : "needs_review", method: "xlsx-xml", segments, error: segments.length ? null : "Workbook contains no cell values." };
 }
 
+/** PPTX: reads slides in presentation order, preserving slide and paragraph references. */
+function pptx(bytes: Uint8Array): Extraction {
+  const files = unzipSync(bytes, { filter: f => f.name === "ppt/presentation.xml" || f.name === "ppt/_rels/presentation.xml.rels" || /^ppt\/slides\/slide\d+\.xml$/.test(f.name) });
+  const pres = files["ppt/presentation.xml"]; if (!pres) return { status: "processing_failed", method: "pptx-xml", segments: [], error: "ppt/presentation.xml missing; not a valid PPTX." };
+  const rels = files["ppt/_rels/presentation.xml.rels"] ? strFromU8(files["ppt/_rels/presentation.xml.rels"]) : "";
+  const targetOf = (rid: string) => {
+    const t = rels.match(new RegExp(`Id="${rid}"[^>]*Target="([^"]+)"`))?.[1] ?? rels.match(new RegExp(`Target="([^"]+)"[^>]*Id="${rid}"`))?.[1];
+    return t ? (t.startsWith("/") ? t.slice(1) : t.startsWith("ppt/") ? t : `ppt/${t}`) : undefined;
+  };
+  const order = (strFromU8(pres).match(/<p:sldId [^>]*\/>/g) ?? []).map(s => targetOf(s.match(/r:id="([^"]+)"/)?.[1] ?? "")).filter((t): t is string => Boolean(t));
+  const slideFiles = order.length ? order : Object.keys(files).filter(n => /^ppt\/slides\/slide\d+\.xml$/.test(n)).sort();
+  const segments: Segment[] = [];
+  slideFiles.forEach((file, i) => {
+    const xml = files[file]; if (!xml) return;
+    const slide = i + 1; let para = 0;
+    for (const p of strFromU8(xml).match(/<a:p>[\s\S]*?<\/a:p>/g) ?? []) {
+      para++;
+      const t = xmlText((p.match(/<a:t>[\s\S]*?<\/a:t>/g) ?? []).join("")).replace(/\s+/g, " ").trim();
+      if (!t) continue;
+      segments.push({ seq: segments.length, locator_key: `slide${slide}:p${para}`, locator: { slide, paragraph: para, part: file }, page: slide, sheet: null, cell: null, content: t });
+      if (segments.length >= MAX_SEGMENTS) return;
+    }
+  });
+  return { status: segments.length ? "extracted" : "needs_review", method: "pptx-xml", segments, error: segments.length ? null : "Presentation contains no slide text." };
+}
+
+/** Legacy DOC (OLE compound file): text via the validated word-extractor library. */
+async function doc(bytes: Uint8Array): Promise<Extraction> {
+  const B = (globalThis as { Buffer?: { from(b: Uint8Array): unknown } }).Buffer;
+  if (!B) return { status: "needs_review", method: "doc-ole", segments: [], error: "Legacy .doc extraction is unavailable in this runtime; convert the file to DOCX or PDF and upload again." };
+  const WordExtractor = (await import("word-extractor")).default;
+  const extracted = await new WordExtractor().extract(B.from(bytes) as never);
+  const segments = (extracted.getBody() as string).split(/\r?\n/).map((l: string, i: number) => ({ l: l.replace(/\s+/g, " ").trim(), i })).filter((x: { l: string }) => x.l)
+    .map((x, n) => ({ seq: n, locator_key: `l${x.i + 1}`, locator: { line: x.i + 1 }, page: null, sheet: null, cell: null, content: x.l }));
+  return { status: segments.length ? "extracted" : "needs_review", method: "doc-ole", segments: segments.slice(0, MAX_SEGMENTS), error: segments.length ? null : "DOC contains no extractable text." };
+}
+
+/** Legacy XLS (BIFF): cell values via the validated SheetJS library, preserving sheet and cell references. */
+async function xls(bytes: Uint8Array): Promise<Extraction> {
+  const XLSX = await import("xlsx");
+  const wb = XLSX.read(bytes, { type: "array" });
+  const segments: Segment[] = [];
+  for (const name of wb.SheetNames) {
+    const rows = XLSX.utils.sheet_to_json<string[]>(wb.Sheets[name]!, { header: 1, raw: false, defval: "" });
+    rows.forEach((cells, i) => {
+      const vals = cells.map(c => String(c).trim());
+      if (!vals.some(Boolean)) return;
+      const content = vals.length === 2 && vals[0] && vals[1] ? `${vals[0]}: ${vals[1]}` : vals.filter(Boolean).join(" | ");
+      segments.push({ seq: segments.length, locator_key: `${name}!row${i + 1}`, locator: { sheet: name, row: i + 1 }, page: null, sheet: name, cell: `row ${i + 1}`, content });
+    });
+    if (segments.length >= MAX_SEGMENTS) break;
+  }
+  return { status: segments.length ? "extracted" : "needs_review", method: "xls-biff", segments: segments.slice(0, MAX_SEGMENTS), error: segments.length ? null : "Workbook contains no cell values." };
+}
+
 export function parseCsv(text: string): string[][] {
   const rows: string[][] = []; let row: string[] = []; let cell = ""; let q = false;
   for (let i = 0; i < text.length; i++) {
@@ -185,7 +240,10 @@ export async function extract(ext: string, bytes: Uint8Array): Promise<Extractio
     switch (ext) {
       case "pdf": return await pdf(bytes);
       case "docx": return docx(bytes);
+      case "doc": return await doc(bytes);
       case "xlsx": return xlsx(bytes);
+      case "xls": return await xls(bytes);
+      case "pptx": return pptx(bytes);
       case "csv": return csv(bytes);
       case "txt": return txt(bytes);
       case "jpg": case "jpeg": case "png": return { status: "ocr_required", method: "none", segments: [], error: "Image has no embedded text; the processing step runs OCR on it." };
