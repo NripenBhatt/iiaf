@@ -71,6 +71,13 @@
       "when": 1792570688072,
       "tag": "0009_document_outputs",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1792587396767,
+      "tag": "0010_phase1_saved_output_listing",
+      "breakpoints": true
     }
   ]
 }
