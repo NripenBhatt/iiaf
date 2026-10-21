@@ -31,4 +31,5 @@
 - Canonical mappings are organization-scoped, changed only by propose_field_mapping/review_field_mapping. Populate packages only from an approved mapping and one usable value; Word/PDF export stored content verbatim.
 - OCR runs server-side in src/lib/ocr.server.ts through the Lovable AI Gateway (openai/gpt-6-astra, Responses API) for PNG/JPEG and scanned or mixed PDF pages; the gateway key never leaves the server. OCR locators are page-level only (no bounding boxes or confidence from the provider), OCR-derived facts carry the OCR_CAUTION review flag, and results flow through the same begin_processing/complete_processing_trusted path as text extraction.
 - Native extraction covers PDF text, DOCX, DOC (word-extractor/Buffer with explicit conversion fallback), XLSX, XLS (SheetJS), PPTX slide/paragraphs, CSV and TXT; scans/PNG/JPEG use OCR. Parse stored originals server-side; inspect and report parser dependencies/runtime constraints.
-- Type word-extractor's used CommonJS API in src/types/word-extractor.d.ts: Buffer|string to Promise of string getBody, avoiding unsafe casts.
+- Type word-extractor in src/types/word-extractor.d.ts (no unsafe casts).
+- Upload outputs: outputs.functions.ts writes from the latest completed job's segments only, cached per source hash in document_outputs; facts stay unapproved.
