@@ -68,7 +68,7 @@ export async function ocrImage(bytes: Uint8Array, mime: string): Promise<string[
 const PAGE_MARK = /^=== PAGE (\d+) ===$/;
 
 /** Streams one Responses call over raw HTTP and returns the full output text. */
-async function transcribeRaw(content: unknown[]): Promise<string> {
+export async function transcribeRaw(content: unknown[]): Promise<string> {
   const apiKey = process.env["LOVABLE_API_KEY"];
   if (!apiKey) throw new OcrConfigError("OCR is not configured: the server has no AI gateway key.");
   const res = await fetch("https://ai.gateway.lovable.dev/v1/responses", {
