@@ -17,7 +17,7 @@ export function useListFilters() {
 }
 type Choice = { value: string; label: string };
 export function ListFilterControls({ filters, update, total, categories = [], types = [], outputs = false }: {
-  filters: ListFilters; update: (patch: Partial<ListFilters>) => void; total?: number; categories?: Choice[]; types?: Choice[]; outputs?: boolean;
+  filters: ListFilters; update: (patch: Partial<ListFilters>) => void; total: number | undefined; categories?: Choice[]; types?: Choice[]; outputs?: boolean;
 }) {
   const select = (key: keyof ListFilters, label: string, choices: Choice[]) => <label className="space-y-1 text-xs text-muted-foreground"><span>{label}</span><select aria-label={label} className="h-9 w-full border bg-background px-2 text-sm text-foreground" value={String(filters[key])} onChange={e => update({ [key]: e.target.value })}><option value="">All</option>{choices.map(c => <option key={c.value} value={c.value}>{c.label}</option>)}</select></label>;
   const active = Object.entries(filters).filter(([k, v]) => !["page", "sort", "dateField"].includes(k) && v !== "");
