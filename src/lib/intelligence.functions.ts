@@ -2,7 +2,8 @@ import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { z } from "zod";
 import { UPLOAD_BUCKET } from "./upload-rules";
-import { PROCESSOR, PROCESSOR_VERSION, extract, proposeFacts } from "./extraction";
+import { PROCESSOR, PROCESSOR_VERSION, extract, ocrSegments, proposeFacts, tagOcrFacts } from "./extraction";
+import { MAX_OCR_PAGES, OCR_MODEL, OCR_VERSION, OcrConfigError, ocrImage, ocrPdf } from "./ocr.server";
 
 /** Runs extraction on the stored original (never modified) and records results through audited database functions. */
 export const processDocument = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
