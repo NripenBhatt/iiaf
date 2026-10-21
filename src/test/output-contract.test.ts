@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import { CONTRACT_VERSION, repairOutputSet, type SourceLine, type SourceManifest } from "@/lib/output-contract";
 import { outputCsv, outputDocx, outputText, outputsZip } from "@/lib/output-export";
 import { unzipSync, strFromU8 } from "fflate";
+const bytes = (blob: Blob) => new Promise<Uint8Array>((resolve, reject) => { const reader = new FileReader(); reader.onload = () => reader.result instanceof ArrayBuffer ? resolve(new Uint8Array(reader.result)) : reject(new Error("Invalid blob")); reader.onerror = () => reject(reader.error); reader.readAsArrayBuffer(blob); });
 
 const manifest: SourceManifest = { documentId: "synthetic-doc", jobId: "synthetic-job", originalHash: "test-original-hash", parserVersion: "1.4.0", contractVersion: CONTRACT_VERSION, classification: "DEMO", approval: "draft", locators: ["table1:row1"], verifiedCoverage: false };
 const lines: SourceLine[] = [{ seq: 0, locator_key: "table1:row1", content: "कार्यसूची | 10:00", method_version: "1.4.0", locator: { table: 1, row: 1, cells: [{ column: 1, ref: "table1:r1:c1", raw: "कार्यसूची", value: "कार्यसूची", formula: null, type: "text" }, { column: 2, ref: "table1:r1:c2", raw: "=1+1", value: "10:00", formula: "1+1", type: "n" }] } }];
@@ -38,10 +39,10 @@ describe("source qualification and output contracts", () => {
     const text = outputText(output, "synthetic-agenda.docx");
     expect(text).toContain("DEMO"); expect(text).toContain("NOT APPROVED"); expect(text).toContain("synthetic-job");
     const csv = outputCsv(output); expect(csv).toContain("table1:r1:c1"); expect(csv).toContain("कार्यसूची"); expect(csv).toContain("'=1+1");
-    const doc = unzipSync(new Uint8Array(await (await outputDocx(output, "synthetic-agenda.docx")).arrayBuffer()));
+    const doc = unzipSync(await bytes(await outputDocx(output, "synthetic-agenda.docx")));
     const xml = strFromU8(doc["word/document.xml"] ?? new Uint8Array());
     expect(xml).toContain("<w:tbl>"); expect(xml).toContain("कार्यसूची"); expect(xml).toContain("DEMO");
-    const zip = unzipSync(new Uint8Array(await (await outputsZip([output], "synthetic-agenda.docx")).arrayBuffer()));
+    const zip = unzipSync(await bytes(await outputsZip([output], "synthetic-agenda.docx")));
     expect(Object.keys(zip).filter(n => n.endsWith(".csv"))).toHaveLength(1);
     expect(Object.keys(zip).filter(n => n.endsWith(".manifest.json"))).toHaveLength(1);
   });
