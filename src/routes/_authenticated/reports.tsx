@@ -10,7 +10,8 @@ import { useWorkspace } from "@/components/iiaf/workspace";
 import { validateListSearch } from "@/lib/list-filters";
 import { listSavedOutputs } from "@/lib/saved-outputs.functions";
 import { OUTPUT_CATALOGUE } from "@/lib/output-catalogue";
-import { outputDocx, outputFileBase, outputText, outputsZip } from "@/lib/output-export";
+import { outputCsv, outputDocx, outputFileBase, outputText, outputsZip } from "@/lib/output-export";
+import { OutputPreview } from "@/components/iiaf/output-preview";
 import { saveBlob } from "@/lib/package-export";
 import { getDocumentLink } from "@/lib/documents.functions";
 import { pageHead } from "@/lib/seo";
@@ -40,8 +41,9 @@ function Page() {
       <div className="divide-y">{!error && data?.rows.map(row => <article key={`${row.setId}-${row.index}`} className="space-y-3 p-5">
         <div className="flex flex-wrap items-start justify-between gap-2"><div><p className="text-xs text-muted-foreground">{row.output.name} · {row.module}</p><h2 className="font-semibold">{row.output.title}</h2></div><Status>Draft · not approved</Status></div>
         <p className="break-all text-xs text-muted-foreground">Source: {row.sourceName} · Generated {new Date(row.generatedAt).toLocaleString()} · Parser {row.sourceVersion}</p>
-        <p className="text-xs text-muted-foreground">Data classification: not recorded per source. Not verified coverage.{workspace.name.includes("SYNTHETIC") ? " SYNTHETIC DEMO workspace." : ""}</p>
-        <details><summary className="cursor-pointer text-sm font-medium">Preview</summary><p className="mt-3 max-h-80 overflow-auto whitespace-pre-wrap text-sm">{row.output.body}</p></details>
+        <p className="text-xs text-muted-foreground">Data classification: {row.output.manifest?.classification ?? "not recorded per source"}. Not verified coverage.{workspace.name.includes("SYNTHETIC") ? " SYNTHETIC DEMO workspace." : ""}</p>
+        <details><summary className="cursor-pointer text-sm font-medium">Preview</summary><div className="mt-3 max-h-80 overflow-auto"><OutputPreview output={row.output} /></div></details>
+        {row.output.tables?.length ? <Button size="sm" variant="outline" onClick={() => saveBlob(new Blob([outputCsv(row.output)], { type: "text/csv" }), `${outputFileBase(row.output, row.sourceName)}.csv`)}><Download /> CSV</Button> : null}
         <div className="flex flex-wrap gap-2"><Button size="sm" variant="outline" onClick={() => void outputDocx(row.output, row.sourceName).then(b => saveBlob(b, `${outputFileBase(row.output, row.sourceName)}.docx`))}><Download /> Word</Button><Button size="sm" variant="outline" onClick={() => saveBlob(new Blob([outputText(row.output, row.sourceName)], { type: "text/plain" }), `${outputFileBase(row.output, row.sourceName)}.txt`)}><Download /> Text</Button><Button size="sm" variant="ghost" onClick={() => void outputsZip([row.output], row.sourceName).then(b => saveBlob(b, `${outputFileBase(row.output, row.sourceName)}.zip`))}><Download /> ZIP</Button><Button size="sm" variant="ghost" onClick={() => void openOriginal(row.documentId)}>Original</Button><Button size="sm" variant="ghost" onClick={() => update({ source: row.documentId })}>Same source</Button></div>
       </article>)}</div>
     </section>

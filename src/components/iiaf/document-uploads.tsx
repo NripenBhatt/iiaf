@@ -13,7 +13,8 @@ import { useWorkspace } from "./workspace";
 import { listDocuments, registerDocument, finalizeDocument, markDocumentFailed, getDocumentLink } from "@/lib/documents.functions";
 import { processDocument } from "@/lib/intelligence.functions";
 import { generateOutputs, getOutputs, type OutputSet } from "@/lib/outputs.functions";
-import { outputDocx, outputFileBase, outputText, outputsZip } from "@/lib/output-export";
+import { outputCsv, outputDocx, outputFileBase, outputText, outputsZip } from "@/lib/output-export";
+import { OutputPreview } from "./output-preview";
 import { saveBlob } from "@/lib/package-export";
 import { ALLOWED_EXTENSIONS, isStored, UPLOAD_BUCKET, sha256Hex, validateSelection, type UploadModule } from "@/lib/upload-rules";
 import { ListFilterControls, useListFilters } from "./list-filters";
@@ -63,7 +64,7 @@ export function DocumentUploads({ module, label }: { module: UploadModule; label
   async function showOutputs(id: string, name: string) {
     setActive({ id, name }); setOutputsError(null); setOutputs(null);
     const existing = await load({ data: { documentId: id } }).catch(() => null);
-    if (existing) setOutputs(existing); else await makeOutputs(id, name);
+    if (existing && (existing.outputs[0]?.manifest || !data?.canUpload)) setOutputs(existing); else await makeOutputs(id, name);
   }
 
   async function upload() {
@@ -131,10 +132,10 @@ export function DocumentUploads({ module, label }: { module: UploadModule; label
         {outputs.outputs.length === 0 && <p className="text-sm">The document did not contain enough information for any output.</p>}
         <div className="grid gap-4 lg:grid-cols-2">{outputs.outputs.map(o => <article key={o.type} className="flex flex-col border bg-background p-4">
           <p className="text-xs uppercase tracking-wide text-muted-foreground">{o.name}</p><h3 className="mt-1 font-semibold">{o.title}</h3>
-          <div className="mt-2 max-h-64 flex-1 overflow-auto whitespace-pre-wrap text-sm">{o.body}</div>
+          <div className="mt-2 max-h-64 min-w-0 flex-1 overflow-auto"><OutputPreview output={o} /></div>
           <p className="mt-3 text-xs text-muted-foreground">Source: {active.name}</p>
           <div className="mt-3 flex gap-2"><Button size="sm" variant="outline" onClick={() => void outputDocx(o, active.name).then(b => saveBlob(b, `${outputFileBase(o, active.name)}.docx`))}><Download /> Word</Button>
-            <Button size="sm" variant="ghost" onClick={() => saveBlob(new Blob([outputText(o, active.name)], { type: "text/plain" }), `${outputFileBase(o, active.name)}.txt`)}><Download /> Text</Button></div>
+            <Button size="sm" variant="ghost" onClick={() => saveBlob(new Blob([outputText(o, active.name)], { type: "text/plain" }), `${outputFileBase(o, active.name)}.txt`)}><Download /> Text</Button>{o.tables?.length ? <Button size="sm" variant="ghost" onClick={() => saveBlob(new Blob([outputCsv(o)], { type: "text/csv" }), `${outputFileBase(o, active.name)}.csv`)}><Download /> CSV</Button> : null}</div>
         </article>)}</div>
         {(outputs.skipped.length > 0 || outputs.limitations.length > 0) && <div className="text-xs text-muted-foreground">
           {outputs.skipped.length > 0 && <p><span className="font-medium">Not produced:</span> {outputs.skipped.map(s => `${s.name} (${s.reason})`).join("; ")}</p>}

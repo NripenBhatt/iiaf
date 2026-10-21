@@ -88,6 +88,37 @@ describe("document extraction", () => {
 });
 
 describe("fact validation", () => {
+  it("does not mistake a URL scheme for a fact label", async () => {
+    const r = await extract("txt", enc("https://aiflucknow.in/idea-to-enterprise\nPublication_URL: https://aiflucknow.in/idea-to-enterprise"));
+    expect(proposeFacts(r.segments)).toHaveLength(1);
+    expect(proposeFacts(r.segments)[0]?.field).toBe("Publication_URL");
+  });
+  it("retains Hindi labels as unresolved, never fabricates a canonical mapping", async () => {
+    const r = await extract("txt", enc("बैठक तिथि: 12 मार्च 2026"));
+    expect(proposeFacts(r.segments)[0]).toMatchObject({ label: "बैठक तिथि", value: "12 मार्च 2026", field: null });
+  });
+  it("preserves CSV blanks, embedded newlines, raw whitespace and cells", async () => {
+    const r = await extract("csv", enc('Name,Empty,Value\n"Hindi\nहिन्दी",," 83% "'));
+    expect(r.segments[1]?.locator["cells"]).toEqual([
+      { column: 1, ref: "row2:col1", raw: "Hindi\nहिन्दी", value: "Hindi\nहिन्दी", formula: null, type: "text" },
+      { column: 2, ref: "row2:col2", raw: "", value: "", formula: null, type: "text" },
+      { column: 3, ref: "row2:col3", raw: " 83% ", value: "83%", formula: null, type: "text" },
+    ]);
+  });
+  it("preserves DOCX Hindi table row, columns, blank cell and grid span", async () => {
+    const xml = '<w:document><w:body><w:tbl><w:tr><w:tc><w:p><w:r><w:t>कार्यसूची</w:t></w:r></w:p></w:tc><w:tc><w:tcPr><w:gridSpan w:val="2"/></w:tcPr><w:p/></w:tc><w:tc><w:p><w:r><w:t>10:00</w:t></w:r></w:p></w:tc></w:tr></w:tbl></w:body></w:document>';
+    const r = await extract("docx", zipSync({ "word/document.xml": strToU8(xml) }));
+    expect(r.segments[0]?.locator_key).toBe("table1:row1");
+    expect(r.segments[0]?.locator["cells"]).toMatchObject([{ column: 1, value: "कार्यसूची" }, { column: 2, value: "", columnSpan: 2 }, { column: 4, value: "10:00" }]);
+  });
+  it("retains XLSX raw numbers, percentages, dates, cached formula and gaps", async () => {
+    const wb = XLSX.utils.book_new();
+    const sheet = XLSX.utils.aoa_to_sheet([["Count", "Rate", "Date", "Total"], [142, 0.83, new Date(Date.UTC(2026, 9, 13)), 118]]);
+    sheet["B2"].z = "0%"; sheet["C2"].z = "yyyy-mm-dd"; sheet["D2"].f = "A2-24";
+    XLSX.utils.book_append_sheet(wb, sheet, "Data");
+    const r = await extract("xlsx", new Uint8Array(XLSX.write(wb, { type: "array", bookType: "xlsx" }) as ArrayBuffer));
+    expect(r.segments[1]?.locator["cells"]).toMatchObject([{ ref: "A2", raw: "142", value: "142" }, { ref: "B2", raw: "0.83", value: "83%" }, { ref: "C2", value: "2026-10-13" }, { ref: "D2", raw: "118", formula: "A2-24" }]);
+  });
   it("accepts unambiguous dates and rejects impossible ones", () => {
     expect(parseDate("12 March 2026")).toBe("2026-03-12");
     expect(parseDate("31/02/2026")).toBeNull();

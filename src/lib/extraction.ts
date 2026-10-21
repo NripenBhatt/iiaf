@@ -3,12 +3,13 @@ import fieldSpec from "@/data/fact-fields.json";
 
 /** Extraction output is untrusted data: it is stored and displayed, never executed or interpreted as instructions. */
 export const PROCESSOR = "iiaf-extractor";
-export const PROCESSOR_VERSION = "1.3.0";
+export const PROCESSOR_VERSION = "1.4.0";
 export const MAX_SEGMENTS = 2000;
 /** Added to every proposed fact whose text came from OCR rather than an embedded text layer. */
 export const OCR_CAUTION = "Recognised by OCR from an image or scanned page; verify against the original before approving.";
 
-export type Locator = Record<string, string | number | null>;
+export type SourceCell = { column: number; ref: string; raw: string; value: string; formula: string | null; type: string | null; rowSpan?: number; columnSpan?: number };
+export type Locator = Record<string, string | number | null | SourceCell[]>;
 export type Segment = { seq: number; locator_key: string; locator: Locator; page: number | null; sheet: string | null; cell: string | null; content: string };
 export type Fact = { label: string; field: string | null; spec: string | null; value: string; locator_key: string; locator: Locator; issues: string[] };
 export type ExtractStatus = "extracted" | "needs_review" | "ocr_required" | "processing_failed";
@@ -34,7 +35,7 @@ export function tagOcrFacts(facts: Fact[]): Fact[] {
   return facts;
 }
 
-const norm = (s: string) => s.toLowerCase().replace(/[^a-z0-9]+/g, "");
+const norm = (s: string) => s.normalize("NFKC").toLowerCase().replace(/[^\p{L}\p{N}]+/gu, "");
 const FIELDS = fieldSpec.fields.map(f => ({ ...f, keys: [norm(f.field), norm(f.label ?? "")].filter(Boolean) }));
 
 export function matchField(label: string) {
@@ -69,11 +70,12 @@ export function validateFact(field: string | null, value: string): string[] {
   return issues;
 }
 
-const PAIR = /^\s*([A-Za-z][A-Za-z0-9 _/&().-]{1,60}?)\s*[:=]\s*(.{1,500})$/;
+const PAIR = /^\s*([\p{L}][\p{L}\p{M}\p{N} _/&().-]{1,60}?)\s*[:=]\s*(.{1,500})$/u;
 /** Proposes facts only from explicit "Label: value" pairs or labelled spreadsheet cells; no keyword inference. */
 export function proposeFacts(segments: Segment[]): Fact[] {
   const facts: Fact[] = [];
   for (const s of segments) {
+    if (/^\s*https?:\/\//i.test(s.content)) continue;
     const m = s.content.match(PAIR);
     if (!m) continue;
     const label = m[1]!.trim(); const value = m[2]!.trim(); const f = matchField(label);
@@ -106,27 +108,45 @@ function docx(bytes: Uint8Array): Extraction {
   const files = unzipSync(bytes, { filter: f => f.name === "word/document.xml" });
   const xml = files["word/document.xml"]; if (!xml) return { status: "processing_failed", method: "docx-xml", segments: [], error: "word/document.xml missing; not a valid DOCX." };
   const body = strFromU8(xml); const segments: Segment[] = []; let heading: string | null = null; let p = 0; let table = 0;
-  const parts = body.split(/(<w:tbl>|<\/w:tbl>)/); let inTable = false;
+  const parts = body.split(/(<w:tbl[ >][\s\S]*?<\/w:tbl>)/);
   for (const part of parts) {
-    if (part === "<w:tbl>") { inTable = true; table++; continue; } if (part === "</w:tbl>") { inTable = false; continue; }
+    if (/^<w:tbl[ >]/.test(part)) {
+      table++;
+      let row = 0;
+      for (const tr of part.match(/<w:tr[ >][\s\S]*?<\/w:tr>/g) ?? []) {
+        row++; let column = 1;
+        const cells: SourceCell[] = (tr.match(/<w:tc[ >][\s\S]*?<\/w:tc>/g) ?? []).map(tc => {
+          const value = (tc.match(/<w:p[ >][\s\S]*?<\/w:p>/g) ?? []).map(para => xmlText((para.match(/<w:t[^>]*>[\s\S]*?<\/w:t>/g) ?? []).join(""))).join("\n");
+          const span = Number(tc.match(/<w:gridSpan[^>]*w:val="(\d+)"/)?.[1] ?? 1);
+          const cell = { column, ref: `table${table}:r${row}:c${column}`, raw: value, value, formula: null, type: "text", columnSpan: span };
+          column += span; return cell;
+        });
+        segments.push({ seq: segments.length, locator_key: `table${table}:row${row}`, locator: { table, row, heading, cells, header_status: "unverified", vertical_merge: /<w:vMerge/.test(tr) ? "present; verify against original" : null }, page: null, sheet: null, cell: null, content: cells.map(c => c.value).join(" | ") });
+      }
+      continue;
+    }
     for (const para of part.match(/<w:p[ >][\s\S]*?<\/w:p>/g) ?? []) {
       p++; const t = xmlText((para.match(/<w:t[^>]*>[\s\S]*?<\/w:t>|<w:tab\/>/g) ?? []).map(x => x === "<w:tab/>" ? "\t" : x).join("")).replace(/\s+/g, " ").trim();
       if (!t) continue;
       const style = para.match(/<w:pStyle w:val="([^"]+)"/)?.[1] ?? null;
       if (style && /heading|title/i.test(style)) heading = t;
-      segments.push({ seq: segments.length, locator_key: `para${p}`, locator: { paragraph: p, style, heading, table: inTable ? table : null }, page: null, sheet: null, cell: null, content: t });
+      segments.push({ seq: segments.length, locator_key: `para${p}`, locator: { paragraph: p, style, heading, table: null }, page: null, sheet: null, cell: null, content: t });
     }
   }
   return { status: segments.length ? "extracted" : "needs_review", method: "docx-xml", segments, error: segments.length ? null : "DOCX contains no text paragraphs." };
 }
 
 function colIndex(ref: string) { let n = 0; for (const c of ref.replace(/\d+/g, "")) n = n * 26 + c.charCodeAt(0) - 64; return n; }
-function xlsx(bytes: Uint8Array): Extraction {
-  const files = unzipSync(bytes, { filter: f => f.name === "xl/workbook.xml" || f.name === "xl/sharedStrings.xml" || f.name === "xl/_rels/workbook.xml.rels" || f.name.startsWith("xl/worksheets/sheet") });
+async function xlsx(bytes: Uint8Array): Promise<Extraction> {
+  const { SSF } = await import("xlsx");
+  const files = unzipSync(bytes, { filter: f => f.name === "xl/styles.xml" || f.name === "xl/workbook.xml" || f.name === "xl/sharedStrings.xml" || f.name === "xl/_rels/workbook.xml.rels" || f.name.startsWith("xl/worksheets/sheet") });
   const wb = files["xl/workbook.xml"]; if (!wb) return { status: "processing_failed", method: "xlsx-xml", segments: [], error: "xl/workbook.xml missing; not a valid XLSX." };
   const shared = (files["xl/sharedStrings.xml"] ? strFromU8(files["xl/sharedStrings.xml"]).match(/<si>[\s\S]*?<\/si>/g) ?? [] : []).map(s => xmlText((s.match(/<t[^>]*>[\s\S]*?<\/t>/g) ?? []).join("")));
   const rels = files["xl/_rels/workbook.xml.rels"] ? strFromU8(files["xl/_rels/workbook.xml.rels"]) : "";
   const segments: Segment[] = [];
+  const styles = files["xl/styles.xml"] ? strFromU8(files["xl/styles.xml"]) : "";
+  const formats = Object.fromEntries((styles.match(/<numFmt [^>]*\/>/g) ?? []).map(x => [Number(x.match(/numFmtId="(\d+)"/)?.[1]), xmlText(x.match(/formatCode="([^"]+)"/)?.[1] ?? "")]));
+  const styleFormats = (styles.match(/<cellXfs[^>]*>([\s\S]*?)<\/cellXfs>/)?.[1]?.match(/<xf\b[^>]*>/g) ?? []).map(x => Number(x.match(/numFmtId="(\d+)"/)?.[1] ?? 0));
   for (const s of strFromU8(wb).match(/<sheet [^>]*\/>/g) ?? []) {
     const name = xmlText(s.match(/name="([^"]*)"/)?.[1] ?? "Sheet"); const rid = s.match(/r:id="([^"]+)"/)?.[1];
     const target = rels.match(new RegExp(`Id="${rid}"[^>]*Target="([^"]+)"`))?.[1] ?? rels.match(new RegExp(`Target="([^"]+)"[^>]*Id="${rid}"`))?.[1];
@@ -138,13 +158,18 @@ function xlsx(bytes: Uint8Array): Extraction {
         const ref = c.match(/r="([A-Z]+\d+)"/)?.[1] ?? ""; const t = c.match(/t="(\w+)"/)?.[1];
         const v = c.match(/<v>([\s\S]*?)<\/v>/)?.[1]; const inline = c.match(/<is>([\s\S]*?)<\/is>/)?.[1];
         const value = t === "s" && v !== undefined ? shared[+v] ?? "" : t === "inlineStr" && inline ? xmlText(inline) : v !== undefined ? xmlText(v) : "";
-        return { ref, col: colIndex(ref), value: value.trim() };
-      }).filter(c => c.value);
-      if (!cells.length) continue;
+        const format = styleFormats[Number(c.match(/\bs="(\d+)"/)?.[1] ?? 0)] ?? 0;
+        let display = value;
+        if ((!t || t === "n") && value !== "" && Number.isFinite(Number(value)) && format) {
+          try { display = SSF.format(formats[format] || format, Number(value), { date1904: /date1904="(?:1|true)"/.test(strFromU8(wb)) }); } catch { display = value; }
+        }
+        return { ref, col: colIndex(ref), value: display, raw: value, formula: c.match(/<f[^>]*>([\s\S]*?)<\/f>/)?.[1] ?? null, type: t ?? "n" };
+      });
+      if (!cells.some(c => c.value || c.formula)) continue;
       if (first) { headers = Object.fromEntries(cells.map(c => [c.col, c.value])); first = false; }
       const content = cells.length === 2 && !headers[cells[1]!.col]?.length ? `${cells[0]!.value}: ${cells[1]!.value}` : cells.map(c => c.value).join(" | ");
       const range = `${cells[0]!.ref}:${cells[cells.length - 1]!.ref}`;
-      segments.push({ seq: segments.length, locator_key: `${name}!${range}`, locator: { sheet: name, row: +r, range }, page: null, sheet: name, cell: range, content: cells.length === 2 ? `${cells[0]!.value}: ${cells[1]!.value}` : content });
+      segments.push({ seq: segments.length, locator_key: `${name}!${range}`, locator: { sheet: name, row: +r, range, cells: cells.map(c => ({ column: c.col, ref: c.ref, raw: c.raw, value: c.value, formula: c.formula, type: c.type })), header_status: "unverified", merged_ranges: (strFromU8(file).match(/<mergeCell\s+ref="([^"]+)"/g) ?? []).join("; ") }, page: null, sheet: name, cell: range, content: cells.length === 2 ? `${cells[0]!.value}: ${cells[1]!.value}` : content });
       if (segments.length >= MAX_SEGMENTS) break;
     }
   }
@@ -194,13 +219,19 @@ async function xls(bytes: Uint8Array): Promise<Extraction> {
   const wb = XLSX.read(bytes, { type: "array" });
   const segments: Segment[] = [];
   for (const name of wb.SheetNames) {
-    const rows = XLSX.utils.sheet_to_json<string[]>(wb.Sheets[name]!, { header: 1, raw: false, defval: "" });
-    rows.forEach((cells, i) => {
-      const vals = cells.map(c => String(c).trim());
-      if (!vals.some(Boolean)) return;
-      const content = vals.length === 2 && vals[0] && vals[1] ? `${vals[0]}: ${vals[1]}` : vals.filter(Boolean).join(" | ");
-      segments.push({ seq: segments.length, locator_key: `${name}!row${i + 1}`, locator: { sheet: name, row: i + 1 }, page: null, sheet: name, cell: `row ${i + 1}`, content });
-    });
+    const sheet = wb.Sheets[name]; if (!sheet?.["!ref"]) continue;
+    const range = XLSX.utils.decode_range(sheet["!ref"]);
+    for (let r = range.s.r; r <= range.e.r && segments.length < MAX_SEGMENTS; r++) {
+      const cells: SourceCell[] = [];
+      for (let c = range.s.c; c <= range.e.c; c++) {
+        const ref = XLSX.utils.encode_cell({ r, c }); const source = sheet[ref];
+        cells.push({ column: c + 1, ref, raw: String(source?.v ?? ""), value: source ? XLSX.utils.format_cell(source) : "", formula: source?.f ?? null, type: source?.t ?? null });
+      }
+      if (!cells.some(c => c.value || c.formula)) continue;
+      const vals = cells.map(c => c.value);
+      const content = vals.length === 2 && vals[0] && vals[1] ? `${vals[0]}: ${vals[1]}` : vals.join(" | ");
+      segments.push({ seq: segments.length, locator_key: `${name}!row${r + 1}`, locator: { sheet: name, row: r + 1, cells, header_status: "unverified" }, page: null, sheet: name, cell: `row ${r + 1}`, content });
+    }
     if (segments.length >= MAX_SEGMENTS) break;
   }
   return { status: segments.length ? "extracted" : "needs_review", method: "xls-biff", segments: segments.slice(0, MAX_SEGMENTS), error: segments.length ? null : "Workbook contains no cell values." };
@@ -224,7 +255,7 @@ function csv(bytes: Uint8Array): Extraction {
   parseCsv(new TextDecoder().decode(bytes)).forEach((cells, i) => {
     const vals = cells.map(c => c.trim()); if (!vals.some(Boolean)) return;
     const content = vals.length === 2 && vals[0] && vals[1] ? `${vals[0]}: ${vals[1]}` : vals.join(" | ");
-    segments.push({ seq: segments.length, locator_key: `row${i + 1}`, locator: { row: i + 1, columns: vals.length }, page: null, sheet: "csv", cell: `row ${i + 1}`, content });
+    segments.push({ seq: segments.length, locator_key: `row${i + 1}`, locator: { row: i + 1, columns: vals.length, cells: cells.map((raw, c) => ({ column: c + 1, ref: `row${i + 1}:col${c + 1}`, raw, value: vals[c] ?? "", formula: null, type: "text" })), header_status: "unverified" }, page: null, sheet: "csv", cell: `row ${i + 1}`, content });
   });
   return { status: segments.length ? "extracted" : "needs_review", method: "csv-parser", segments: segments.slice(0, MAX_SEGMENTS), error: segments.length ? null : "CSV is empty." };
 }
@@ -241,7 +272,7 @@ export async function extract(ext: string, bytes: Uint8Array): Promise<Extractio
       case "pdf": return await pdf(bytes);
       case "docx": return docx(bytes);
       case "doc": return await doc(bytes);
-      case "xlsx": return xlsx(bytes);
+      case "xlsx": return await xlsx(bytes);
       case "xls": return await xls(bytes);
       case "pptx": return pptx(bytes);
       case "csv": return csv(bytes);

@@ -4,7 +4,7 @@ import type { UploadModule } from "./upload-rules";
 export type OutputType = { id: string; name: string; guidance: string };
 
 const EVENT: OutputType[] = [
-  { id: "press_release", name: "News article / press release", guidance: "Announcement of the upcoming or stated event, past tense only if the source says it happened." },
+  { id: "press_release", name: "News article / press release", guidance: "Announced for the stated date; occurrence must be separately verified." },
   { id: "website_event", name: "Website event listing", guidance: "Title, summary, date, time, venue, organisers, how to participate." },
   { id: "linkedin", name: "LinkedIn post", guidance: "Professional tone, up to 1,200 characters." },
   { id: "facebook", name: "Facebook post", guidance: "Friendly tone, up to 800 characters." },
@@ -14,15 +14,18 @@ const EVENT: OutputType[] = [
   { id: "event_summary", name: "Event summary", guidance: "Neutral factual summary of what the source states." },
 ];
 const DOCUMENT_SUMMARY: OutputType = { id: "document_summary", name: "Document summary", guidance: "Neutral executive summary of the document." };
+const REVIEW: OutputType[] = [{ id: "extraction_review", name: "Stored extraction review", guidance: "Unchanged source text with locators." }, { id: "structured_tables", name: "Source tables", guidance: "Actual stored cells; no inferred values or approved evidence." }];
 
 export const OUTPUT_CATALOGUE: Record<UploadModule, OutputType[]> = {
   institutional: [
+    ...REVIEW,
     ...EVENT,
     { id: "profile_section", name: "Institutional profile section", guidance: "Only for documents describing the institution, departments, programmes, faculty or facilities." },
     { id: "website_content", name: "Website content", guidance: "Web page copy for non-event institutional information." },
     DOCUMENT_SUMMARY,
   ],
   meeting: [
+    ...REVIEW,
     { id: "meeting_summary", name: "Meeting summary", guidance: "What the meeting covered, per the source." },
     { id: "agenda_summary", name: "Agenda summary", guidance: "Only if an agenda is present." },
     { id: "decisions", name: "Decisions and resolutions", guidance: "Only decisions explicitly recorded." },
@@ -31,6 +34,7 @@ export const OUTPUT_CATALOGUE: Record<UploadModule, OutputType[]> = {
     { id: "follow_up", name: "Follow-up communication draft", guidance: "Email to participants restating recorded decisions/actions." },
   ],
   evidence: [
+    ...REVIEW,
     DOCUMENT_SUMMARY,
     { id: "evidence_note", name: "Evidence description note", guidance: "Describe what the document evidences, for a reviewer. Never claim compliance, scores or approval." },
   ],
