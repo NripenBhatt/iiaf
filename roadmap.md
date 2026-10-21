@@ -43,7 +43,7 @@
 
 # v4 coordinated implementation
 - [x] Phase 1 authorized scope: intake guidance, explicit evidence gaps, shared authorized filters/counts/pagination, saved draft listing and authenticated download/isolation checks. 27 focused tests and fresh automatic build pass; exact requirement cards, assignments and durable source classification remain unavailable pending authoritative inputs/later-phase work.
-- [ ] Phase 2: structured extraction, retrieval/cache, qualification, cross-purpose routing and honest output contracts — awaiting separate phase authorization.
+- [ ] Phase 2 (authorized): structured extraction, retrieval/cache, qualification, cross-purpose routing and honest output contracts; preserve existing work and use no paid services.
 - [ ] Phase 3: runtime catalogue/rules, cumulative knowledge, evidence mappings and meeting intelligence — awaiting separate phase authorization.
 - [ ] Phase 4: role intelligence, permitted workspaces, company-only Converse, reminders and final verification — awaiting separate phase authorization.
 - [ ] Missing reference dependency: v4 companion concept note is absent from supplied files; exact Converse v1.2 workbook is present in the v2 bundle. Do not silently substitute an older concept note.
