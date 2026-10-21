@@ -3,14 +3,36 @@ import fieldSpec from "@/data/fact-fields.json";
 
 /** Extraction output is untrusted data: it is stored and displayed, never executed or interpreted as instructions. */
 export const PROCESSOR = "iiaf-extractor";
-export const PROCESSOR_VERSION = "1.1.0";
+export const PROCESSOR_VERSION = "1.2.0";
 export const MAX_SEGMENTS = 2000;
+/** Added to every proposed fact whose text came from OCR rather than an embedded text layer. */
+export const OCR_CAUTION = "Recognised by OCR from an image or scanned page; verify against the original before approving.";
 
 export type Locator = Record<string, string | number | null>;
 export type Segment = { seq: number; locator_key: string; locator: Locator; page: number | null; sheet: string | null; cell: string | null; content: string };
 export type Fact = { label: string; field: string | null; spec: string | null; value: string; locator_key: string; locator: Locator; issues: string[] };
 export type ExtractStatus = "extracted" | "needs_review" | "ocr_required" | "processing_failed";
-export type Extraction = { status: ExtractStatus; method: string; segments: Segment[]; error: string | null };
+export type Extraction = { status: ExtractStatus; method: string; segments: Segment[]; error: string | null; ocrPages?: number[] };
+
+/** Builds source-located segments from OCR output. Locators are page-level: the OCR provider supplies no line coordinates. */
+export function ocrSegments(pageLines: { page: number | null; lines: string[] }[], seqStart: number): Segment[] {
+  const segments: Segment[] = [];
+  for (const { page, lines } of pageLines) {
+    lines.forEach((content, i) => segments.push({
+      seq: seqStart + segments.length,
+      locator_key: page === null ? `ocr:l${i + 1}` : `ocr:p${page}:l${i + 1}`,
+      locator: { page, line: i + 1, source: "ocr", precision: "page-level" },
+      page, sheet: null, cell: null, content,
+    }));
+  }
+  return segments.slice(0, MAX_SEGMENTS);
+}
+
+/** Marks proposed facts that rest on OCR-recognised text so reviewers verify them against the original. */
+export function tagOcrFacts(facts: Fact[]): Fact[] {
+  for (const f of facts) if (f.locator["source"] === "ocr" && !f.issues.includes(OCR_CAUTION)) f.issues.push(OCR_CAUTION);
+  return facts;
+}
 
 const norm = (s: string) => s.toLowerCase().replace(/[^a-z0-9]+/g, "");
 const FIELDS = fieldSpec.fields.map(f => ({ ...f, keys: [norm(f.field), norm(f.label ?? "")].filter(Boolean) }));
