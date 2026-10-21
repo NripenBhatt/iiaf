@@ -7,9 +7,6 @@ import type { UploadModule } from "./upload-rules";
 export type GeneratedOutput = { type: string; name: string; title: string; body: string };
 export type OutputSet = { outputs: GeneratedOutput[]; skipped: { name: string; reason: string }[]; limitations: string[]; sourceVersion: string; segmentCount: number; createdAt: string; cached: boolean };
 
-type Supa = Parameters<Parameters<ReturnType<typeof createServerFn>["middleware"]>[0][0] extends never ? never : never>[0];
-void (0 as unknown as Supa);
-
 async function sha256(text: string) {
   const d = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(text));
   return [...new Uint8Array(d)].map(b => b.toString(16).padStart(2, "0")).join("");
