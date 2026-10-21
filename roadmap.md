@@ -40,3 +40,10 @@
 - [x] Add precise declarations for the installed Word parser and verify automatic compiler/build results.
 - [x] Re-run extraction tests and real-file OCR processing; verify locators and pending human review.
 - [x] Report tested formats and remaining limitations without changing import gates or permissions.
+
+# v4 coordinated implementation
+- [ ] Phase 1: map references/conflicts; improve existing intake/evidence cards; shared authorized filters/counts/pagination; stored report listing; focused live tests.
+- [ ] Phase 2: structured extraction, retrieval/cache, qualification, cross-purpose routing and honest output contracts — awaiting separate phase authorization.
+- [ ] Phase 3: runtime catalogue/rules, cumulative knowledge, evidence mappings and meeting intelligence — awaiting separate phase authorization.
+- [ ] Phase 4: role intelligence, permitted workspaces, company-only Converse, reminders and final verification — awaiting separate phase authorization.
+- [ ] Missing reference dependency: locate the v4 companion concept note and exact Converse v1.2 workbook among supplied files; do not silently substitute older versions.
