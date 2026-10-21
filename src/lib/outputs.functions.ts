@@ -47,10 +47,13 @@ export const generateOutputs = createServerFn({ method: "POST" }).middleware([re
     const { lines, version } = await latestSource(context.supabase, doc.id);
     if (!lines.length) throw new Error("No text could be read from this document, so no outputs were generated.");
     const source = lines.map(l => `[${l.locator_key}] ${l.content}`).join("\n");
+    console.log("[outputs] lines", lines.length);
     const hash = await sha256(source);
+    console.log("[outputs] hash");
     const { data: cached } = await context.supabase.from("document_outputs").select("outputs,source_version,created_at").eq("document_id", doc.id).eq("source_hash", hash).maybeSingle();
     if (cached) return { ...(cached.outputs as unknown as OutputSet), sourceVersion: cached.source_version, createdAt: cached.created_at, cached: true };
 
+    console.log("[outputs] cache", !!cached);
     const catalogue = OUTPUT_CATALOGUE[doc.module as UploadModule] ?? OUTPUT_CATALOGUE.institutional;
     const { transcribeRaw, OCR_MODEL } = await import("./ocr.server");
     const prompt = `You write communication outputs for a university, using ONLY the extracted source text below (each line starts with its source locator).
