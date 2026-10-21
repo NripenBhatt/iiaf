@@ -1,5 +1,7 @@
+import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { zipSync, strToU8 } from "fflate";
+import * as XLSX from "xlsx";
 import { extract, matchField, parseCsv, parseDate, proposeFacts, validateFact } from "@/lib/extraction";
 
 const enc = (s: string) => new TextEncoder().encode(s);
@@ -33,8 +35,33 @@ describe("document extraction", () => {
   it("marks images as OCR required instead of claiming extraction", async () => {
     expect((await extract("png", new Uint8Array([137, 80]))).status).toBe("ocr_required");
   });
-  it("marks unsupported stored formats for manual review", async () => {
-    expect((await extract("pptx", new Uint8Array([1]))).status).toBe("needs_review");
+  it("reads PPTX slides in order with slide and paragraph references", async () => {
+    const pres = `<p:presentation xmlns:r="r"><p:sldIdLst><p:sldId id="256" r:id="rId2"/><p:sldId id="257" r:id="rId1"/></p:sldIdLst></p:presentation>`;
+    const rels = `<Relationships><Relationship Id="rId1" Target="slides/slide2.xml"/><Relationship Id="rId2" Target="slides/slide1.xml"/></Relationships>`;
+    const slide1 = `<p:sld><p:cSld><p:spTree><p:sp><p:txBody><a:p><a:r><a:t>Meeting_Type: Senate</a:t></a:r></a:p></p:txBody></p:sp></p:spTree></p:cSld></p:sld>`;
+    const slide2 = `<p:sld><p:cSld><p:spTree><p:sp><p:txBody><a:p><a:r><a:t>Evidence_ID: EV-0123</a:t></a:r></a:p></p:txBody></p:sp></p:spTree></p:cSld></p:sld>`;
+    const bytes = zipSync({ "ppt/presentation.xml": strToU8(pres), "ppt/_rels/presentation.xml.rels": strToU8(rels), "ppt/slides/slide1.xml": strToU8(slide1), "ppt/slides/slide2.xml": strToU8(slide2) });
+    const r = await extract("pptx", bytes);
+    expect(r.status).toBe("extracted");
+    expect(r.segments.map(s => s.locator_key)).toEqual(["slide1:p1", "slide2:p1"]);
+    expect(r.segments[0]).toMatchObject({ content: "Meeting_Type: Senate", locator: { slide: 1 } });
+  });
+  it("reads legacy XLS workbooks with sheet and row references", async () => {
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet([["Meeting_ID", "M-0042"], ["Chairperson", "Dr. Rao"]]), "Meetings");
+    const bytes = new Uint8Array(XLSX.write(wb, { bookType: "xls", type: "array" }) as ArrayBuffer);
+    const r = await extract("xls", bytes);
+    expect(r.status).toBe("extracted");
+    expect(r.segments[0]).toMatchObject({ sheet: "Meetings", content: "Meeting_ID: M-0042" });
+  });
+  it("reads legacy DOC files as text lines", async () => {
+    const bytes = new Uint8Array(readFileSync("src/test/fixtures/sample.doc"));
+    const r = await extract("doc", bytes);
+    expect(r.status).toBe("extracted");
+    expect(r.segments.map(s => s.content)).toContain("Document_Version: v3");
+  });
+  it("marks unknown stored formats for manual review", async () => {
+    expect((await extract("odt", new Uint8Array([1]))).status).toBe("needs_review");
   });
   it("fails safely on corrupt files", async () => {
     expect((await extract("docx", enc("not a zip"))).status).toBe("processing_failed");

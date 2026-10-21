@@ -19,7 +19,7 @@ function Page() {
         title="Institutional Information"
         description="Profile, departments, programmes, faculty, policies, research, placements and institutional reports — preserved at source with extraction and review status."
       />
-      <PlaceholderNotice>Uploads are stored privately and PDF (text layer), DOCX, XLSX, CSV and TXT can be processed into source-located text and proposed facts. Images and scanned PDF pages are read by OCR (page-level locators, no coordinates); OCR-derived facts are flagged for careful review. The sample table below is illustrative only.</PlaceholderNotice>
+      <PlaceholderNotice>Uploads are stored privately and every accepted format can be processed: PDF (text layer, with OCR for scanned pages), DOCX, DOC, XLSX, XLS, PPTX, CSV and TXT are parsed natively with slide, sheet, cell, heading and line references preserved; PNG and JPEG are read by OCR (page-level locators, no coordinates). OCR-derived facts are flagged for careful review. The sample table below is illustrative only.</PlaceholderNotice>
       <DocumentUploads module="institutional" label="Institutional documents" />
       <FactReview module="institutional" />
       <Analytics page="institutional" />
