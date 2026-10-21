@@ -4,11 +4,21 @@ import { z } from "zod";
 import { UPLOAD_BUCKET } from "./upload-rules";
 import { PROCESSOR, PROCESSOR_VERSION, extract, ocrSegments, proposeFacts, tagOcrFacts } from "./extraction";
 import { MAX_OCR_PAGES, OCR_MODEL, OCR_VERSION, OcrConfigError, ocrImage, ocrPdf } from "./ocr.server";
+import { latestSource } from "./document-source";
 
 /** Runs extraction on the stored original (never modified) and records results through audited database functions. */
 export const processDocument = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
-  .inputValidator(z.object({ id: z.string().uuid() }))
+  .inputValidator(z.object({ id: z.string().uuid(), retryReason: z.string().trim().min(5).max(500).optional() }))
   .handler(async ({ context, data }) => {
+    const { data: document } = await context.supabase.from("uploaded_documents").select("organization_id,processing_status").eq("id", data.id).maybeSingle();
+    if (!document) throw new Error("Document not found.");
+    const [{ data: upload }, { data: review }] = await Promise.all([context.supabase.rpc("may_upload", { _org: document.organization_id }), context.supabase.rpc("may_review_facts", { _org: document.organization_id })]);
+    if (!upload && !review) throw new Error("Your role cannot process this document.");
+    if (!data.retryReason) {
+      const cached = await latestSource(context.supabase, data.id);
+      if (cached) return { status: cached.job.state, error: cached.job.error, cached: true, job_id: cached.job.id, segment_count: cached.lines.length };
+      if (["extracted", "needs_review", "processing_failed", "ocr_required"].includes(document.processing_status)) throw new Error("No usable stored extraction. An explicit retry reason is required; processing was not rerun.");
+    }
     const { data: job, error } = await context.supabase.rpc("begin_processing", { _doc: data.id });
     if (error || !job) throw new Error(error?.code === "42501" ? "Your role cannot process this document." : error?.message ?? "Processing could not start.");
     // Results are written only by this trusted server process (service role) after the caller was authorized by begin_processing.
@@ -54,7 +64,7 @@ export const processDocument = createServerFn({ method: "POST" }).middleware([re
       const finalStatus = status === "extracted" && facts.length ? "needs_review" : status;
       const processor = method.startsWith("ocr") || method.includes("+ocr") ? `${PROCESSOR}+ocr:${method}` : `${PROCESSOR}:${method}`;
       const version = method.includes("ocr") ? `${PROCESSOR_VERSION}+ocr-${OCR_VERSION}` : PROCESSOR_VERSION;
-      const { data: outcome, error: finishError } = await finish(finalStatus, processor, version, segments, facts, error);
+      const { data: outcome, error: finishError } = await finish(finalStatus, processor, version, segments, facts, data.retryReason ? `${error ?? ""} Retry requested: ${data.retryReason}` : error);
       if (finishError) throw new Error("Results could not be recorded; the job stays retryable.");
       return { ...(outcome as Record<string, unknown>), error };
     } catch (e) {
