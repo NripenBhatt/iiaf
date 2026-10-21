@@ -3,7 +3,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { pageHead } from "@/lib/seo";
 import { DocumentUploads } from "@/components/iiaf/document-uploads";
 import { FactReview } from "@/components/iiaf/fact-review";
-import { DataTable, PageHeader, PlaceholderNotice, Stat, Status } from "@/components/iiaf/ui";
+import { DataTable, PageHeader, Stat, Status } from "@/components/iiaf/ui";
 
 export const Route = createFileRoute("/_authenticated/meetings")({
   head: () => pageHead("Meeting Information", "Notices, agendas, minutes, decisions and action items with owners and deadlines."),
@@ -18,9 +18,8 @@ function Page() {
         title="Meeting Information"
         description="Agenda, discussion, decision, action and completion proof are kept as separate records."
       />
-      <PlaceholderNotice>Meeting files upload and are stored privately. Text and labelled fields can be extracted for review; meeting decisions and action items are not yet parsed into linked records. Figures below are samples.</PlaceholderNotice>
       <DocumentUploads module="meeting" label="Meeting records" />
-      <FactReview module="meeting" />
+      <details className="mb-8 border bg-card p-4"><summary className="cursor-pointer text-sm font-medium">Reviewer tools · extracted facts awaiting human review</summary><div className="mt-4"><FactReview module="meeting" /></div></details>
       <div className="mb-6 grid gap-4 sm:grid-cols-3">
         <Stat label="Meetings this term" value="14" />
         <Stat label="Open actions" value="38" />
