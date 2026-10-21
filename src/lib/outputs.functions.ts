@@ -15,7 +15,7 @@ async function sha256(text: string) {
 /** Segments from the most recent completed extraction only — earlier runs (other versions or OCR re-reads) are never mixed in. */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 async function latestSource(supabase: any, documentId: string) {
-  const { data: jobs } = await supabase.from("document_processing_jobs").select("id,finished_at,processor_version").eq("document_id", documentId).eq("state", "completed").order("finished_at", { ascending: false });
+  const { data: jobs } = await supabase.from("document_processing_jobs").select("id,finished_at,processor_version").eq("document_id", documentId).in("state", ["extracted", "needs_review"]).order("finished_at", { ascending: false });
   const { data: segs } = await supabase.from("document_segments").select("job_id,seq,locator_key,content,method_version").eq("document_id", documentId).order("seq").limit(5000);
   const all = (segs ?? []) as { job_id: string; seq: number; locator_key: string; content: string; method_version: string }[];
   const job = ((jobs ?? []) as { id: string }[]).find(j => all.some(s => s.job_id === j.id));
