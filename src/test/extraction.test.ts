@@ -37,8 +37,8 @@ describe("Phase 2 real-file synthetic fixtures", () => {
   });
   it.each(["xlsx", "xls"])("preserves real %s worksheet values and date formatting", async extension => {
     const r = await extract(extension, fixture(`synthetic-performance.${extension}`));
-    expect(r.segments[1]?.locator["cells"]).toMatchObject([{ ref: "A2", raw: "142" }, { ref: "B2", raw: "0.83", value: "83%" }, { ref: "C2", value: "2026-10-13" }, { ref: "D2", raw: "118" }]);
-    if (extension === "xlsx") expect(r.segments[1]?.locator["cells"]).toMatchObject([{}, {}, {}, { formula: "A2-24" }]);
+    expect(r.segments[1]?.locator["cells"]).toMatchObject([{ ref: "A2", raw: "142" }, { ref: "B2", raw: "0.83", value: "83%" }, { ref: "C2", value: "2026-10-13" }, { ref: "D2", raw: "118" }, { ref: "E2", value: "" }]);
+    if (extension === "xlsx") expect(r.segments[1]?.locator["cells"]).toMatchObject([{}, {}, {}, { formula: "A2-24" }, {}]);
   });
   it("preserves real slide order and paragraph references", async () => {
     const r = await extract("pptx", fixture("synthetic-slides.pptx"));
