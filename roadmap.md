@@ -37,6 +37,6 @@
 - [x] Agency Requirement Explorer, retrieval, draft package, hash-bound review, trusted extraction.
 
 # Phase 6 extraction repair
-- [ ] Add precise declarations for the installed Word parser and verify automatic TypeScript/production build results.
-- [ ] Re-run extraction tests and real-file OCR processing; verify locators and pending human review.
-- [ ] Report tested formats and remaining limitations without changing import gates or permissions.
+- [x] Add precise declarations for the installed Word parser and verify automatic compiler/build results.
+- [x] Re-run extraction tests and real-file OCR processing; verify locators and pending human review.
+- [x] Report tested formats and remaining limitations without changing import gates or permissions.

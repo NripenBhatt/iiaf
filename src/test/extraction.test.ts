@@ -7,6 +7,13 @@ import { extract, matchField, parseCsv, parseDate, proposeFacts, validateFact } 
 const enc = (s: string) => new TextEncoder().encode(s);
 
 describe("document extraction", () => {
+  it("extracts a real text PDF with page and line provenance", async () => {
+    const r = await extract("pdf", new Uint8Array(readFileSync("src/test/fixtures/text-policy.pdf")));
+    expect(r.status).toBe("extracted");
+    expect(r.ocrPages).toBeUndefined();
+    expect(r.segments[0]).toMatchObject({ locator_key: "p1:l1", locator: { page: 1, line: 1 }, page: 1 });
+    expect(r.segments.map(s => s.content).join(" ")).toContain("Document_Version: v3");
+  });
   it("keeps line locators for text files", async () => {
     const r = await extract("txt", enc("Title\n\nMeeting_Date: 12 March 2026"));
     expect(r.status).toBe("extracted");
@@ -35,6 +42,17 @@ describe("document extraction", () => {
   it("marks images as OCR required instead of claiming extraction", async () => {
     expect((await extract("png", new Uint8Array([137, 80]))).status).toBe("ocr_required");
   });
+  it.each(["jpg", "jpeg"])("routes %s to OCR rather than claiming native extraction", async (extension) => {
+    const r = await extract(extension, new Uint8Array([255, 216, 255, 217]));
+    expect(r.status).toBe("ocr_required");
+    expect(r.segments).toEqual([]);
+  });
+  it("keeps CSV row locators and source-located proposed facts", async () => {
+    const r = await extract("csv", enc("Meeting_ID,M-0042\nChairperson,Dr. Rao"));
+    expect(r.status).toBe("extracted");
+    expect(r.segments[1]).toMatchObject({ locator_key: "row2", locator: { row: 2, columns: 2 }, sheet: "csv" });
+    expect(proposeFacts(r.segments)[0]).toMatchObject({ value: "M-0042", locator_key: "row1", locator: { row: 1 } });
+  });
   it("reads PPTX slides in order with slide and paragraph references", async () => {
     const pres = `<p:presentation xmlns:r="r"><p:sldIdLst><p:sldId id="256" r:id="rId2"/><p:sldId id="257" r:id="rId1"/></p:sldIdLst></p:presentation>`;
     const rels = `<Relationships><Relationship Id="rId1" Target="slides/slide2.xml"/><Relationship Id="rId2" Target="slides/slide1.xml"/></Relationships>`;
@@ -59,6 +77,7 @@ describe("document extraction", () => {
     const r = await extract("doc", bytes);
     expect(r.status).toBe("extracted");
     expect(r.segments.map(s => s.content)).toContain("Document_Version: v3");
+    expect(r.segments.every(s => s.locator_key === `l${s.locator["line"]}`)).toBe(true);
   });
   it("marks unknown stored formats for manual review", async () => {
     expect((await extract("odt", new Uint8Array([1]))).status).toBe("needs_review");
