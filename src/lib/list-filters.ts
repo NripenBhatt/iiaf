@@ -12,14 +12,21 @@ export const listFilterSchema = z.object({
 export type ListFilters = z.infer<typeof listFilterSchema>;
 export const EMPTY_FILTERS: ListFilters = listFilterSchema.parse({});
 export const PAGE_SIZE = 20;
-export function validateListSearch(search: Record<string, unknown>): ListFilters {
-  const result = listFilterSchema.safeParse({ ...EMPTY_FILTERS, ...search });
-  return result.success ? result.data : EMPTY_FILTERS;
+export function validateListSearch(search: Record<string, unknown>) {
+  const string = (key: keyof ListFilters) => typeof search[key] === "string" ? String(search[key]) : "";
+  return {
+    q: string("q").slice(0, 200), category: string("category").slice(0, 60), type: string("type").slice(0, 80),
+    status: string("status").slice(0, 60), source: string("source"), owner: string("owner"),
+    module: ["institutional", "meeting", "evidence"].includes(string("module")) ? string("module") as ListFilters["module"] : "" as const,
+    dateField: ["uploaded", "generated"].includes(string("dateField")) ? string("dateField") as ListFilters["dateField"] : "created" as const,
+    from: string("from"), to: string("to"), sort: string("sort") === "oldest" ? "oldest" as const : "newest" as const,
+    page: Math.max(1, Math.min(10000, typeof search["page"] === "number" && Number.isFinite(search["page"]) ? Math.trunc(search["page"]) : 1)),
+  };
 }
 export function dateBounds(filters: Pick<ListFilters, "from" | "to">) {
   const start = filters.from ? new Date(`${filters.from}T00:00:00.000Z`) : null;
   const end = filters.to ? new Date(`${filters.to}T00:00:00.000Z`) : null;
-  if ((start && !Number.isFinite(start.getTime())) || (end && !Number.isFinite(end.getTime())) || (start && end && start > end)) throw new Error("Choose a valid date range.");
+  if ((start && (!Number.isFinite(start.getTime()) || start.toISOString().slice(0, 10) !== filters.from)) || (end && (!Number.isFinite(end.getTime()) || end.toISOString().slice(0, 10) !== filters.to)) || (start && end && start > end)) throw new Error("Choose a valid date range.");
   if (end) end.setUTCDate(end.getUTCDate() + 1);
   return { start: start?.toISOString() ?? null, end: end?.toISOString() ?? null };
 }
