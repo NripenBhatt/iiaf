@@ -43,17 +43,13 @@ export const generateOutputs = createServerFn({ method: "POST" }).middleware([re
     if (!doc) throw new Error("Document not found.");
     const { data: may } = await context.supabase.rpc("may_upload", { _org: doc.organization_id });
     if (!may) throw new Error("Your role cannot generate outputs.");
-    console.log("[outputs] start", doc.id);
     const { lines, version } = await latestSource(context.supabase, doc.id);
     if (!lines.length) throw new Error("No text could be read from this document, so no outputs were generated.");
     const source = lines.map(l => `[${l.locator_key}] ${l.content}`).join("\n");
-    console.log("[outputs] lines", lines.length);
     const hash = await sha256(source);
-    console.log("[outputs] hash");
     const { data: cached } = await context.supabase.from("document_outputs").select("outputs,source_version,created_at").eq("document_id", doc.id).eq("source_hash", hash).maybeSingle();
     if (cached) return { ...(cached.outputs as unknown as OutputSet), sourceVersion: cached.source_version, createdAt: cached.created_at, cached: true };
 
-    console.log("[outputs] cache", !!cached);
     const catalogue = OUTPUT_CATALOGUE[doc.module as UploadModule] ?? OUTPUT_CATALOGUE.institutional;
     const { transcribeRaw, OCR_MODEL } = await import("./ocr.server");
     const prompt = `You write communication outputs for a university, using ONLY the extracted source text below (each line starts with its source locator).
@@ -71,9 +67,7 @@ Return ONLY JSON: {"outputs":[{"type":"<id>","applicable":true,"reason":"","titl
 
 SOURCE TEXT:
 ${source}`;
-    console.log("[outputs] calling model", lines.length, prompt.length);
     const text = await transcribeRaw([{ type: "input_text", text: prompt }]);
-    console.log("[outputs] model done", text.length);
     let parsed;
     try { parsed = parseJson(text); } catch { throw new Error("The writing service returned an unreadable answer; nothing was saved. Please try again."); }
     const byId = new Map(catalogue.map(c => [c.id, c.name]));
