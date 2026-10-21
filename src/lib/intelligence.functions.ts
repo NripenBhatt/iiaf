@@ -36,7 +36,9 @@ export const processDocument = createServerFn({ method: "POST" }).middleware([re
             status = "needs_review";
             error = `${ocrPages.length} page(s) need OCR, above the ${MAX_OCR_PAGES}-page limit per run; embedded-text pages were extracted, scanned pages were not.`;
           } else {
-            const pageLines = await ocrPdf(bytes, ocrPages);
+            const { data: signed, error: signError } = await context.supabase.storage.from(UPLOAD_BUCKET).createSignedUrl(doc.storage_object_key, 300);
+            if (signError || !signed) throw new Error("A temporary read link for OCR could not be created.");
+            const pageLines = await ocrPdf(signed.signedUrl, ocrPages);
             const ocrSegs = ocrSegments(pageLines, segments.length);
             segments = [...segments, ...ocrSegs];
             method = `${result.segments.length ? "pdf-text-layer+" : ""}ocr-pdf(${OCR_MODEL})`;
