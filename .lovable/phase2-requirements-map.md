@@ -9,6 +9,8 @@
 | Qualification | output JSON persistence | Versioned conservative content-unit qualifications, destinations, blockers and manifests embedded in existing document_outputs JSON. No new approval states/permissions. |
 | Output integrity | output-export, Reports, DocumentUploads | Carry demo/unverified/draft/source lineage into downloads; real Word tables and CSV cells; block image/carousel/video claims without approved rendering. |
 | Existing stored poster | stored segments + cached outputs | Reuse without OCR/model calls; deterministic enrichment and readback only. |
+| Format fixture follow-up | src/test/fixtures/phase2; existing extraction tests | 15 valid synthetic files, reproducible offline; no substitution for absent original DBRAU files. Native real-file tests plus raster routing only. |
+| Output catalogue reconciliation | output-reference.ts; output-reference-catalogue.json; output-contract.ts | Preserve 30 source rows and 13 blueprint contracts; explicit partial/blocked reference mappings. Unknown/unsupported outputs blocked; no approval or permission inferred. |
 
 ## Conflicts and dependencies
 - Blueprint lists rendered image/video deliverables, but no approved renderer exists: BLOCKED, no dependency/provider added.
