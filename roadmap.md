@@ -30,7 +30,7 @@
 - [ ] A4 Full import — blocked: 244 held records have no reviewer decisions yet.
 - [x] B1–B6 Extraction (PDF text, DOCX, XLSX, CSV, TXT), lifecycle, provenance, proposed facts, review queue.
 - [x] C1–C5 Rules R-ENTITY-001, R-AGENCY-001, R-CONFLICT-001; live relationships page; lineage demonstrated.
-- [ ] OCR for scans/images — needs a decision on a paid OCR service.
+- [x] OCR for scans/images — via Lovable AI Gateway vision model (no paid OCR service); page-level locators, human review required.
 # Phase 5 criterion-to-evidence
 - [x] Bulk held-record review workflow by finding type.
 - [ ] Full import — blocked: 244 held records still need reviewer decisions and operator approval.
