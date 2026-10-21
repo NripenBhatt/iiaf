@@ -17,12 +17,13 @@ export function outputCsv(o: GeneratedOutput) {
 }
 
 export function outputText(o: GeneratedOutput, source: string) {
-  return `${footer(o, source)}\n\n${o.title}\n\n${o.body}${tableText(o)}\n`;
+  return `${footer(o, source)}${catalogueText(o)}\n\n${o.title}\n\n${o.body}${tableText(o)}\n`;
 }
+const catalogueText = (o: GeneratedOutput) => o.catalogue ? `\nCatalogue reference: ${o.catalogue.catalogueId ?? "local review"}; blueprint ${o.catalogue.contractId ?? "no exact contract"}; ${o.catalogue.support}. ${o.catalogue.reason}` : "";
 export async function outputDocx(o: GeneratedOutput, source: string) {
   const doc = new Document({ creator: "IIAF", title: o.title, sections: [{ children: [
     new Paragraph({ text: o.title, heading: HeadingLevel.HEADING_1 }),
-    new Paragraph({ text: footer(o, source), style: "Caption" }),
+    new Paragraph({ text: `${footer(o, source)}${catalogueText(o)}`, style: "Caption" }),
     ...o.body.split(/\n/).map(l => new Paragraph(l)),
     ...(o.tables ?? []).flatMap(t => [new Paragraph({ text: t.name, heading: HeadingLevel.HEADING_2 }), new Table({ rows: [new TableRow({ children: ["Row / source", "Column / cell", "Value", "Raw / stored formula"].map(v => new TableCell({ children: [new Paragraph(v)] })) }), ...t.rows.flatMap(r => r.cells.map(c => new TableRow({ children: [`${r.row} · ${r.locator}`, `${c.column} · ${c.ref}`, c.value, `${c.raw}${c.formula ? ` · ${c.formula} (not executed)` : ""}`].map(v => new TableCell({ children: [new Paragraph(v)] })) }))) ] })]),
   ] }] });
@@ -35,7 +36,7 @@ export async function outputsZip(list: GeneratedOutput[], source: string) {
     zip.file(`${base}.txt`, outputText(o, source));
     zip.file(`${base}.docx`, await outputDocx(o, source));
     if (o.tables?.length) zip.file(`${base}.csv`, outputCsv(o));
-    if (o.manifest) zip.file(`${base}.manifest.json`, JSON.stringify({ ...o.manifest, qualification: o.qualification ?? [], tables: o.tables ?? [] }, null, 2));
+    if (o.manifest) zip.file(`${base}.manifest.json`, JSON.stringify({ ...o.manifest, catalogue: o.catalogue ?? null, qualification: o.qualification ?? [], tables: o.tables ?? [] }, null, 2));
   }
   return zip.generateAsync({ type: "blob" });
 }

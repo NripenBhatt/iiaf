@@ -3,8 +3,61 @@ import { describe, expect, it } from "vitest";
 import { zipSync, strToU8 } from "fflate";
 import * as XLSX from "xlsx";
 import { extract, matchField, parseCsv, parseDate, proposeFacts, validateFact } from "@/lib/extraction";
+import { CONTRACT_VERSION, repairOutputSet, type SourceManifest } from "@/lib/output-contract";
 
 const enc = (s: string) => new TextEncoder().encode(s);
+
+describe("Phase 2 real-file synthetic fixtures", () => {
+  const fixture = (name: string) => new Uint8Array(readFileSync(`src/test/fixtures/phase2/${name}`));
+  it.each([
+    ["docx", "synthetic-hindi-agenda.docx", "कार्यसूची"],
+    ["docx", "synthetic-minutes.docx", "Minutes"],
+    ["docx", "synthetic-decisions.docx", "revised draft"],
+    ["docx", "synthetic-performance.docx", "142"],
+    ["xlsx", "synthetic-performance.xlsx", "83%"],
+    ["xls", "synthetic-performance.xls", "83%"],
+    ["pptx", "synthetic-slides.pptx", "प्रवेश समीक्षा"],
+    ["csv", "synthetic-table.csv", "2026-10-13"],
+    ["txt", "synthetic-labels.txt", "Evidence_ID: EV-0042"],
+    ["pdf", "synthetic-text.pdf", "Evidence_ID: EV-0042"],
+  ])("reads %s file %s with source-linked review outputs", async (extension, name, expected) => {
+    const result = await extract(extension, fixture(name));
+    expect(result.status).toBe("extracted");
+    expect(result.segments.map(s => s.content).join("\n")).toContain(expected);
+    expect(result.segments.every(s => s.locator_key.length > 0 && Object.keys(s.locator).length > 0)).toBe(true);
+    const manifest: SourceManifest = { documentId: `synthetic-${name}`, jobId: "synthetic-fixture-job", originalHash: "offline-test-only", parserVersion: "1.4.0", contractVersion: CONTRACT_VERSION, classification: "DEMO", approval: "draft", locators: result.segments.map(s => s.locator_key), verifiedCoverage: false };
+    const outputs = repairOutputSet([], result.segments.map(s => ({ ...s, method_version: "1.4.0" })), manifest);
+    expect(outputs.outputs[0]?.body).toContain(expected);
+    expect(outputs.outputs.every(o => o.manifest?.approval === "draft" && o.manifest.verifiedCoverage === false)).toBe(true);
+  });
+  it("preserves agenda Hindi table blanks without inventing proceedings", async () => {
+    const r = await extract("docx", fixture("synthetic-hindi-agenda.docx"));
+    expect(r.segments.find(s => s.locator_key === "table1:row2")?.locator["cells"]).toMatchObject([{ value: "10:00", column: 1 }, { value: "प्रवेश समीक्षा", column: 2 }, { value: "", column: 3 }]);
+    expect(proposeFacts(r.segments).find(f => f.label === "बैठक तिथि")?.field).toBeNull();
+  });
+  it.each(["xlsx", "xls"])("preserves real %s worksheet values and date formatting", async extension => {
+    const r = await extract(extension, fixture(`synthetic-performance.${extension}`));
+    expect(r.segments[1]?.locator["cells"]).toMatchObject([{ ref: "A2", raw: "142" }, { ref: "B2", raw: "0.83", value: "83%" }, { ref: "C2", value: "2026-10-13" }, { ref: "D2", raw: "118" }, { ref: "E2", value: "" }]);
+    if (extension === "xlsx") expect(r.segments[1]?.locator["cells"]).toMatchObject([{}, {}, {}, { formula: "A2-24" }, {}]);
+  });
+  it("preserves real slide order and paragraph references", async () => {
+    const r = await extract("pptx", fixture("synthetic-slides.pptx"));
+    expect(r.segments.find(s => s.content === "प्रवेश समीक्षा")?.locator).toMatchObject({ slide: 2, paragraph: 2 });
+  });
+  it.each(["png", "jpg", "jpeg"])("routes a valid %s image to OCR without a paid invocation", async extension => {
+    const r = await extract(extension, fixture(`synthetic-poster.${extension}`));
+    expect(r.status).toBe("ocr_required"); expect(r.segments).toEqual([]);
+  });
+  it("identifies the actual image-only page in a scanned PDF", async () => {
+    const r = await extract("pdf", fixture("synthetic-scanned.pdf"));
+    expect(r.status).toBe("ocr_required"); expect(r.ocrPages).toEqual([1]); expect(r.segments).toEqual([]);
+  });
+  it("keeps native page text while identifying the scanned page of a mixed PDF", async () => {
+    const r = await extract("pdf", fixture("synthetic-mixed.pdf"));
+    expect(r.status).toBe("extracted"); expect(r.ocrPages).toEqual([2]);
+    expect(r.segments[0]?.page).toBe(1); expect(r.segments.map(s => s.content).join("\n")).toContain("EV-0042");
+  });
+});
 
 describe("document extraction", () => {
   it("extracts a real text PDF with page and line provenance", async () => {
