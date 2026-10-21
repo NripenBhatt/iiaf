@@ -43,7 +43,8 @@
 
 # v4 coordinated implementation
 - [x] Phase 1 authorized scope: intake guidance, explicit evidence gaps, shared authorized filters/counts/pagination, saved draft listing and authenticated download/isolation checks. 27 focused tests and fresh automatic build pass; exact requirement cards, assignments and durable source classification remain unavailable pending authoritative inputs/later-phase work.
-- [ ] Phase 2 (authorized): structured extraction, retrieval/cache, qualification, cross-purpose routing and honest output contracts; preserve existing work and use no paid services.
+- [x] Phase 2 repairs: native DOCX/XLSX/XLS/CSV cells, URL/Unicode handling, paginated latest-job retrieval, default no-reread cache, source-linked Candidate qualification, draft/DEMO manifests, actual Word tables/CSV/ZIP. Stored 183-line poster and new synthetic CSV verified through university UI; no AI calls, no original reruns.
+- [ ] Phase 2 blocked acceptance: exact DBRAU fixture validation (files absent), image/carousel/video artifacts (no approved renderer), authoritative semantic qualification/catalogue bindings (field parity still partial). Historical flattened tables cannot gain true cells without separately authorized retry. Full Phase 2 acceptance not claimed.
 - [ ] Phase 3: runtime catalogue/rules, cumulative knowledge, evidence mappings and meeting intelligence — awaiting separate phase authorization.
 - [ ] Phase 4: role intelligence, permitted workspaces, company-only Converse, reminders and final verification — awaiting separate phase authorization.
 - [ ] Missing reference dependency: v4 companion concept note is absent from supplied files; exact Converse v1.2 workbook is present in the v2 bundle. Do not silently substitute an older concept note.

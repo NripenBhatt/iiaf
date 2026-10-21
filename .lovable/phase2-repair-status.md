@@ -1,0 +1,12 @@
+# Phase 2 repair evidence — 21 October 2026
+
+- Diagnosis: table parsers flattened rows without cell payloads; output retrieval capped all jobs before selection; default processing allowed repeated reads; exports omitted durable draft/DEMO lineage. Bare URLs matched label separators.
+- Repaired existing parser locators, latest-job read pagination, cache guards, no-credit output repair, source-review qualification/manifest JSON, Word/CSV/ZIP export and small existing preview changes. No new schema, provider or dependency. Originals, historical outputs, permissions, master gates retained.
+- 50/50 focused tests passed. Automatic build OK at 13:47:04 UTC; final edits require fresh automatic result before completion.
+- University UI: exact stored 183-line poster -> persisted review draft -> downloadable valid DOCX/TXT/manifest ZIP. Date, time, subject, institutions, venue, presenter retained. No OCR rerun. This is source review, not a new communication-writing result.
+- New SYNTHETIC-phase2-table.csv: native upload/read, 12 cells including blank, Hindi, 142, 83%, date and literal formula -> real Word table, CSV, TXT and manifests, seven ZIP entries. Reopened in Reports. Cache returned existing job without rereading.
+- Direct university server checks: other-organization output generation, processing and saved-list counts denied (3/3); company-only Converse redirected to Access denied. Poster output/source retries both cached.
+- Four previously approved facts remain; this repair approved none. Held reviews 0; full import runs 0. One new synthetic document/job and two stored-output sets created during tests.
+- Partial: historical OCR/flattened tables lack real geometry; DOC/PDF/PPTX embedded images and nested/vertical-merge table details need original review. No new OCR operational test. DBRAU fixtures and v4 companion are absent. Rendered image/carousel/video blocked, no paid renderer. Qualification is conservative Candidate/source-review routing, not complete catalogue semantic binding or Phase 3 meeting intelligence. New documents receive deterministic source-review/table drafts; no new AI-written communications this round.
+- Rollback: restore changed source files; leave immutable test outputs/source records labelled synthetic. No migration rollback. Contracts extend output-contract.ts; table cells extend locator JSON; source format limitations tracked in phase2-format-evidence.md.
+- Phases 3–4 remain unauthorized and untouched.
