@@ -42,7 +42,7 @@
 - [x] Report tested formats and remaining limitations without changing import gates or permissions.
 
 # v4 coordinated implementation
-- [ ] Phase 1: map references/conflicts; improve existing intake/evidence cards; shared authorized filters/counts/pagination; stored report listing; focused live tests.
+- [x] Phase 1 authorized scope: intake guidance, explicit evidence gaps, shared authorized filters/counts/pagination, saved draft listing and authenticated download/isolation checks. 27 focused tests and fresh automatic build pass; exact requirement cards, assignments and durable source classification remain unavailable pending authoritative inputs/later-phase work.
 - [ ] Phase 2: structured extraction, retrieval/cache, qualification, cross-purpose routing and honest output contracts — awaiting separate phase authorization.
 - [ ] Phase 3: runtime catalogue/rules, cumulative knowledge, evidence mappings and meeting intelligence — awaiting separate phase authorization.
 - [ ] Phase 4: role intelligence, permitted workspaces, company-only Converse, reminders and final verification — awaiting separate phase authorization.
