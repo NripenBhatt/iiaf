@@ -226,6 +226,57 @@ export type Database = {
           },
         ]
       }
+      document_outputs: {
+        Row: {
+          created_at: string
+          created_by: string
+          document_id: string
+          id: string
+          model: string
+          organization_id: string
+          outputs: Json
+          source_hash: string
+          source_version: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string
+          document_id: string
+          id?: string
+          model: string
+          organization_id: string
+          outputs: Json
+          source_hash: string
+          source_version: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          document_id?: string
+          id?: string
+          model?: string
+          organization_id?: string
+          outputs?: Json
+          source_hash?: string
+          source_version?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "document_outputs_document_id_fkey"
+            columns: ["document_id"]
+            isOneToOne: false
+            referencedRelation: "uploaded_documents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "document_outputs_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       document_processing_jobs: {
         Row: {
           document_id: string

@@ -64,6 +64,13 @@
       "when": 1792504644671,
       "tag": "0008_phase6_field_mappings_assistant",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1792570688072,
+      "tag": "0009_document_outputs",
+      "breakpoints": true
     }
   ]
 }
