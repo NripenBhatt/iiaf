@@ -1,4 +1,3 @@
-import { InstitutionDomains } from "@/components/iiaf/institution-domains";
 import { validateListSearch } from "@/lib/list-filters";
 import { createFileRoute } from "@tanstack/react-router";
 import { pageHead } from "@/lib/seo";
@@ -22,7 +21,6 @@ function Page() {
       />
       <DocumentUploads module="institutional" label="Institutional documents" />
       <details className="mb-8 border bg-card p-4"><summary className="cursor-pointer text-sm font-medium">Reviewer tools · extracted facts awaiting human review</summary><div className="mt-4"><FactReview module="institutional" /></div></details>
-      <InstitutionDomains />
     </>
   );
 }
