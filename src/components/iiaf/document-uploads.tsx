@@ -16,6 +16,8 @@ import { generateOutputs, getOutputs, type OutputSet } from "@/lib/outputs.funct
 import { outputDocx, outputFileBase, outputText, outputsZip } from "@/lib/output-export";
 import { saveBlob } from "@/lib/package-export";
 import { ALLOWED_EXTENSIONS, isStored, UPLOAD_BUCKET, sha256Hex, validateSelection, type UploadModule } from "@/lib/upload-rules";
+import { ListFilterControls, useListFilters } from "./list-filters";
+import intakeGuidance from "@/data/intake-guidance.json";
 
 const EVIDENCE_FRAMEWORKS = ["NAAC", "NIRF", "QS", "THE", "UI GreenMetric", "Other / not stated"];
 function categoriesFor(module: UploadModule) {
@@ -32,17 +34,19 @@ const simpleStatus = (s: string) => READ_FAILED.includes(s) ? { tone: "danger" a
 
 export function DocumentUploads({ module, label }: { module: UploadModule; label: string }) {
   const { workspace } = useWorkspace(); const cache = useQueryClient();
+  const { filters, update } = useListFilters();
   const list = useServerFn(listDocuments); const register = useServerFn(registerDocument); const finalize = useServerFn(finalizeDocument);
   const process = useServerFn(processDocument); const fail = useServerFn(markDocumentFailed); const link = useServerFn(getDocumentLink);
   const generate = useServerFn(generateOutputs); const load = useServerFn(getOutputs);
   const key = ["documents", workspace.id, module];
-  const { data, isLoading, error } = useQuery({ queryKey: key, queryFn: () => list({ data: { organizationId: workspace.id, module } }) });
+  const { data, isLoading, error } = useQuery({ queryKey: [...key, filters], queryFn: () => list({ data: { organizationId: workspace.id, module, filters } }) });
   const [file, setFile] = useState<File | null>(null); const [preview, setPreview] = useState<string | null>(null);
   const [category, setCategory] = useState(""); const [docType, setDocType] = useState("UNKNOWN");
   const [meta, setMeta] = useState(blank); const [stage, setStage] = useState<string | null>(null); const [dragging, setDragging] = useState(false);
   const [active, setActive] = useState<{ id: string; name: string } | null>(null);
   const [outputs, setOutputs] = useState<OutputSet | null>(null); const [outputsError, setOutputsError] = useState<string | null>(null);
   const categories = categoriesFor(module); const types = typesFor(module, category);
+  const guidance = module === "evidence" ? null : intakeGuidance[module].categories.find(c => c.code === category);
   const fileErrors = file ? validateSelection(file) : [];
 
   useEffect(() => {
@@ -103,6 +107,8 @@ export function DocumentUploads({ module, label }: { module: UploadModule; label
         {field("declared_purpose", "Title or description (optional)", "e.g. Startup workshop poster")}
         {field(module === "meeting" ? "document_date_raw" : "reporting_period", module === "meeting" ? "Meeting date (optional)" : "Reporting period or event date (optional)", "Only if known")}
       </div>
+      {guidance && <div className="border-l-2 border-primary pl-3 text-sm"><p className="font-medium">{guidance.name}</p><p className="mt-1 text-muted-foreground">{guidance.description}</p>{guidance.examples && <p className="mt-1 text-muted-foreground">Examples: {guidance.examples}</p>}<p className="mt-1 text-xs text-muted-foreground">{guidance.formats ? `Catalogue formats: ${guidance.formats}. ` : ""}Assignment and due date: not recorded.</p></div>}
+      {module === "evidence" && <p className="border-l-2 border-border pl-3 text-sm text-muted-foreground">Declared framework only. Exact methodology edition, requirement and evidence approval are not established by this upload.</p>}
       <label htmlFor={`${module}-file`} onDragOver={e => { e.preventDefault(); setDragging(true); }} onDragLeave={() => setDragging(false)} onDrop={e => { e.preventDefault(); setDragging(false); const f = e.dataTransfer.files[0]; if (f) setFile(f); }}
         className={`flex cursor-pointer flex-wrap items-center gap-4 border-2 border-dashed p-5 text-sm ${dragging ? "border-primary bg-primary/5" : "border-border"}`}>
         {preview ? <img src={preview} alt="Selected file preview" className="h-24 w-24 border object-cover" /> : <FileText className="size-8 text-muted-foreground" />}
@@ -137,9 +143,11 @@ export function DocumentUploads({ module, label }: { module: UploadModule; label
     </div>}
 
     {error ? <p role="alert" className="text-sm text-destructive">Documents could not be loaded.</p> : isLoading ? <p className="text-sm text-muted-foreground">Loading documents…</p> :
-      <div className="border bg-card"><h2 className="border-b px-5 py-3 font-semibold">Your {label.toLowerCase()} · {data?.documents.length ?? 0}</h2>
+      <div className="border bg-card"><h2 className="border-b px-5 py-3 font-semibold">Your {label.toLowerCase()}</h2>
+        <ListFilterControls filters={filters} update={update} total={data?.total ?? 0} categories={categories.map(c => ({ value: c.code, label: c.name }))} types={module === "evidence" ? [] : catalogue[module].documentTypes.map(t => ({ value: t.id, label: t.name }))} />
+        {data?.documents.length === 0 && <p className="p-5 text-sm text-muted-foreground">No documents match these filters. Clear filters to see other documents.</p>}
         <ul className="divide-y">{(data?.documents ?? []).map(d => { const st = simpleStatus(d.processing_status); return <li key={d.id} className="flex flex-wrap items-center justify-between gap-3 px-5 py-3 text-sm">
-          <div><p className="break-all font-medium">{d.original_filename}</p><p className="text-xs text-muted-foreground">{new Date(d.created_at).toLocaleDateString()} · {(d.file_size_bytes / 1024).toFixed(0)} KB</p></div>
+          <div><p className="break-all font-medium">{d.original_filename}</p><p className="text-xs text-muted-foreground">{new Date(d.created_at).toLocaleDateString()} · {(d.file_size_bytes / 1024).toFixed(0)} KB · {d.reporting_period || d.document_date_raw || "Period/date not stated"}</p><p className="text-xs text-muted-foreground">Latest activity: {new Date(d.updated_at).toLocaleString()} · Owner: {d.department_or_owner || "not recorded"}</p></div>
           <div className="flex flex-wrap items-center gap-2"><Status tone={st.tone}>{st.text}</Status>
             {isStored(d.processing_status) && <Button size="sm" variant="ghost" onClick={() => void open(d.id)}>Original</Button>}
             {st.text === "Read" && <Button size="sm" variant="outline" disabled={busy} onClick={() => void showOutputs(d.id, d.original_filename)}>View outputs</Button>}</div>

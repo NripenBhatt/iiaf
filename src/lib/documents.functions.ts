@@ -2,20 +2,38 @@ import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { z } from "zod";
 import { UPLOAD_BUCKET, isStored, contentMatchesExtension, detectMime, sha256Hex, validateSelection } from "./upload-rules";
+import { listFilterSchema, dateBounds, literalSearch, PAGE_SIZE } from "./list-filters";
 
 const moduleSchema = z.enum(["institutional", "meeting", "evidence"]);
 const text = z.string().trim().max(300).optional().default("");
 
 export const listDocuments = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
-  .inputValidator(z.object({ organizationId: z.string().uuid(), module: moduleSchema }))
+  .inputValidator(z.object({ organizationId: z.string().uuid(), module: moduleSchema, filters: listFilterSchema.optional() }))
   .handler(async ({ context, data }) => {
-    const { data: rows, error } = await context.supabase.from("uploaded_documents")
-      .select("id,upload_id,module,category_code,document_type_id,declared_purpose,department_or_owner,reporting_period,document_date_raw,document_version_or_status,original_filename,file_extension,detected_mime_type,file_size_bytes,sha256_hash,processing_status,extraction_status,validation_errors,attempts,uploader_id,created_at,uploaded_at,schema_version")
-      .eq("organization_id", data.organizationId).eq("module", data.module).order("created_at", { ascending: false }).limit(200);
+    const { data: member, error: memberError } = await context.supabase.rpc("is_member", { _org: data.organizationId });
+    if (memberError || !member) throw new Error("Access denied");
+    const filters = data.filters ?? listFilterSchema.parse({});
+    if (filters.dateField === "generated") throw new Error("Documents have no generation date.");
+    const bounds = dateBounds(filters);
+    let query = context.supabase.from("uploaded_documents")
+      .select("id,upload_id,module,category_code,document_type_id,declared_purpose,department_or_owner,reporting_period,document_date_raw,document_version_or_status,original_filename,file_extension,detected_mime_type,file_size_bytes,sha256_hash,processing_status,extraction_status,validation_errors,attempts,uploader_id,created_at,uploaded_at,updated_at,language,schema_version", { count: "exact" })
+      .eq("organization_id", data.organizationId).eq("module", data.module);
+    const search = literalSearch(filters.q);
+    if (search) query = query.or(`original_filename.ilike.%${search}%,declared_purpose.ilike.%${search}%`);
+    if (filters.category) query = query.eq("category_code", filters.category);
+    if (filters.type) query = query.eq("document_type_id", filters.type);
+    if (filters.status) query = query.eq("processing_status", filters.status);
+    if (filters.source) query = query.eq("id", filters.source);
+    if (filters.owner) query = query.eq("uploader_id", filters.owner);
+    const dateColumn = filters.dateField === "uploaded" ? "uploaded_at" : "created_at";
+    if (bounds.start) query = query.gte(dateColumn, bounds.start);
+    if (bounds.end) query = query.lt(dateColumn, bounds.end);
+    const ascending = filters.sort === "oldest";
+    const { data: rows, error, count } = await query.order(dateColumn, { ascending }).order("id", { ascending }).range((filters.page - 1) * PAGE_SIZE, filters.page * PAGE_SIZE - 1);
     if (error) throw new Error("Unable to load uploaded documents");
     const { data: canUpload } = await context.supabase.rpc("may_upload", { _org: data.organizationId });
     const all = rows ?? [];
-    return { canUpload: !!canUpload, userId: context.userId, documents: all.map(d => ({ ...d, duplicateOf: all.filter(o => o.id !== d.id && o.sha256_hash === d.sha256_hash && isStored(o.processing_status)).map(o => o.original_filename) })) };
+    return { canUpload: !!canUpload, userId: context.userId, total: count ?? 0, documents: all.map(d => ({ ...d, duplicateOf: all.filter(o => o.id !== d.id && o.sha256_hash === d.sha256_hash && isStored(o.processing_status)).map(o => o.original_filename) })) };
   });
 
 export const registerDocument = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])

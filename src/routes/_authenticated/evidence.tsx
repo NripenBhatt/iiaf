@@ -1,11 +1,12 @@
-import { Analytics } from "@/components/iiaf/analytics";
+import { validateListSearch } from "@/lib/list-filters";
 import { createFileRoute } from "@tanstack/react-router";
 import { pageHead } from "@/lib/seo";
 import { DocumentUploads } from "@/components/iiaf/document-uploads";
 import { FactReview } from "@/components/iiaf/fact-review";
-import { DataTable, PageHeader, Status } from "@/components/iiaf/ui";
+import { PageHeader } from "@/components/iiaf/ui";
 
 export const Route = createFileRoute("/_authenticated/evidence")({
+  validateSearch: validateListSearch,
   head: () => pageHead("Accreditation & Ranking Evidence", "Demonstration evidence coverage and review states; official agency editions and mappings are unconfirmed."),
   component: Page,
 });
@@ -29,17 +30,7 @@ function Page() {
           </span>
         ))}
       </div>
-      <Analytics page="evidence" />
-      <DataTable
-        caption="NAAC · sample methodology edition"
-        columns={["Criterion", "Evidence", "Source", "Mapping", "Review"]}
-        rows={[
-          ["3.2.1", "Extramural research grants", "Finance ledger 2024–25", <Status tone="gold">Proposed</Status>, <Status tone="warning">In review</Status>],
-          ["2.4.2", "Faculty with PhD", "Faculty roster", <Status tone="success">Approved</Status>, <Status tone="success">Verified</Status>],
-          ["5.2.1", "Placement of outgoing students", "Placement report 2025", <Status tone="gold">Proposed</Status>, <Status>Not started</Status>],
-          ["7.1.3", "Waste management facilities", "—", <Status tone="danger">Gap</Status>, <Status>No evidence</Status>],
-        ]}
-      />
+      <div className="border-t py-5"><h2 className="font-semibold">Official requirement mapping · Blocked</h2><p className="mt-2 text-sm text-muted-foreground">An exact official methodology edition, requirement identifier and reviewed source linkage are required. Declared frameworks and uploaded drafts do not establish verified coverage.</p><dl className="mt-3 grid gap-2 text-sm sm:grid-cols-2"><div><dt className="text-muted-foreground">Edition / effective period</dt><dd>Not verified</dd></div><div><dt className="text-muted-foreground">Criterion / metric / unit</dt><dd>Not established</dd></div><div><dt className="text-muted-foreground">Owner / package / deadline</dt><dd>Not assigned</dd></div><div><dt className="text-muted-foreground">Mapping / approval</dt><dd>Blocked pending authoritative details and review</dd></div></dl></div>
     </>
   );
 }

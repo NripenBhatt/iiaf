@@ -1,0 +1,292 @@
+{
+  "institutional": {
+    "source": "IIAF_Institutional_Information_Upload_Catalogue_CLEAN.xlsx",
+    "categories": [
+      {
+        "code": "INST-01",
+        "name": "Institutional Profile & Identity",
+        "description": "Upload and extract institutional records in this information family.",
+        "examples": "University profile; institutional history; vision and mission; objectives; statutory status; recognition/establishment records; campus/location profile",
+        "formats": "Multiple supported formats"
+      },
+      {
+        "code": "INST-02",
+        "name": "Institutional Brochures & Prospectus",
+        "description": "Upload and extract institutional records in this information family.",
+        "examples": "University brochure; general prospectus; admission prospectus; programme brochure; school/department brochure; international prospectus; annual information booklet",
+        "formats": "Multiple supported formats"
+      },
+      {
+        "code": "INST-03",
+        "name": "Events, Seminars & Conferences",
+        "description": "Upload and extract institutional records in this information family.",
+        "examples": "Seminar; conference; symposium; workshop; webinar; lecture; invited talk; colloquium; festival; exhibition; orientation; convocation; celebration; training programme",
+        "formats": "Multiple supported formats"
+      },
+      {
+        "code": "INST-04",
+        "name": "Event Notices, Posters & Media",
+        "description": "Upload and extract institutional records in this information family.",
+        "examples": "Event notice; invitation; poster; schedule; programme booklet; attendance sheet; event photographs; press release; feedback form; participation certificate",
+        "formats": "Multiple supported formats"
+      },
+      {
+        "code": "INST-05",
+        "name": "Departments, Schools & Centres",
+        "description": "Upload and extract institutional records in this information family.",
+        "examples": "Department profile; school/college profile; centre/institute profile; department annual report; department directory; centre establishment order",
+        "formats": "Multiple supported formats"
+      },
+      {
+        "code": "INST-06",
+        "name": "Academic Programmes & Curriculum",
+        "description": "Upload and extract institutional records in this information family.",
+        "examples": "Programme catalogue; course list; programme structure; curriculum; syllabus; course outcomes; academic regulations; academic calendar; credit structure",
+        "formats": "Multiple supported formats"
+      },
+      {
+        "code": "INST-07",
+        "name": "Faculty Profiles & Qualifications",
+        "description": "Upload and extract institutional records in this information family.",
+        "examples": "Faculty directory; CV; qualification record; appointment profile; designation list; specialization list; faculty workload/experience summary",
+        "formats": "Multiple supported formats"
+      },
+      {
+        "code": "INST-08",
+        "name": "Non-teaching Staff & Administration",
+        "description": "Upload and extract institutional records in this information family.",
+        "examples": "Staff directory; administrative office directory; role/responsibility list; office order; establishment/staffing summary",
+        "formats": "Multiple supported formats"
+      },
+      {
+        "code": "INST-09",
+        "name": "Student Achievements, Awards & Scholarships",
+        "description": "Upload and extract institutional records in this information family.",
+        "examples": "Award records; scholarship list; competition results; student project awards; merit recognitions; fellowship records",
+        "formats": "Multiple supported formats"
+      },
+      {
+        "code": "INST-10",
+        "name": "Student Activities, Clubs & Sports",
+        "description": "Upload and extract institutional records in this information family.",
+        "examples": "Club/society records; NSS/NCC activity; sports participation; cultural activity; student association records; extracurricular report",
+        "formats": "Multiple supported formats"
+      },
+      {
+        "code": "INST-11",
+        "name": "Admissions & Enrolment",
+        "description": "Upload and extract institutional records in this information family.",
+        "examples": "Admission policy; prospectus; admission calendar; applications; admissions/enrolment summary; category-wise enrolment data; intake approvals",
+        "formats": "Multiple supported formats"
+      },
+      {
+        "code": "INST-12",
+        "name": "Examinations, Results & Academic Performance",
+        "description": "Upload and extract institutional records in this information family.",
+        "examples": "Examination schedule; result summary; pass percentage; progression summary; examination regulations; result gazette (access restricted)",
+        "formats": "Multiple supported formats"
+      },
+      {
+        "code": "INST-13",
+        "name": "Placements, Internships & Careers",
+        "description": "Upload and extract institutional records in this information family.",
+        "examples": "Placement report; employer list; placement offers; internship report; career guidance activity; higher-studies outcomes; salary summary",
+        "formats": "Multiple supported formats"
+      },
+      {
+        "code": "INST-14",
+        "name": "Research Publications & Scholarly Output",
+        "description": "Upload and extract institutional records in this information family.",
+        "examples": "Journal article; book; book chapter; conference paper; editorial; working paper; publication list; repository export",
+        "formats": "Multiple supported formats"
+      },
+      {
+        "code": "INST-15",
+        "name": "Research Projects, Grants & Funding",
+        "description": "Upload and extract institutional records in this information family.",
+        "examples": "Sanction letter; grant agreement; funded project record; progress report; completion report; utilisation certificate; expenditure summary",
+        "formats": "Multiple supported formats"
+      },
+      {
+        "code": "INST-16",
+        "name": "Patents, IP & Innovation",
+        "description": "Upload and extract institutional records in this information family.",
+        "examples": "Patent application/grant; copyright; design registration; technology transfer; prototype; innovation report; incubation-supported innovation record",
+        "formats": "Multiple supported formats"
+      },
+      {
+        "code": "INST-17",
+        "name": "Collaborations, MoUs & Partnerships",
+        "description": "Upload and extract institutional records in this information family.",
+        "examples": "MoU; collaboration agreement; exchange agreement; industry partnership; academic partnership; joint programme record",
+        "formats": "Multiple supported formats"
+      },
+      {
+        "code": "INST-18",
+        "name": "Infrastructure, Laboratories & Facilities",
+        "description": "Upload and extract institutional records in this information family.",
+        "examples": "Campus/building inventory; laboratory list; library facilities; classroom/hostel/sports facilities; equipment inventory; accessibility facilities",
+        "formats": "Multiple supported formats"
+      },
+      {
+        "code": "INST-19",
+        "name": "Finance, Budget & Institutional Development",
+        "description": "Upload and extract institutional records in this information family.",
+        "examples": "Annual budget; audited financial statements; expenditure summaries; development plan; capital expenditure; grant utilisation",
+        "formats": "Multiple supported formats"
+      },
+      {
+        "code": "INST-20",
+        "name": "Policies, Regulations & Manuals",
+        "description": "Upload and extract institutional records in this information family.",
+        "examples": "Policy; statute; ordinance; regulation; SOP; handbook; code of conduct; quality policy; retention/privacy policy",
+        "formats": "Multiple supported formats"
+      },
+      {
+        "code": "INST-21",
+        "name": "Orders, Circulars & Notifications",
+        "description": "Upload and extract institutional records in this information family.",
+        "examples": "Office order; circular; notification; memorandum; appointment/order; administrative instruction",
+        "formats": "Multiple supported formats"
+      },
+      {
+        "code": "INST-22",
+        "name": "Annual Reports & Institutional Reports",
+        "description": "Upload and extract institutional records in this information family.",
+        "examples": "University annual report; department annual report; self-study report; institutional development report; activity report",
+        "formats": "Multiple supported formats"
+      },
+      {
+        "code": "INST-23",
+        "name": "Outreach, Extension & Community Engagement",
+        "description": "Upload and extract institutional records in this information family.",
+        "examples": "Outreach programme; extension activity; community engagement; social responsibility; village/adopted community report; awareness campaign",
+        "formats": "Multiple supported formats"
+      },
+      {
+        "code": "INST-24",
+        "name": "Website, News & Public Communications",
+        "description": "Upload and extract institutional records in this information family.",
+        "examples": "Website page export; official news; press release; newsletter; social media source material; official feed; public announcement",
+        "formats": "Multiple supported formats"
+      },
+      {
+        "code": "INST-25",
+        "name": "General Institutional Records",
+        "description": "Upload and extract institutional records in this information family.",
+        "examples": "Other institutional record; correspondence; certificate; official submission; data extract not covered elsewhere",
+        "formats": "Multiple supported formats"
+      }
+    ]
+  },
+  "meeting": {
+    "source": "IIAF_Meeting_Information_Upload_Catalogue_CLEAN.xlsx",
+    "categories": [
+      {
+        "code": "MEET-01",
+        "name": "Meeting Notice",
+        "description": "Register and extract this meeting document family.",
+        "examples": "Notice of meeting; invitation; meeting circular; rescheduling/cancellation notice",
+        "formats": "Multiple supported formats"
+      },
+      {
+        "code": "MEET-02",
+        "name": "Agenda & Agenda Items",
+        "description": "Register and extract this meeting document family.",
+        "examples": "Proposed agenda; approved agenda; agenda papers; agenda item list",
+        "formats": "Multiple supported formats"
+      },
+      {
+        "code": "MEET-03",
+        "name": "Meeting Attachments & Briefing Papers",
+        "description": "Register and extract this meeting document family.",
+        "examples": "Reports; proposals; presentations; notes; financial/academic papers circulated before meeting",
+        "formats": "Multiple supported formats"
+      },
+      {
+        "code": "MEET-04",
+        "name": "Attendance & Participants",
+        "description": "Register and extract this meeting document family.",
+        "examples": "Attendance sheet; participant list; apologies; invitee list; quorum record",
+        "formats": "Multiple supported formats"
+      },
+      {
+        "code": "MEET-05",
+        "name": "Draft Minutes",
+        "description": "Register and extract this meeting document family.",
+        "examples": "Draft minutes; unapproved proceedings",
+        "formats": "Multiple supported formats"
+      },
+      {
+        "code": "MEET-06",
+        "name": "Approved Minutes",
+        "description": "Register and extract this meeting document family.",
+        "examples": "Approved/signed minutes; confirmation of previous minutes",
+        "formats": "Multiple supported formats"
+      },
+      {
+        "code": "MEET-07",
+        "name": "Proceedings & Discussion Notes",
+        "description": "Register and extract this meeting document family.",
+        "examples": "Proceedings; deliberation notes; secretary notes; discussion summary",
+        "formats": "Multiple supported formats"
+      },
+      {
+        "code": "MEET-08",
+        "name": "Decisions & Resolutions",
+        "description": "Register and extract this meeting document family.",
+        "examples": "Resolution; decision register; recommendation; approved outcome",
+        "formats": "Multiple supported formats"
+      },
+      {
+        "code": "MEET-09",
+        "name": "Action Items & Assignments",
+        "description": "Register and extract this meeting document family.",
+        "examples": "Action register; assigned task; responsibility matrix; follow-up list",
+        "formats": "Multiple supported formats"
+      },
+      {
+        "code": "MEET-10",
+        "name": "Action-Taken Reports (ATR)",
+        "description": "Register and extract this meeting document family.",
+        "examples": "Action-taken report; compliance report; progress report against resolutions",
+        "formats": "Multiple supported formats"
+      },
+      {
+        "code": "MEET-11",
+        "name": "Implementation Evidence",
+        "description": "Register and extract this meeting document family.",
+        "examples": "Completion report; implementation order; circular; photos; invoice; work completion certificate; outcome report",
+        "formats": "Multiple supported formats"
+      },
+      {
+        "code": "MEET-12",
+        "name": "Deferred & Carried-Forward Items",
+        "description": "Register and extract this meeting document family.",
+        "examples": "Unresolved items; deferred agenda; carry-forward register; pending decision list",
+        "formats": "Multiple supported formats"
+      },
+      {
+        "code": "MEET-13",
+        "name": "Minutes Corrections & Amendments",
+        "description": "Register and extract this meeting document family.",
+        "examples": "Errata; corrected minutes; addendum; revised resolution; approved amendment",
+        "formats": "Multiple supported formats"
+      },
+      {
+        "code": "MEET-14",
+        "name": "Next-Meeting Records",
+        "description": "Register and extract this meeting document family.",
+        "examples": "Next meeting notice; tentative schedule; proposed follow-up agenda",
+        "formats": "Multiple supported formats"
+      },
+      {
+        "code": "MEET-15",
+        "name": "Other Governance Meeting Records",
+        "description": "Register and extract this meeting document family.",
+        "examples": "Other meeting record or attachment",
+        "formats": "Multiple supported formats"
+      }
+    ]
+  }
+}

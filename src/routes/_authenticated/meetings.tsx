@@ -1,11 +1,12 @@
-import { Analytics } from "@/components/iiaf/analytics";
+import { validateListSearch } from "@/lib/list-filters";
 import { createFileRoute } from "@tanstack/react-router";
 import { pageHead } from "@/lib/seo";
 import { DocumentUploads } from "@/components/iiaf/document-uploads";
 import { FactReview } from "@/components/iiaf/fact-review";
-import { DataTable, PageHeader, Stat, Status } from "@/components/iiaf/ui";
+import { PageHeader } from "@/components/iiaf/ui";
 
 export const Route = createFileRoute("/_authenticated/meetings")({
+  validateSearch: validateListSearch,
   head: () => pageHead("Meeting Information", "Notices, agendas, minutes, decisions and action items with owners and deadlines."),
   component: Page,
 });
@@ -20,27 +21,7 @@ function Page() {
       />
       <DocumentUploads module="meeting" label="Meeting records" />
       <details className="mb-8 border bg-card p-4"><summary className="cursor-pointer text-sm font-medium">Reviewer tools · extracted facts awaiting human review</summary><div className="mt-4"><FactReview module="meeting" /></div></details>
-      <div className="mb-6 grid gap-4 sm:grid-cols-3">
-        <Stat label="Meetings this term" value="14" />
-        <Stat label="Open actions" value="38" />
-        <Stat label="Overdue" value="6" />
-      </div>
-      <Analytics page="meetings" />
-      <DataTable
-        caption="Meeting register"
-        columns={["Meeting", "Agenda", "Minutes", "Decision", "State"]}
-        rows={[["Academic Council · 12 Mar 2026", "Research incentive policy", "Minutes v1 · sample", "Revise policy", <Status tone="warning">Implementation pending</Status>], ["IQAC · 04 Mar 2026", "Placement outcomes", "Minutes v2 · sample", "Publish summary", <Status tone="gold">Action overdue</Status>]]}
-      />
-      <div className="h-5" />
-      <DataTable
-        caption="Action items"
-        columns={["Action", "Meeting", "Owner", "Due", "Status"]}
-        rows={[
-          ["Revise research incentive policy", "Academic Council · 12 Mar", "Dean, Research", "30 Apr", <Status tone="warning">In progress</Status>],
-          ["Publish placement summary", "IQAC · 04 Mar", "Placement Officer", "15 Mar", <Status tone="danger">Overdue</Status>],
-          ["Upload completion evidence", "Board of Studies · 20 Feb", "HoD, CSE", "10 Mar", <Status tone="success">Completed</Status>],
-        ]}
-      />
+      <p className="mb-6 text-sm text-muted-foreground">Meeting actions, assignments and deadlines are not yet recorded separately. An uploaded agenda is not proof of a decision or completed action.</p>
     </>
   );
 }

@@ -1415,6 +1415,10 @@ export type Database = {
         Args: { _roles: Database["public"]["Enums"]["app_role"][] }
         Returns: boolean
       }
+      list_saved_outputs: {
+        Args: { _filters?: Json; _org: string }
+        Returns: Json
+      }
       mark_document_failed: {
         Args: { _id: string; _reason: string }
         Returns: undefined
