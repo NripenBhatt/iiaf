@@ -268,6 +268,16 @@ function txt(bytes: Uint8Array): Extraction {
 
 export async function extract(ext: string, bytes: Uint8Array): Promise<Extraction> {
   try {
+    const result = await extractNative(ext, bytes);
+    const limited = result.segments.length >= MAX_SEGMENTS || result.segments.some(s => s.content.length > 8000);
+    if (limited) return { ...result, status: "needs_review", segments: result.segments.slice(0, MAX_SEGMENTS), error: "Partial extraction: segment or stored-text limit reached; remaining content requires review of the original. No completeness claim." };
+    return result;
+  } catch (e) {
+    return { status: "processing_failed", method: ext, segments: [], error: `Extraction failed: ${e instanceof Error ? e.message.slice(0, 200) : "unknown error"}` };
+  }
+}
+
+async function extractNative(ext: string, bytes: Uint8Array): Promise<Extraction> {
     switch (ext) {
       case "pdf": return await pdf(bytes);
       case "docx": return docx(bytes);
@@ -280,7 +290,4 @@ export async function extract(ext: string, bytes: Uint8Array): Promise<Extractio
       case "jpg": case "jpeg": case "png": return { status: "ocr_required", method: "none", segments: [], error: "Image has no embedded text; the processing step runs OCR on it." };
       default: return { status: "needs_review", method: "none", segments: [], error: `.${ext} is stored but not supported by extractor ${PROCESSOR_VERSION}; manual review required.` };
     }
-  } catch (e) {
-    return { status: "processing_failed", method: ext, segments: [], error: `Extraction failed: ${e instanceof Error ? e.message.slice(0, 200) : "unknown error"}` };
-  }
 }

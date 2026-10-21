@@ -38,10 +38,12 @@ export const generateOutputs = createServerFn({ method: "POST" }).middleware([re
     const { data: organization } = await context.supabase.from("organizations").select("name").eq("id", doc.organization_id).single();
     const classification = /synthetic|demo|fictional|dummy|काल्पनिक|नमूना/i.test(`${organization?.name ?? ""} ${doc.original_filename} ${doc.declared_purpose} ${source}`) ? "DEMO" as const : "unverified" as const;
     const hash = await sha256(`${CONTRACT_VERSION}\n${job.id}\n${classification}\n${source}\n${JSON.stringify(lines.map(l => l.locator))}`);
-    const { data: cached } = await context.supabase.from("document_outputs").select("outputs,source_version,created_at").eq("document_id", doc.id).eq("source_hash", hash).maybeSingle();
-    if (cached) return { ...(cached.outputs as unknown as OutputSet), sourceVersion: cached.source_version, createdAt: cached.created_at, cached: true };
+    const { data: cached, error: cacheError } = await context.supabase.from("document_outputs").select("outputs,source_version,created_at").eq("document_id", doc.id).eq("source_hash", hash).maybeSingle();
+    if (cacheError) throw new Error("Saved output cache could not be read.");
+    if (cached) return { ...stored.parse(cached.outputs), sourceVersion: cached.source_version, createdAt: cached.created_at, cached: true };
 
-    const { data: previous, error: previousError } = await context.supabase.from("document_outputs").select("outputs").eq("document_id", doc.id).order("created_at", { ascending: false }).limit(1).maybeSingle();
+    const originalTextHash = await sha256(source);
+    const { data: previous, error: previousError } = await context.supabase.from("document_outputs").select("outputs").eq("document_id", doc.id).eq("source_hash", originalTextHash).order("created_at", { ascending: false }).limit(1).maybeSingle();
     if (previousError) throw new Error("Existing outputs could not be read.");
     const set = repairOutputSet(previous ? stored.parse(previous.outputs).outputs : [], lines, { documentId: doc.id, jobId: job.id, originalHash: doc.sha256_hash, parserVersion: version, contractVersion: CONTRACT_VERSION, classification, approval: "draft", locators: lines.map(l => l.locator_key), verifiedCoverage: false });
     const { data: saved, error } = await context.supabase.from("document_outputs").upsert({ organization_id: doc.organization_id, document_id: doc.id, source_version: version, source_hash: hash, model: "none:stored-source-contract", outputs: JSON.parse(JSON.stringify(set)) }, { onConflict: "document_id,source_hash", ignoreDuplicates: true }).select("created_at").maybeSingle();
