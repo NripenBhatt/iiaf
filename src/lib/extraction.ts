@@ -90,9 +90,13 @@ async function pdf(bytes: Uint8Array): Promise<Extraction> {
   const doc = await getDocumentProxy(bytes);
   const { text } = await extractText(doc, { mergePages: false });
   const pages = Array.isArray(text) ? text : [text];
+  const pageLines = pages.map(p => lines(p));
   const segments: Segment[] = [];
-  pages.forEach((p, i) => lines(p).forEach((l, j) => segments.push({ seq: segments.length, locator_key: `p${i + 1}:l${j + 1}`, locator: { page: i + 1, line: j + 1 }, page: i + 1, sheet: null, cell: null, content: l })));
-  if (segments.map(s => s.content).join("").length < 20) return { status: "ocr_required", method: "pdf-text-layer", segments: [], error: `No usable text layer on ${pages.length} page(s); scanned PDF needs OCR, which is not configured.` };
+  pageLines.forEach((ls, i) => ls.forEach((l, j) => segments.push({ seq: segments.length, locator_key: `p${i + 1}:l${j + 1}`, locator: { page: i + 1, line: j + 1 }, page: i + 1, sheet: null, cell: null, content: l })));
+  // Pages with insufficient embedded text are scanned/image-only and routed to OCR by the caller.
+  const deficient = pageLines.map((ls, i) => ({ n: i + 1, chars: ls.join("").length })).filter(p => p.chars < 20).map(p => p.n);
+  if (deficient.length === pages.length) return { status: "ocr_required", method: "pdf-text-layer", segments: [], error: `No usable text layer on ${pages.length} page(s); scanned pages need OCR.`, ocrPages: deficient };
+  if (deficient.length) return { status: "extracted", method: "pdf-text-layer", segments, error: null, ocrPages: deficient };
   return { status: "extracted", method: "pdf-text-layer", segments, error: null };
 }
 
@@ -184,7 +188,7 @@ export async function extract(ext: string, bytes: Uint8Array): Promise<Extractio
       case "xlsx": return xlsx(bytes);
       case "csv": return csv(bytes);
       case "txt": return txt(bytes);
-      case "jpg": case "jpeg": case "png": return { status: "ocr_required", method: "none", segments: [], error: "Image requires OCR. No OCR service is configured; nothing was extracted." };
+      case "jpg": case "jpeg": case "png": return { status: "ocr_required", method: "none", segments: [], error: "Image has no embedded text; the processing step runs OCR on it." };
       default: return { status: "needs_review", method: "none", segments: [], error: `.${ext} is stored but not supported by extractor ${PROCESSOR_VERSION}; manual review required.` };
     }
   } catch (e) {
