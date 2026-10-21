@@ -1,0 +1,431 @@
+{
+  "source": "IIAF_Relationship_Engine_Rule_Model_v2_1.xlsx",
+  "sheet": "OUTPUT_CATALOGUE",
+  "bindingStatus": "reference-only; no approval or release inferred",
+  "outputs": [
+    {
+      "Output_ID": "OUT-001",
+      "Output_Name": "Institutional profile",
+      "Default_Access_Class": "University-visible",
+      "Primary_Destination": "DST-005",
+      "Description": "Profile summary, factsheet, directory",
+      "Output_Formats": "PDF/DOCX/XLSX/CSV/HTML",
+      "Principal_Input_Entities": "Institution facts; approved institutional records",
+      "Generation_Gates": "Current data snapshot; profile approval",
+      "Visibility_or_Delivery_Rule": "University downloadable"
+    },
+    {
+      "Output_ID": "OUT-002",
+      "Output_Name": "Contact directory",
+      "Default_Access_Class": "University-visible",
+      "Primary_Destination": "DST-005",
+      "Description": "People/unit contact directory",
+      "Output_Formats": "XLSX/CSV/PDF/HTML",
+      "Principal_Input_Entities": "Person, unit, contact point",
+      "Generation_Gates": "Privacy/access filtering; contact validity",
+      "Visibility_or_Delivery_Rule": "University downloadable within scope"
+    },
+    {
+      "Output_ID": "OUT-003",
+      "Output_Name": "Recruiter/employer directory",
+      "Default_Access_Class": "University-visible with role controls",
+      "Primary_Destination": "DST-011",
+      "Description": "Employer/company contacts, recruiters, sector, relationship history",
+      "Output_Formats": "XLSX/CSV/PDF",
+      "Principal_Input_Entities": "Organisation, ContactPoint, placement records",
+      "Generation_Gates": "Consent/purpose, source date, employer confidentiality",
+      "Visibility_or_Delivery_Rule": "University downloadable per policy"
+    },
+    {
+      "Output_ID": "OUT-004",
+      "Output_Name": "Placement and internship summary",
+      "Default_Access_Class": "University-visible",
+      "Primary_Destination": "DST-011",
+      "Description": "Student placements, offers, internships, recruiter engagement",
+      "Output_Formats": "XLSX/CSV/PDF",
+      "Principal_Input_Entities": "PlacementRecord, Person, Organisation, AcademicPeriod",
+      "Generation_Gates": "Verified status, reporting period, duplicate handling",
+      "Visibility_or_Delivery_Rule": "Personal records may be restricted"
+    },
+    {
+      "Output_ID": "OUT-005",
+      "Output_Name": "Meeting notice and agenda pack",
+      "Default_Access_Class": "University-visible role-scoped",
+      "Primary_Destination": "DST-006",
+      "Description": "Notice, agenda, attachments/briefing pack",
+      "Output_Formats": "PDF/DOCX",
+      "Principal_Input_Entities": "Meeting, AgendaItem, EvidenceArtifact",
+      "Generation_Gates": "Meeting metadata and access classification",
+      "Visibility_or_Delivery_Rule": "Downloadable by authorized roles"
+    },
+    {
+      "Output_ID": "OUT-006",
+      "Output_Name": "Minutes and resolutions",
+      "Default_Access_Class": "University-visible role-scoped",
+      "Primary_Destination": "DST-006",
+      "Description": "Draft/approved minutes, proceedings, decisions, resolutions",
+      "Output_Formats": "DOCX/PDF",
+      "Principal_Input_Entities": "Meeting, AgendaItem, Decision, source artifacts",
+      "Generation_Gates": "Draft/approved version and approval record",
+      "Visibility_or_Delivery_Rule": "Downloadable by authorized roles"
+    },
+    {
+      "Output_ID": "OUT-007",
+      "Output_Name": "Action tracker and ATR",
+      "Default_Access_Class": "University-visible role-scoped",
+      "Primary_Destination": "DST-006",
+      "Description": "Action item, owner, due date, status, ATR and implementation evidence",
+      "Output_Formats": "XLSX/CSV/PDF",
+      "Principal_Input_Entities": "ActionItem, Decision, EvidenceArtifact",
+      "Generation_Gates": "Assigned owner, status, period, evidence link",
+      "Visibility_or_Delivery_Rule": "Downloadable by authorized roles"
+    },
+    {
+      "Output_ID": "OUT-008",
+      "Output_Name": "Website article/news release",
+      "Default_Access_Class": "University-visible",
+      "Primary_Destination": "DST-007",
+      "Description": "Web article, event recap, institutional news",
+      "Output_Formats": "DOCX/HTML/PDF",
+      "Principal_Input_Entities": "Approved facts, events, achievements, images",
+      "Generation_Gates": "Factual review, public release approval, rights",
+      "Visibility_or_Delivery_Rule": "Downloadable; publishing integration separate"
+    },
+    {
+      "Output_ID": "OUT-009",
+      "Output_Name": "Social media post variants",
+      "Default_Access_Class": "University-visible",
+      "Primary_Destination": "DST-007",
+      "Description": "LinkedIn, X, Instagram, Facebook, short captions",
+      "Output_Formats": "DOCX/CSV/TXT",
+      "Principal_Input_Entities": "Approved facts, events, research, achievements",
+      "Generation_Gates": "Channel character/format rules; approval",
+      "Visibility_or_Delivery_Rule": "Downloadable; posting integration separate"
+    },
+    {
+      "Output_ID": "OUT-010",
+      "Output_Name": "Social reel/story storyboard",
+      "Default_Access_Class": "University-visible",
+      "Primary_Destination": "DST-007",
+      "Description": "Hook, scenes, voiceover, on-screen text, caption, CTA",
+      "Output_Formats": "DOCX/PDF/CSV",
+      "Principal_Input_Entities": "Approved events, people, outcomes, approved assets",
+      "Generation_Gates": "Rights, consent, name/title/date validation",
+      "Visibility_or_Delivery_Rule": "Downloadable; video rendering/publishing separate"
+    },
+    {
+      "Output_ID": "OUT-011",
+      "Output_Name": "LinkedIn article / long-form thought piece",
+      "Default_Access_Class": "University-visible",
+      "Primary_Destination": "DST-007",
+      "Description": "Long-form institutional/research/leadership article",
+      "Output_Formats": "DOCX/HTML",
+      "Principal_Input_Entities": "Approved facts, leadership quotes, research outputs",
+      "Generation_Gates": "Author/quote approval; evidence validation",
+      "Visibility_or_Delivery_Rule": "Downloadable"
+    },
+    {
+      "Output_ID": "OUT-012",
+      "Output_Name": "Email campaign draft",
+      "Default_Access_Class": "University-visible role-scoped",
+      "Primary_Destination": "DST-008",
+      "Description": "Email subject/body, recipient segment, variables, schedule proposal",
+      "Output_Formats": "DOCX/HTML/CSV",
+      "Principal_Input_Entities": "ContactPoint, audience rules, approved content",
+      "Generation_Gates": "Consent/lawful basis, opt-out, sender authorization",
+      "Visibility_or_Delivery_Rule": "Draft export; sending requires connected service"
+    },
+    {
+      "Output_ID": "OUT-013",
+      "Output_Name": "WhatsApp campaign draft",
+      "Default_Access_Class": "University-visible role-scoped",
+      "Primary_Destination": "DST-008",
+      "Description": "Message template, approved recipient segment, follow-up plan",
+      "Output_Formats": "DOCX/CSV",
+      "Principal_Input_Entities": "ContactPoint, campaign purpose and audience",
+      "Generation_Gates": "Consent, applicable WhatsApp policies, template approval",
+      "Visibility_or_Delivery_Rule": "Draft export; sending requires integration"
+    },
+    {
+      "Output_ID": "OUT-014",
+      "Output_Name": "Newsletter",
+      "Default_Access_Class": "University-visible",
+      "Primary_Destination": "DST-007",
+      "Description": "Email/web newsletter with events, research, achievements",
+      "Output_Formats": "DOCX/HTML/PDF",
+      "Principal_Input_Entities": "Approved public communication assets",
+      "Generation_Gates": "Factual review and approval",
+      "Visibility_or_Delivery_Rule": "Downloadable"
+    },
+    {
+      "Output_ID": "OUT-015",
+      "Output_Name": "Annual institutional report",
+      "Default_Access_Class": "University-visible or controlled release",
+      "Primary_Destination": "DST-005",
+      "Description": "Institutional annual summary, outcomes and activity narrative",
+      "Output_Formats": "DOCX/PDF/XLSX",
+      "Principal_Input_Entities": "Institution, units, events, research, placement, outreach",
+      "Generation_Gates": "Scope/period, source completeness, approval",
+      "Visibility_or_Delivery_Rule": "Downloadable"
+    },
+    {
+      "Output_ID": "OUT-016",
+      "Output_Name": "Department/academic analysis",
+      "Default_Access_Class": "Company-restricted by default",
+      "Primary_Destination": "DST-009",
+      "Description": "Department, programme, faculty, academic-period analysis",
+      "Output_Formats": "XLSX/PDF/DOCX",
+      "Principal_Input_Entities": "Normalized facts and metrics",
+      "Generation_Gates": "Formula, denominators, scope, privacy thresholds",
+      "Visibility_or_Delivery_Rule": "R&R only unless released"
+    },
+    {
+      "Output_ID": "OUT-017",
+      "Output_Name": "Accreditation/ranking evidence matrix",
+      "Default_Access_Class": "Company-restricted by default",
+      "Primary_Destination": "DST-002",
+      "Description": "Requirement-to-evidence map, bundle completeness, missing items",
+      "Output_Formats": "XLSX/CSV/PDF",
+      "Principal_Input_Entities": "AgencyRequirement, EvidenceRequirementLink, artifacts",
+      "Generation_Gates": "Official methodology version and approved mapping",
+      "Visibility_or_Delivery_Rule": "R&R only unless released"
+    },
+    {
+      "Output_ID": "OUT-018",
+      "Output_Name": "Agency submission dataset/report",
+      "Default_Access_Class": "Company-restricted by default",
+      "Primary_Destination": "DST-004",
+      "Description": "Agency-specific tables, narrative, exports",
+      "Output_Formats": "XLSX/CSV/DOCX/PDF",
+      "Principal_Input_Entities": "Verified agency-ready values and evidence",
+      "Generation_Gates": "Cycle/version lock, reconciliation, authorized sign-off",
+      "Visibility_or_Delivery_Rule": "R&R only unless released"
+    },
+    {
+      "Output_ID": "OUT-019",
+      "Output_Name": "Thematic/SDG report",
+      "Default_Access_Class": "Company-restricted by default",
+      "Primary_Destination": "DST-010",
+      "Description": "SDG/theme indicators, narratives and evidence annex",
+      "Output_Formats": "DOCX/PDF/XLSX",
+      "Principal_Input_Entities": "Facts, metrics, SDG/indicator methodology",
+      "Generation_Gates": "Explicit methodology and evidence trail",
+      "Visibility_or_Delivery_Rule": "R&R only unless released"
+    },
+    {
+      "Output_ID": "OUT-020",
+      "Output_Name": "Custom/on-demand report",
+      "Default_Access_Class": "Company-restricted by default",
+      "Primary_Destination": "DST-012",
+      "Description": "Bespoke report/query/export",
+      "Output_Formats": "DOCX/PDF/XLSX/CSV",
+      "Principal_Input_Entities": "Approved query against normalized data/output store",
+      "Generation_Gates": "Scope, permissions, reproducible query/template",
+      "Visibility_or_Delivery_Rule": "R&R only unless released"
+    },
+    {
+      "Output_ID": "OUT-021",
+      "Output_Name": "Data quality/conflict report",
+      "Default_Access_Class": "Company-internal",
+      "Primary_Destination": "DST-013",
+      "Description": "Missing, conflicting, stale or duplicate records",
+      "Output_Formats": "XLSX/CSV/PDF",
+      "Principal_Input_Entities": "Reconciliation and validation records",
+      "Generation_Gates": "Rule version, reviewer and status",
+      "Visibility_or_Delivery_Rule": "Internal by default"
+    },
+    {
+      "Output_ID": "OUT-022",
+      "Output_Name": "Evidence bundle export",
+      "Default_Access_Class": "Company-restricted by default",
+      "Primary_Destination": "DST-003",
+      "Description": "Requirement bundle with files, index and provenance",
+      "Output_Formats": "ZIP/PDF/XLSX",
+      "Principal_Input_Entities": "Evidence artifacts and mapping",
+      "Generation_Gates": "Permission checks, artifact rights, current requirement version",
+      "Visibility_or_Delivery_Rule": "R&R only unless released"
+    },
+    {
+      "Output_ID": "OUT-023",
+      "Output_Name": "Institutional web profile export",
+      "Default_Access_Class": "University-visible",
+      "Primary_Destination": "DST-005",
+      "Description": "Web-ready institution, unit, programme and contact content",
+      "Output_Formats": "HTML/JSON/CSV",
+      "Principal_Input_Entities": "Approved current institutional facts",
+      "Generation_Gates": "Public-field allowlist, currentness",
+      "Visibility_or_Delivery_Rule": "Downloadable"
+    },
+    {
+      "Output_ID": "OUT-024",
+      "Output_Name": "Employer outreach pack",
+      "Default_Access_Class": "Company/internal with controlled university view",
+      "Primary_Destination": "DST-008",
+      "Description": "Employer segmentation, outreach message, contact list",
+      "Output_Formats": "XLSX/CSV/DOCX",
+      "Principal_Input_Entities": "Organisation, contact, placement and collaboration facts",
+      "Generation_Gates": "Contact permissions and outreach purpose",
+      "Visibility_or_Delivery_Rule": "Access restricted"
+    },
+    {
+      "Output_ID": "OUT-025",
+      "Output_Name": "Governance compliance report",
+      "Default_Access_Class": "Company-restricted by default",
+      "Primary_Destination": "DST-006",
+      "Description": "Decision completion, action aging, ATR status",
+      "Output_Formats": "XLSX/PDF",
+      "Principal_Input_Entities": "Meeting/Decision/ActionItem/Implementation evidence",
+      "Generation_Gates": "Role access and period completeness",
+      "Visibility_or_Delivery_Rule": "Release explicitly"
+    },
+    {
+      "Output_ID": "OUT-026",
+      "Output_Name": "Event publicity pack",
+      "Default_Access_Class": "University-visible",
+      "Primary_Destination": "DST-007",
+      "Description": "Poster copy, social copy, website blurb, press note, email/WhatsApp invitation",
+      "Output_Formats": "DOCX/PDF/CSV",
+      "Principal_Input_Entities": "Event, participants, approved speakers, venue/time",
+      "Generation_Gates": "Fact validation, image/quote consent, approval",
+      "Visibility_or_Delivery_Rule": "Downloadable"
+    },
+    {
+      "Output_ID": "OUT-027",
+      "Output_Name": "Research/publication profile",
+      "Default_Access_Class": "University-visible",
+      "Primary_Destination": "DST-005",
+      "Description": "Research output list, project/grant/patent summary",
+      "Output_Formats": "XLSX/CSV/PDF/HTML",
+      "Principal_Input_Entities": "ResearchOutput, Person, Organisation",
+      "Generation_Gates": "Identifier checks, authorship, period, duplicate handling",
+      "Visibility_or_Delivery_Rule": "Downloadable"
+    },
+    {
+      "Output_ID": "OUT-028",
+      "Output_Name": "Department brochure/prospectus content",
+      "Default_Access_Class": "University-visible",
+      "Primary_Destination": "DST-005",
+      "Description": "Programme and department promotional content",
+      "Output_Formats": "DOCX/HTML/PDF",
+      "Principal_Input_Entities": "AcademicUnit, AcademicProgramme, approved facts",
+      "Generation_Gates": "Approval and currentness",
+      "Visibility_or_Delivery_Rule": "Downloadable"
+    },
+    {
+      "Output_ID": "OUT-029",
+      "Output_Name": "Social media calendar",
+      "Default_Access_Class": "University-visible",
+      "Primary_Destination": "DST-007",
+      "Description": "Channel-wise content plan and publishing dates",
+      "Output_Formats": "XLSX/CSV",
+      "Principal_Input_Entities": "Approved communication assets and events calendar",
+      "Generation_Gates": "Approval status and schedule conflicts",
+      "Visibility_or_Delivery_Rule": "Downloadable; scheduling integration separate"
+    },
+    {
+      "Output_ID": "OUT-030",
+      "Output_Name": "Communication performance report",
+      "Default_Access_Class": "Company-restricted by default",
+      "Primary_Destination": "DST-007",
+      "Description": "Engagement metrics and content performance",
+      "Output_Formats": "XLSX/PDF",
+      "Principal_Input_Entities": "Channel analytics if connected/available",
+      "Generation_Gates": "Platform data availability and date window",
+      "Visibility_or_Delivery_Rule": "No fabricated analytics"
+    }
+  ],
+  "contractSource": "IIAF_Qualification_and_Relationship_Engine_Blueprint_v1_FIXED.xlsx",
+  "contracts": [
+    {
+      "Output_ID": "O01",
+      "Output type": "News article",
+      "Required deliverable": "DOCX/HTML/Markdown article; optional visual",
+      "Format requirements": "Headline, lead, body, date/status, source-backed context; quotes only if supplied",
+      "Quality gate": "No invented event facts; upcoming/completed correctly labelled"
+    },
+    {
+      "Output_ID": "O02",
+      "Output type": "Website update",
+      "Required deliverable": "HTML or DOCX draft",
+      "Format requirements": "Headings, accessible copy, relevant CTA, clearly marked placeholder links",
+      "Quality gate": "No invented URLs, promises or claims"
+    },
+    {
+      "Output_ID": "O03",
+      "Output type": "Social image post",
+      "Required deliverable": "PNG/JPG creative plus separate caption",
+      "Format requirements": "Platform dimensions, readable typography, brand rules, visual hierarchy",
+      "Quality gate": "Actual image file exists and opens; text-only response fails"
+    },
+    {
+      "Output_ID": "O04",
+      "Output type": "Social carousel",
+      "Required deliverable": "PNG/JPG slides plus caption",
+      "Format requirements": "Consistent dimensions, sequence, hook, readable text",
+      "Quality gate": "Every slide exported; source trace retained"
+    },
+    {
+      "Output_ID": "O05",
+      "Output type": "Reel/video package",
+      "Required deliverable": "Timed script, storyboard, on-screen text, cover image, caption",
+      "Format requirements": "Scene timing, voice-over, visual direction, CTA; rendered video only if actually produced",
+      "Quality gate": "UI never labels a script as a finished video"
+    },
+    {
+      "Output_ID": "O06",
+      "Output type": "Meeting agenda",
+      "Required deliverable": "DOCX/PDF plus structured agenda table",
+      "Format requirements": "Numbered items, objective, presenter/owner, duration, pre-reads, outcomes",
+      "Quality gate": "Agenda stays distinct from minutes"
+    },
+    {
+      "Output_ID": "O07",
+      "Output type": "Meeting minutes",
+      "Required deliverable": "DOCX/PDF plus structured decisions/actions",
+      "Format requirements": "Meeting details, supplied attendance, proceedings, separate decisions/actions",
+      "Quality gate": "No invented proceedings; language matches request"
+    },
+    {
+      "Output_ID": "O08",
+      "Output type": "Decision register",
+      "Required deliverable": "XLSX/CSV or DOCX table",
+      "Format requirements": "ID, agenda item, wording, status, authority if stated, owner/date if supplied",
+      "Quality gate": "Decision states remain distinct"
+    },
+    {
+      "Output_ID": "O09",
+      "Output type": "Action tracker",
+      "Required deliverable": "XLSX/CSV and readable table",
+      "Format requirements": "Action, meeting/decision, owner, due date, status, completion proof",
+      "Quality gate": "Overdue only when dates are reliable"
+    },
+    {
+      "Output_ID": "O10",
+      "Output type": "Table extraction",
+      "Required deliverable": "XLSX/CSV plus source locators",
+      "Format requirements": "Headers, row/column structure, units, totals, footnotes, page/sheet/cell references",
+      "Quality gate": "Source sample cross-check passes; discrepancies flagged"
+    },
+    {
+      "Output_ID": "O11",
+      "Output type": "Accreditation evidence matrix",
+      "Required deliverable": "XLSX/CSV plus in-app table",
+      "Format requirements": "One row per source unit × agency × exact versioned requirement; rationale, locator, status",
+      "Quality gate": "Exact requirement ID, source locator and status required"
+    },
+    {
+      "Output_ID": "O12",
+      "Output type": "Metric report",
+      "Required deliverable": "XLSX/CSV; charts where suitable",
+      "Format requirements": "Value, unit, year, cohort, denominator, definition, source, verification state",
+      "Quality gate": "Demo label retained; no misleading charts"
+    },
+    {
+      "Output_ID": "O13",
+      "Output type": "Extraction review",
+      "Required deliverable": "Readable extracted text and page/segment locators",
+      "Format requirements": "Full stored text, ordering, extraction source, review status",
+      "Quality gate": "No claim of success without retrievable stored text"
+    }
+  ]
+}
