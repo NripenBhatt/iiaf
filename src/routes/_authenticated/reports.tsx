@@ -33,7 +33,7 @@ function Page() {
   return <>
     <PageHeader eyebrow="Output engine" title="Reports & Outputs" description="Saved text drafts with their source documents. Approval, release and publication are separate." />
     <section className="border bg-card" aria-label="Saved outputs">
-      <ListFilterControls outputs filters={filters} update={update} total={data?.total ?? 0} types={types} />
+      <ListFilterControls outputs filters={filters} update={update} total={error || isFetching ? undefined : data?.total} types={types} />
       {isFetching && <p role="status" className="p-4 text-sm text-muted-foreground">Loading saved outputs…</p>}
       {error && <p role="alert" className="p-4 text-sm text-destructive">Saved outputs could not be loaded. No count or results are confirmed.</p>}
       {!isFetching && !error && data?.rows.length === 0 && <p className="p-5 text-sm text-muted-foreground">No saved outputs match these filters. Clear filters to see other drafts.</p>}
