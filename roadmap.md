@@ -46,4 +46,4 @@
 - [ ] Phase 2: structured extraction, retrieval/cache, qualification, cross-purpose routing and honest output contracts — awaiting separate phase authorization.
 - [ ] Phase 3: runtime catalogue/rules, cumulative knowledge, evidence mappings and meeting intelligence — awaiting separate phase authorization.
 - [ ] Phase 4: role intelligence, permitted workspaces, company-only Converse, reminders and final verification — awaiting separate phase authorization.
-- [ ] Missing reference dependency: locate the v4 companion concept note and exact Converse v1.2 workbook among supplied files; do not silently substitute older versions.
+- [ ] Missing reference dependency: v4 companion concept note is absent from supplied files; exact Converse v1.2 workbook is present in the v2 bundle. Do not silently substitute an older concept note.
