@@ -52,12 +52,11 @@ export const processDocument = createServerFn({ method: "POST" }).middleware([re
       const finalStatus = status === "extracted" && facts.length ? "needs_review" : status;
       const processor = method.startsWith("ocr") || method.includes("+ocr") ? `${PROCESSOR}+ocr:${method}` : `${PROCESSOR}:${method}`;
       const version = method.includes("ocr") ? `${PROCESSOR_VERSION}+ocr-${OCR_VERSION}` : PROCESSOR_VERSION;
-      const { data: outcome, error: finishError } = await finish(finalStatus, processor, segments, facts, error);
-      // finish() already prefixes PROCESSOR; pass method-only processor to avoid double prefixing.
+      const { data: outcome, error: finishError } = await finish(finalStatus, processor, version, segments, facts, error);
       if (finishError) throw new Error("Results could not be recorded; the job stays retryable.");
-      return { ...(outcome as Record<string, unknown>), error: result.error };
+      return { ...(outcome as Record<string, unknown>), error };
     } catch (e) {
-      await finish("processing_failed", "none", [], [], e instanceof Error ? e.message : "Processing failed");
+      await finish("processing_failed", `${PROCESSOR}:none`, PROCESSOR_VERSION, [], [], e instanceof Error ? e.message : "Processing failed");
       throw e instanceof Error ? e : new Error("Processing failed");
     }
   });
