@@ -40,8 +40,8 @@ export const processDocument = createServerFn({ method: "POST" }).middleware([re
             const ocrSegs = ocrSegments(pageLines, segments.length);
             segments = [...segments, ...ocrSegs];
             method = `${result.segments.length ? "pdf-text-layer+" : ""}ocr-pdf(${OCR_MODEL})`;
-            status = "extracted";
-            error = null;
+            status = segments.length ? "extracted" : "needs_review";
+            error = segments.length ? null : "OCR found no readable text on the scanned page(s).";
           }
         } catch (e) {
           if (e instanceof OcrConfigError) { status = "ocr_required"; error = e.message; }
