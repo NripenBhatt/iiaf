@@ -13,14 +13,14 @@ async function sha256(text: string) {
   return [...new Uint8Array(d)].map(b => b.toString(16).padStart(2, "0")).join("");
 }
 
-const stored = z.object({ outputs: generatedOutputSchema.array() });
+const stored = z.object({ outputs: generatedOutputSchema.array(), skipped: z.array(z.object({ name: z.string(), reason: z.string() })).default([]), limitations: z.string().array().default([]), segmentCount: z.number().default(0) });
 
 export const getOutputs = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
   .inputValidator(z.object({ documentId: z.string().uuid() }))
   .handler(async ({ context, data }) => {
     const { data: row, error } = await context.supabase.from("document_outputs").select("outputs,source_version,created_at").eq("document_id", data.documentId).order("created_at", { ascending: false }).limit(1).maybeSingle();
     if (error) throw new Error("Outputs could not be read.");
-    return row ? { ...stored.parse(row.outputs), skipped: [], limitations: ["Historical draft; source classification and verification may be incomplete."], segmentCount: 0, sourceVersion: row.source_version, createdAt: row.created_at, cached: true } : null;
+    return row ? { ...stored.parse(row.outputs), sourceVersion: row.source_version, createdAt: row.created_at, cached: true } : null;
   });
 
 /** No-credit repair: reuse historical drafts and stored text, persist qualification/lineage in the existing JSON cache. */
