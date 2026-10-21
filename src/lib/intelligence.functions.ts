@@ -19,10 +19,41 @@ export const processDocument = createServerFn({ method: "POST" }).middleware([re
       const { data: doc } = await context.supabase.from("uploaded_documents").select("storage_object_key,file_extension").eq("id", data.id).single();
       const { data: blob } = doc ? await context.supabase.storage.from(UPLOAD_BUCKET).download(doc.storage_object_key) : { data: null };
       if (!doc || !blob) { await finish("processing_failed", "none", [], [], "Stored original could not be read."); throw new Error("Stored original could not be read."); }
-      const result = await extract(doc.file_extension, new Uint8Array(await blob.arrayBuffer()));
-      const facts = result.status === "extracted" ? proposeFacts(result.segments) : [];
-      const status = result.status === "extracted" && facts.length ? "needs_review" : result.status;
-      const { data: outcome, error: finishError } = await finish(status, result.method, result.segments, facts, result.error);
+      const bytes = new Uint8Array(await blob.arrayBuffer());
+      const result = await extract(doc.file_extension, bytes);
+      let { status, method, segments, error } = result;
+      const isImage = ["jpg", "jpeg", "png"].includes(doc.file_extension);
+      const ocrPages = isImage ? [] : (result.ocrPages ?? []);
+      if (isImage || ocrPages.length) {
+        try {
+          if (isImage) {
+            const lines = await ocrImage(bytes, doc.file_extension === "png" ? "image/png" : "image/jpeg");
+            segments = ocrSegments([{ page: null, lines }], 0);
+            method = `ocr-image(${OCR_MODEL})`;
+            status = lines.length ? "extracted" : "needs_review";
+            error = lines.length ? null : "OCR found no readable text in the image.";
+          } else if (ocrPages.length > MAX_OCR_PAGES) {
+            status = "needs_review";
+            error = `${ocrPages.length} page(s) need OCR, above the ${MAX_OCR_PAGES}-page limit per run; embedded-text pages were extracted, scanned pages were not.`;
+          } else {
+            const pageLines = await ocrPdf(bytes, ocrPages);
+            const ocrSegs = ocrSegments(pageLines, segments.length);
+            segments = [...segments, ...ocrSegs];
+            method = `${result.segments.length ? "pdf-text-layer+" : ""}ocr-pdf(${OCR_MODEL})`;
+            status = "extracted";
+            error = null;
+          }
+        } catch (e) {
+          if (e instanceof OcrConfigError) { status = "ocr_required"; error = e.message; }
+          else throw e;
+        }
+      }
+      const facts = status === "extracted" ? tagOcrFacts(proposeFacts(segments)) : [];
+      const finalStatus = status === "extracted" && facts.length ? "needs_review" : status;
+      const processor = method.startsWith("ocr") || method.includes("+ocr") ? `${PROCESSOR}+ocr:${method}` : `${PROCESSOR}:${method}`;
+      const version = method.includes("ocr") ? `${PROCESSOR_VERSION}+ocr-${OCR_VERSION}` : PROCESSOR_VERSION;
+      const { data: outcome, error: finishError } = await finish(finalStatus, processor, segments, facts, error);
+      // finish() already prefixes PROCESSOR; pass method-only processor to avoid double prefixing.
       if (finishError) throw new Error("Results could not be recorded; the job stays retryable.");
       return { ...(outcome as Record<string, unknown>), error: result.error };
     } catch (e) {
