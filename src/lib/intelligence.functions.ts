@@ -13,12 +13,12 @@ export const processDocument = createServerFn({ method: "POST" }).middleware([re
     if (error || !job) throw new Error(error?.code === "42501" ? "Your role cannot process this document." : error?.message ?? "Processing could not start.");
     // Results are written only by this trusted server process (service role) after the caller was authorized by begin_processing.
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const finish = (status: string, method: string, segments: unknown[], facts: unknown[], err: string | null) =>
-      supabaseAdmin.rpc("complete_processing_trusted", { _actor: context.userId, _job: job, _status: status, _processor: `${PROCESSOR}:${method}`, _version: PROCESSOR_VERSION, _segments: JSON.parse(JSON.stringify(segments)), _facts: JSON.parse(JSON.stringify(facts)), _error: err ?? "" });
+    const finish = (status: string, processor: string, version: string, segments: unknown[], facts: unknown[], err: string | null) =>
+      supabaseAdmin.rpc("complete_processing_trusted", { _actor: context.userId, _job: job, _status: status, _processor: processor, _version: version, _segments: JSON.parse(JSON.stringify(segments)), _facts: JSON.parse(JSON.stringify(facts)), _error: err ?? "" });
     try {
       const { data: doc } = await context.supabase.from("uploaded_documents").select("storage_object_key,file_extension").eq("id", data.id).single();
       const { data: blob } = doc ? await context.supabase.storage.from(UPLOAD_BUCKET).download(doc.storage_object_key) : { data: null };
-      if (!doc || !blob) { await finish("processing_failed", "none", [], [], "Stored original could not be read."); throw new Error("Stored original could not be read."); }
+      if (!doc || !blob) { await finish("processing_failed", `${PROCESSOR}:none`, PROCESSOR_VERSION, [], [], "Stored original could not be read."); throw new Error("Stored original could not be read."); }
       const bytes = new Uint8Array(await blob.arrayBuffer());
       const result = await extract(doc.file_extension, bytes);
       let { status, method, segments, error } = result;
