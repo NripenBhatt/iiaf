@@ -2,7 +2,8 @@ import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { z } from "zod";
 import { UPLOAD_BUCKET } from "./upload-rules";
-import { PROCESSOR, PROCESSOR_VERSION, extract, proposeFacts } from "./extraction";
+import { PROCESSOR, PROCESSOR_VERSION, extract, ocrSegments, proposeFacts, tagOcrFacts } from "./extraction";
+import { MAX_OCR_PAGES, OCR_MODEL, OCR_VERSION, OcrConfigError, ocrImage, ocrPdf } from "./ocr.server";
 
 /** Runs extraction on the stored original (never modified) and records results through audited database functions. */
 export const processDocument = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
@@ -12,20 +13,50 @@ export const processDocument = createServerFn({ method: "POST" }).middleware([re
     if (error || !job) throw new Error(error?.code === "42501" ? "Your role cannot process this document." : error?.message ?? "Processing could not start.");
     // Results are written only by this trusted server process (service role) after the caller was authorized by begin_processing.
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const finish = (status: string, method: string, segments: unknown[], facts: unknown[], err: string | null) =>
-      supabaseAdmin.rpc("complete_processing_trusted", { _actor: context.userId, _job: job, _status: status, _processor: `${PROCESSOR}:${method}`, _version: PROCESSOR_VERSION, _segments: JSON.parse(JSON.stringify(segments)), _facts: JSON.parse(JSON.stringify(facts)), _error: err ?? "" });
+    const finish = (status: string, processor: string, version: string, segments: unknown[], facts: unknown[], err: string | null) =>
+      supabaseAdmin.rpc("complete_processing_trusted", { _actor: context.userId, _job: job, _status: status, _processor: processor, _version: version, _segments: JSON.parse(JSON.stringify(segments)), _facts: JSON.parse(JSON.stringify(facts)), _error: err ?? "" });
     try {
       const { data: doc } = await context.supabase.from("uploaded_documents").select("storage_object_key,file_extension").eq("id", data.id).single();
       const { data: blob } = doc ? await context.supabase.storage.from(UPLOAD_BUCKET).download(doc.storage_object_key) : { data: null };
-      if (!doc || !blob) { await finish("processing_failed", "none", [], [], "Stored original could not be read."); throw new Error("Stored original could not be read."); }
-      const result = await extract(doc.file_extension, new Uint8Array(await blob.arrayBuffer()));
-      const facts = result.status === "extracted" ? proposeFacts(result.segments) : [];
-      const status = result.status === "extracted" && facts.length ? "needs_review" : result.status;
-      const { data: outcome, error: finishError } = await finish(status, result.method, result.segments, facts, result.error);
+      if (!doc || !blob) { await finish("processing_failed", `${PROCESSOR}:none`, PROCESSOR_VERSION, [], [], "Stored original could not be read."); throw new Error("Stored original could not be read."); }
+      const bytes = new Uint8Array(await blob.arrayBuffer());
+      const result = await extract(doc.file_extension, bytes);
+      let { status, method, segments, error } = result;
+      const isImage = ["jpg", "jpeg", "png"].includes(doc.file_extension);
+      const ocrPages = isImage ? [] : (result.ocrPages ?? []);
+      if (isImage || ocrPages.length) {
+        try {
+          if (isImage) {
+            const lines = await ocrImage(bytes, doc.file_extension === "png" ? "image/png" : "image/jpeg");
+            segments = ocrSegments([{ page: null, lines }], 0);
+            method = `ocr-image(${OCR_MODEL})`;
+            status = lines.length ? "extracted" : "needs_review";
+            error = lines.length ? null : "OCR found no readable text in the image.";
+          } else if (ocrPages.length > MAX_OCR_PAGES) {
+            status = "needs_review";
+            error = `${ocrPages.length} page(s) need OCR, above the ${MAX_OCR_PAGES}-page limit per run; embedded-text pages were extracted, scanned pages were not.`;
+          } else {
+            const pageLines = await ocrPdf(bytes, ocrPages);
+            const ocrSegs = ocrSegments(pageLines, segments.length);
+            segments = [...segments, ...ocrSegs];
+            method = `${result.segments.length ? "pdf-text-layer+" : ""}ocr-pdf(${OCR_MODEL})`;
+            status = "extracted";
+            error = null;
+          }
+        } catch (e) {
+          if (e instanceof OcrConfigError) { status = "ocr_required"; error = e.message; }
+          else throw e;
+        }
+      }
+      const facts = status === "extracted" ? tagOcrFacts(proposeFacts(segments)) : [];
+      const finalStatus = status === "extracted" && facts.length ? "needs_review" : status;
+      const processor = method.startsWith("ocr") || method.includes("+ocr") ? `${PROCESSOR}+ocr:${method}` : `${PROCESSOR}:${method}`;
+      const version = method.includes("ocr") ? `${PROCESSOR_VERSION}+ocr-${OCR_VERSION}` : PROCESSOR_VERSION;
+      const { data: outcome, error: finishError } = await finish(finalStatus, processor, version, segments, facts, error);
       if (finishError) throw new Error("Results could not be recorded; the job stays retryable.");
-      return { ...(outcome as Record<string, unknown>), error: result.error };
+      return { ...(outcome as Record<string, unknown>), error };
     } catch (e) {
-      await finish("processing_failed", "none", [], [], e instanceof Error ? e.message : "Processing failed");
+      await finish("processing_failed", `${PROCESSOR}:none`, PROCESSOR_VERSION, [], [], e instanceof Error ? e.message : "Processing failed");
       throw e instanceof Error ? e : new Error("Processing failed");
     }
   });

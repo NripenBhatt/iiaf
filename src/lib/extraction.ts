@@ -3,14 +3,36 @@ import fieldSpec from "@/data/fact-fields.json";
 
 /** Extraction output is untrusted data: it is stored and displayed, never executed or interpreted as instructions. */
 export const PROCESSOR = "iiaf-extractor";
-export const PROCESSOR_VERSION = "1.1.0";
+export const PROCESSOR_VERSION = "1.2.0";
 export const MAX_SEGMENTS = 2000;
+/** Added to every proposed fact whose text came from OCR rather than an embedded text layer. */
+export const OCR_CAUTION = "Recognised by OCR from an image or scanned page; verify against the original before approving.";
 
 export type Locator = Record<string, string | number | null>;
 export type Segment = { seq: number; locator_key: string; locator: Locator; page: number | null; sheet: string | null; cell: string | null; content: string };
 export type Fact = { label: string; field: string | null; spec: string | null; value: string; locator_key: string; locator: Locator; issues: string[] };
 export type ExtractStatus = "extracted" | "needs_review" | "ocr_required" | "processing_failed";
-export type Extraction = { status: ExtractStatus; method: string; segments: Segment[]; error: string | null };
+export type Extraction = { status: ExtractStatus; method: string; segments: Segment[]; error: string | null; ocrPages?: number[] };
+
+/** Builds source-located segments from OCR output. Locators are page-level: the OCR provider supplies no line coordinates. */
+export function ocrSegments(pageLines: { page: number | null; lines: string[] }[], seqStart: number): Segment[] {
+  const segments: Segment[] = [];
+  for (const { page, lines } of pageLines) {
+    lines.forEach((content, i) => segments.push({
+      seq: seqStart + segments.length,
+      locator_key: page === null ? `ocr:l${i + 1}` : `ocr:p${page}:l${i + 1}`,
+      locator: { page, line: i + 1, source: "ocr", precision: "page-level" },
+      page, sheet: null, cell: null, content,
+    }));
+  }
+  return segments.slice(0, MAX_SEGMENTS);
+}
+
+/** Marks proposed facts that rest on OCR-recognised text so reviewers verify them against the original. */
+export function tagOcrFacts(facts: Fact[]): Fact[] {
+  for (const f of facts) if (f.locator["source"] === "ocr" && !f.issues.includes(OCR_CAUTION)) f.issues.push(OCR_CAUTION);
+  return facts;
+}
 
 const norm = (s: string) => s.toLowerCase().replace(/[^a-z0-9]+/g, "");
 const FIELDS = fieldSpec.fields.map(f => ({ ...f, keys: [norm(f.field), norm(f.label ?? "")].filter(Boolean) }));
@@ -68,9 +90,13 @@ async function pdf(bytes: Uint8Array): Promise<Extraction> {
   const doc = await getDocumentProxy(bytes);
   const { text } = await extractText(doc, { mergePages: false });
   const pages = Array.isArray(text) ? text : [text];
+  const pageLines = pages.map(p => lines(p));
   const segments: Segment[] = [];
-  pages.forEach((p, i) => lines(p).forEach((l, j) => segments.push({ seq: segments.length, locator_key: `p${i + 1}:l${j + 1}`, locator: { page: i + 1, line: j + 1 }, page: i + 1, sheet: null, cell: null, content: l })));
-  if (segments.map(s => s.content).join("").length < 20) return { status: "ocr_required", method: "pdf-text-layer", segments: [], error: `No usable text layer on ${pages.length} page(s); scanned PDF needs OCR, which is not configured.` };
+  pageLines.forEach((ls, i) => ls.forEach((l, j) => segments.push({ seq: segments.length, locator_key: `p${i + 1}:l${j + 1}`, locator: { page: i + 1, line: j + 1 }, page: i + 1, sheet: null, cell: null, content: l })));
+  // Pages with insufficient embedded text are scanned/image-only and routed to OCR by the caller.
+  const deficient = pageLines.map((ls, i) => ({ n: i + 1, chars: ls.join("").length })).filter(p => p.chars < 20).map(p => p.n);
+  if (deficient.length === pages.length) return { status: "ocr_required", method: "pdf-text-layer", segments: [], error: `No usable text layer on ${pages.length} page(s); scanned pages need OCR.`, ocrPages: deficient };
+  if (deficient.length) return { status: "extracted", method: "pdf-text-layer", segments, error: null, ocrPages: deficient };
   return { status: "extracted", method: "pdf-text-layer", segments, error: null };
 }
 
@@ -162,7 +188,7 @@ export async function extract(ext: string, bytes: Uint8Array): Promise<Extractio
       case "xlsx": return xlsx(bytes);
       case "csv": return csv(bytes);
       case "txt": return txt(bytes);
-      case "jpg": case "jpeg": case "png": return { status: "ocr_required", method: "none", segments: [], error: "Image requires OCR. No OCR service is configured; nothing was extracted." };
+      case "jpg": case "jpeg": case "png": return { status: "ocr_required", method: "none", segments: [], error: "Image has no embedded text; the processing step runs OCR on it." };
       default: return { status: "needs_review", method: "none", segments: [], error: `.${ext} is stored but not supported by extractor ${PROCESSOR_VERSION}; manual review required.` };
     }
   } catch (e) {
