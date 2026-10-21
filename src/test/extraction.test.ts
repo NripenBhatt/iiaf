@@ -7,6 +7,13 @@ import { extract, matchField, parseCsv, parseDate, proposeFacts, validateFact } 
 const enc = (s: string) => new TextEncoder().encode(s);
 
 describe("document extraction", () => {
+  it("extracts a real text PDF with page and line provenance", async () => {
+    const r = await extract("pdf", new Uint8Array(readFileSync("src/test/fixtures/text-policy.pdf")));
+    expect(r.status).toBe("extracted");
+    expect(r.ocrPages).toBeUndefined();
+    expect(r.segments[0]).toMatchObject({ locator_key: "p1:l1", locator: { page: 1, line: 1 }, page: 1 });
+    expect(r.segments.map(s => s.content).join(" ")).toContain("Document_Version: v3");
+  });
   it("keeps line locators for text files", async () => {
     const r = await extract("txt", enc("Title\n\nMeeting_Date: 12 March 2026"));
     expect(r.status).toBe("extracted");
