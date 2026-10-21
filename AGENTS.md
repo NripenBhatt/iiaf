@@ -30,6 +30,7 @@
 - Assistant threads/messages use per-user/organization RLS; /conversation/$threadId shares /conversation access. Browser WAV dictation uses /api/transcribe; audio is never stored.
 - Canonical mappings are organization-scoped, changed only by propose_field_mapping/review_field_mapping. Populate packages only from an approved mapping and one usable value; Word/PDF export stored content verbatim.
 - OCR in ocr.server.ts uses the server-only AI Gateway for images/scanned PDF pages; locators are page-level, facts carry OCR_CAUTION and use trusted processing/human review.
-- Native extraction covers PDF text, DOCX, DOC (word-extractor/Buffer with explicit conversion fallback), XLSX, XLS (SheetJS), PPTX slide/paragraphs, CSV and TXT; scans/PNG/JPEG use OCR. Parse stored originals server-side; word-extractor is typed in src/types/word-extractor.d.ts.
+- Native parsers read stored originals; typed word-extractor/Buffer DOC has conversion fallback. Synthetic offline fixtures are distinct from missing originals.
 - Outputs reuse paginated latest-job segments and drafts without model calls; qualification/manifests persist in document_outputs JSON. Downloads retain draft/classification/lineage and real cell tables; invoker SQL lists drafts without generation.
 - Table cells persist in locator JSON; flattened historical/OCR tables stay partial. Default processing reuses saved extraction; rereading requires an explicit retry reason.
+- Output catalogue rows are verbatim references; variant bindings grant no approval/access and unsupported contracts fail closed.
