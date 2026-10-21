@@ -3,7 +3,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { pageHead } from "@/lib/seo";
 import { DocumentUploads } from "@/components/iiaf/document-uploads";
 import { FactReview } from "@/components/iiaf/fact-review";
-import { DataTable, PageHeader, PlaceholderNotice, Status } from "@/components/iiaf/ui";
+import { DataTable, PageHeader, Status } from "@/components/iiaf/ui";
 
 export const Route = createFileRoute("/_authenticated/evidence")({
   head: () => pageHead("Accreditation & Ranking Evidence", "Demonstration evidence coverage and review states; official agency editions and mappings are unconfirmed."),
@@ -20,9 +20,8 @@ function Page() {
         title="Accreditation & Ranking Evidence"
         description="Evidence is held against an exact agency, product and methodology version. Mappings remain proposed until reviewed."
       />
-      <PlaceholderNotice>Evidence files upload and are stored privately with a declared framework only. An approved Evidence_ID fact is linked to agency requirements only through explicit imported mapping rows, as candidates for review. Scoring is not implemented; criterion rows below are sample labels.</PlaceholderNotice>
       <DocumentUploads module="evidence" label="Evidence files" />
-      <FactReview module="evidence" />
+      <details className="mb-8 border bg-card p-4"><summary className="cursor-pointer text-sm font-medium">Reviewer tools · extracted facts awaiting human review</summary><div className="mt-4"><FactReview module="evidence" /></div></details>
       <div className="mb-6 flex flex-wrap gap-2">
         {frameworks.map((f, i) => (
           <span key={f} className={i === 0 ? "rounded-full bg-primary px-3 py-1 text-xs font-medium text-primary-foreground" : "rounded-full border bg-card px-3 py-1 text-xs text-muted-foreground"}>

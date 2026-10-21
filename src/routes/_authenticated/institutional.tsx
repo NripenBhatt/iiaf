@@ -4,7 +4,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { pageHead } from "@/lib/seo";
 import { DocumentUploads } from "@/components/iiaf/document-uploads";
 import { FactReview } from "@/components/iiaf/fact-review";
-import { DataTable, PageHeader, PlaceholderNotice, Status } from "@/components/iiaf/ui";
+import { DataTable, PageHeader, Status } from "@/components/iiaf/ui";
 
 export const Route = createFileRoute("/_authenticated/institutional")({
   head: () => pageHead("Institutional Information", "Institution profile, departments, programmes, faculty, policies and reports."),
@@ -19,9 +19,8 @@ function Page() {
         title="Institutional Information"
         description="Profile, departments, programmes, faculty, policies, research, placements and institutional reports — preserved at source with extraction and review status."
       />
-      <PlaceholderNotice>Uploads are stored privately and every accepted format can be processed: PDF (text layer, with OCR for scanned pages), DOCX, DOC, XLSX, XLS, PPTX, CSV and TXT are parsed natively with slide, sheet, cell, heading and line references preserved; PNG and JPEG are read by OCR (page-level locators, no coordinates). OCR-derived facts are flagged for careful review. The sample table below is illustrative only.</PlaceholderNotice>
       <DocumentUploads module="institutional" label="Institutional documents" />
-      <FactReview module="institutional" />
+      <details className="mb-8 border bg-card p-4"><summary className="cursor-pointer text-sm font-medium">Reviewer tools · extracted facts awaiting human review</summary><div className="mt-4"><FactReview module="institutional" /></div></details>
       <Analytics page="institutional" />
       <InstitutionDomains />
       <DataTable
