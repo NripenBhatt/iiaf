@@ -1,4 +1,6 @@
 import type { UploadModule } from "./upload-rules";
+import { outputBinding, type OutputBinding } from "./output-reference";
+export { OUTPUT_REFERENCE, RECONCILED_OUTPUT_CATALOGUE } from "./output-reference";
 
 /** Output types offered per upload module. The document's actual content decides which ones qualify. */
 export type OutputType = { id: string; name: string; guidance: string };
@@ -16,7 +18,7 @@ const EVENT: OutputType[] = [
 const DOCUMENT_SUMMARY: OutputType = { id: "document_summary", name: "Document summary", guidance: "Neutral executive summary of the document." };
 const REVIEW: OutputType[] = [{ id: "extraction_review", name: "Stored extraction review", guidance: "Unchanged source text with locators." }, { id: "structured_tables", name: "Source tables", guidance: "Actual stored cells; no inferred values or approved evidence." }];
 
-export const OUTPUT_CATALOGUE: Record<UploadModule, OutputType[]> = {
+const MODULE_OUTPUTS: Record<UploadModule, OutputType[]> = {
   institutional: [
     ...REVIEW,
     ...EVENT,
@@ -39,3 +41,7 @@ export const OUTPUT_CATALOGUE: Record<UploadModule, OutputType[]> = {
     { id: "evidence_note", name: "Evidence description note", guidance: "Describe what the document evidences, for a reviewer. Never claim compliance, scores or approval." },
   ],
 };
+
+export const OUTPUT_CATALOGUE = Object.fromEntries(
+  Object.entries(MODULE_OUTPUTS).map(([module, outputs]) => [module, outputs.map(output => ({ ...output, ...outputBinding(output.id) }))]),
+) as Record<UploadModule, (OutputType & OutputBinding)[]>;

@@ -1,12 +1,13 @@
 import { z } from "zod";
+import { outputBinding } from "./output-reference";
 
-export const CONTRACT_VERSION = "iiaf-output-2.0";
+export const CONTRACT_VERSION = "iiaf-output-2.1";
 export const sourceCellSchema = z.object({ column: z.number(), ref: z.string(), raw: z.string(), value: z.string(), formula: z.string().nullable(), type: z.string().nullable(), columnSpan: z.number().optional() });
 export const tableRowSchema = z.object({ locator: z.string(), row: z.number(), cells: sourceCellSchema.array() });
 export const tableSchema = z.object({ id: z.string(), name: z.string(), rows: tableRowSchema.array() });
 export const manifestSchema = z.object({ documentId: z.string(), jobId: z.string(), originalHash: z.string(), parserVersion: z.string(), contractVersion: z.string(), classification: z.enum(["DEMO", "unverified"]), approval: z.literal("draft"), locators: z.string().array(), verifiedCoverage: z.literal(false) });
 export const qualificationSchema = z.object({ unitId: z.string(), locator: z.string(), ruleVersion: z.string(), status: z.literal("Candidate"), purpose: z.string(), audience: z.string(), channel: z.string(), relevance: z.string(), evidenceValue: z.literal("unverified"), factualSupport: z.literal("source passage only"), verification: z.literal("human review required"), freshness: z.literal("not established"), confidence: z.null(), sensitivity: z.literal("not assessed"), consent: z.literal("not established"), contradiction: z.literal("not assessed"), duplication: z.literal("not assessed"), rationale: z.string(), destinations: z.string().array(), blockers: z.string().array() });
-export const generatedOutputSchema = z.object({ type: z.string(), name: z.string(), title: z.string(), body: z.string(), tables: tableSchema.array().optional(), manifest: manifestSchema.optional(), qualification: qualificationSchema.array().optional() });
+export const generatedOutputSchema = z.object({ type: z.string(), name: z.string(), title: z.string(), body: z.string(), tables: tableSchema.array().optional(), manifest: manifestSchema.optional(), qualification: qualificationSchema.array().optional(), catalogue: z.object({ catalogueId: z.string().nullable(), contractId: z.string().nullable(), support: z.enum(["source-review", "stored-draft-only", "blocked"]), reason: z.string() }).optional() });
 export type GeneratedOutput = z.infer<typeof generatedOutputSchema>;
 export type SourceLine = { seq: number; locator_key: string; content: string; locator: unknown; method_version: string };
 export type SourceManifest = z.infer<typeof manifestSchema>;
@@ -40,18 +41,22 @@ export function repairOutputSet(previous: GeneratedOutput[], lines: SourceLine[]
   const skipped: { name: string; reason: string }[] = [];
   const outputs: GeneratedOutput[] = [];
   for (const o of previous) {
+    const binding = outputBinding(o.type);
     let reason = "";
     if (/image|carousel|video/.test(o.type) && o.type !== "reel_script") reason = "BLOCKED: no approved renderer or validated image/video artifact.";
     else if (agendaOnly && ["decisions", "action_items", "meeting_report", "follow_up", "meeting_summary"].includes(o.type)) reason = "Agenda alone cannot support minutes, attendance, decisions or completion.";
     else if (["press_release", "website_event", "event_summary"].includes(o.type) && !hasDatedEvent) reason = "No adequately dated event signal; news is not forced.";
     else if (/[\u0900-\u097f]/.test(text) && !/[\u0900-\u097f]/.test(o.body)) reason = "Source contains Hindi; historical translation cannot satisfy source-language preservation.";
     else if (/upcoming|will take place|took place|was held/i.test(o.body)) reason = "Historical copy asserts event occurrence/status without verification; use the stored source review.";
+    if (!reason && binding.support === "blocked") reason = `BLOCKED: ${binding.reason}`;
+    const characterLimit = { linkedin: 1200, facebook: 800, x_post: 270 }[o.type as "linkedin" | "facebook" | "x_post"];
+    if (!reason && characterLimit && Array.from(o.body).length > characterLimit) reason = `Channel limit exceeded (${characterLimit} characters); stored copy is not silently rewritten.`;
     if (reason) { skipped.push({ name: o.name, reason }); continue; }
     if (["extraction_review", "structured_tables"].includes(o.type)) continue;
-    outputs.push({ ...o, manifest, qualification });
+    outputs.push({ ...o, manifest, qualification, catalogue: binding });
   }
-  outputs.push({ type: "extraction_review", name: "Stored extraction review", title: "Stored source text — human review required", body: text, manifest, qualification });
-  if (tables.length) outputs.push({ type: "structured_tables", name: "Source tables", title: "Source tables — headers and values require review", body: "Source cells are retained verbatim. No calculated values, inferred owners, decisions or approved evidence.", tables, manifest, qualification });
+  outputs.push({ type: "extraction_review", name: "Stored extraction review", title: "Stored source text — human review required", body: text, manifest, qualification, catalogue: outputBinding("extraction_review") });
+  if (tables.length) outputs.push({ type: "structured_tables", name: "Source tables", title: "Source tables — headers and values require review", body: "Source cells are retained verbatim. No calculated values, inferred owners, decisions or approved evidence.", tables, manifest, qualification, catalogue: outputBinding("structured_tables") });
   for (const name of ["Social image creative", "Carousel", "Rendered video"]) skipped.push({ name, reason: "BLOCKED: no approved renderer; captions and scripts are not image/video artifacts." });
   return { outputs, skipped, limitations: ["Unapproved source-review drafts; no publication, consent or verified readiness established.", ...(tables.length ? ["Table headers, units and semantic roles require review; stored formulas are not executed."] : ["No cell structure in this stored extraction; flattened historical/OCR tables remain partial. Reprocessing requires explicit authorization."]), "Meeting intelligence and official requirement mappings remain outside this phase."], segmentCount: lines.length, qualification, manifest, contractVersion: CONTRACT_VERSION };
 }
