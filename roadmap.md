@@ -42,6 +42,7 @@
 - [x] Report tested formats and remaining limitations without changing import gates or permissions.
 
 # v4 coordinated implementation
+- [ ] Phase 2 follow-up (authorized): add reproducible synthetic format/meeting/performance fixtures, reconcile output catalogue contracts, run focused real-file tests and report actual coverage without paid OCR or models.
 - [x] Phase 1 authorized scope: intake guidance, explicit evidence gaps, shared authorized filters/counts/pagination, saved draft listing and authenticated download/isolation checks. 27 focused tests and fresh automatic build pass; exact requirement cards, assignments and durable source classification remain unavailable pending authoritative inputs/later-phase work.
 - [x] Phase 2 repairs: native DOCX/XLSX/XLS/CSV cells, URL/Unicode handling, paginated latest-job retrieval, default no-reread cache, source-linked Candidate qualification, draft/DEMO manifests, actual Word tables/CSV/ZIP. Stored 183-line poster and new synthetic CSV verified through university UI; no AI calls, no original reruns.
 - [ ] Phase 2 blocked acceptance: exact DBRAU fixture validation (files absent), image/carousel/video artifacts (no approved renderer), authoritative semantic qualification/catalogue bindings (field parity still partial). Historical flattened tables cannot gain true cells without separately authorized retry. Full Phase 2 acceptance not claimed.
