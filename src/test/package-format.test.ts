@@ -14,7 +14,7 @@ describe("requirement package", () => {
     const c = buildPackageContent(base([ev(), ev({ factId: "f2", usable: false, reasons: ["Fact is not human-approved"] })]));
     expect(c.evidenceIndex).toHaveLength(1);
     expect(c.attachments[0]).toMatchObject({ number: 1, filename: "a.pdf" });
-    expect(c.evidenceIndex[0]!.locator).toBe("page 1, line 2");
+    expect(c.evidenceIndex[0]?.locator).toBe("page 1, line 2");
     expect(c.issues.some(i => i.includes("Fact is not human-approved"))).toBe(true);
   });
   it("never uses a candidate mapping as approved", () => {
@@ -34,21 +34,35 @@ describe("requirement package", () => {
   const field = (canonicalMapping: string | null, canonicalMappingStatus: string) => ({ id: "UGC-F-1", sourceRow: 2, label: "Evidence reference", dataType: "Text", unit: null, mandatory: "Yes", frameworkVersion: "v1", reportingPeriod: "", fieldLevel: "", versionLock: "", officialSource: "", canonicalMapping, canonicalMappingStatus });
   it("populates a field only through an approved canonical mapping", () => {
     const c = buildPackageContent({ ...base(), fields: [field("Evidence_ID", "approved")] });
-    expect(c.dataTable[0]!.value).toBe("EV-0001");
+    expect(c.dataTable[0]?.value).toBe("EV-0001");
   });
   it("leaves a candidate-mapped field unpopulated", () => {
     const c = buildPackageContent({ ...base(), fields: [field(null, "candidate")] });
-    expect(c.dataTable[0]!.value).toBeNull();
-    expect(c.dataTable[0]!.valueStatus).toContain("candidate, not approved");
+    expect(c.dataTable[0]?.value).toBeNull();
+    expect(c.dataTable[0]?.valueStatus).toContain("candidate, not approved");
   });
   it("keeps a value missing when no approved fact exists instead of inventing one", () => {
     const c = buildPackageContent({ ...base([ev({ usable: false, reasons: ["Fact is not human-approved"] })]), fields: [field("Evidence_ID", "approved")] });
-    expect(c.dataTable[0]!.value).toBeNull();
-    expect(c.dataTable[0]!.valueStatus).toMatch(/^Missing/);
+    expect(c.dataTable[0]?.value).toBeNull();
+    expect(c.dataTable[0]?.valueStatus).toMatch(/^Missing/);
   });
   it("does not choose between conflicting approved values", () => {
     const c = buildPackageContent({ ...base([ev(), ev({ factId: "f2", value: "EV-0002" })]), fields: [field("Evidence_ID", "approved")] });
-    expect(c.dataTable[0]!.value).toBeNull();
-    expect(c.dataTable[0]!.valueStatus).toContain("conflicting");
+    expect(c.dataTable[0]?.value).toBeNull();
+    expect(c.dataTable[0]?.valueStatus).toContain("conflicting");
+  });
+  it("does not merge equal values from distinct recorded periods", () => {
+    const c = buildPackageContent({ ...base([ev(), ev({ factId: "f2", reportingPeriod: "2024-25" })]), period: "", fields: [field("Evidence_ID", "approved")] });
+    expect(c.dataTable[0]?.value).toBeNull();
+    expect(c.dataTable[0]?.sources.map(s => s.reportingPeriod)).toEqual(["2025-26", "2024-25"]);
+    expect(c.temporalSemantics).toBe("recorded_periods_separate_not_as_of");
+  });
+  it("stores both conflict endpoints and retains their values and locators in downloads", () => {
+    const source = { factId: "f1", available: true, value: "10", reportingPeriod: "2025-26", filename: "a.pdf", locator: { page: 1 }, state: "approved", integrity: "trusted_processor" };
+    const target = { ...source, factId: "f2", value: "20", filename: "b.pdf", locator: { page: 2 } };
+    const c = buildPackageContent({ ...base(), conflicts: [{ from: "Count", to: "Count", status: "candidate", source, target }] });
+    expect(c.conflicts[0]?.source).toEqual(source); expect(c.conflicts[0]?.target).toEqual(target);
+    const md = packageMarkdown(c, { version: 1, sha256: "x", generatedAt: "t", status: "draft" });
+    expect(md).toContain("value 10"); expect(md).toContain("value 20"); expect(md).toContain("page 2");
   });
 });
