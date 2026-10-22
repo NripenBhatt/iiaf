@@ -1,0 +1,1 @@
+- Analytics reuse analytics.tsx, analytics-data.ts and Recharts for consistent semantics and accessible equivalents.
