@@ -32,6 +32,8 @@
 - OCR in ocr.server.ts uses the server-only AI Gateway for images/scanned PDF pages; locators are page-level, facts carry OCR_CAUTION and use trusted processing/human review.
 - Native parsers read stored originals; typed word-extractor/Buffer DOC has conversion fallback. Synthetic offline fixtures are distinct from missing originals.
 - Outputs reuse paginated latest-job segments and drafts without model calls; qualification/manifests persist in document_outputs JSON. Downloads retain draft/classification/lineage and real cell tables; invoker SQL lists drafts without generation.
+- Shared filters subscribe to committed router location and retain pending edits until navigation finishes, preventing intermediate route matches from erasing typed input.
+- Output writes and ordinary reads validate current document/job/hash/ordered locators and supported draft contracts in the database; cache hashes are opaque, and byte-level extraction accuracy still requires human review.
 - Table cells persist in locator JSON; flattened historical/OCR tables stay partial. Default processing reuses saved extraction; rereading requires an explicit retry reason.
 - Output catalogue rows are verbatim references; variant bindings grant no approval/access and unsupported contracts fail closed.
 - Historical output quarantine is persisted, immutable and enforced by RLS; new sets require source-linked draft manifests and the Phase 3 output gate remains fail-closed to prevent legacy/prose labels granting eligibility.
