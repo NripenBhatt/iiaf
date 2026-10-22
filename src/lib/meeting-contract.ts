@@ -46,7 +46,7 @@ export function structuredMeetings(lines: Line[]) {
       for (const key of ["date", "decisionDate", "dueDate"]) for (const field of fields[key] ?? []) {
         // Do not normalize natural-language or conflicting dates; retain source text and flag it.
         const m = field.value.match(/^(\d{4})-(\d{2})-(\d{2})$/);
-        if (!m || new Date(`${field.value}T00:00:00Z`).toISOString?.call && !validIso(field.value)) issues.push(`Unvalidated or ambiguous date: ${key}; no overdue inference.`);
+        if (!m || !validIso(field.value)) issues.push(`Unvalidated or ambiguous date: ${key}; no overdue inference.`);
       }
       records[kind].push({ order: records[kind].length + 1, locator: line.locator_key, fields, missing, issues });
     }

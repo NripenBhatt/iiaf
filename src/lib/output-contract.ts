@@ -1,13 +1,14 @@
 import { z } from "zod";
 import { outputBinding } from "./output-reference";
+import { meetingSchema, structuredMeetings } from "./meeting-contract";
 
-export const CONTRACT_VERSION = "iiaf-output-2.1";
-export const sourceCellSchema = z.object({ column: z.number(), ref: z.string(), raw: z.string(), value: z.string(), formula: z.string().nullable(), type: z.string().nullable(), columnSpan: z.number().optional() });
+export const CONTRACT_VERSION = "iiaf-output-2.2";
+export const sourceCellSchema = z.object({ column: z.number(), ref: z.string(), raw: z.string(), value: z.string(), formula: z.string().nullable(), type: z.string().nullable(), columnSpan: z.number().optional(), rowSpan: z.number().optional(), verticalMerge: z.string().optional(), mergeOrigin: z.string().nullable().optional() });
 export const tableRowSchema = z.object({ locator: z.string(), row: z.number(), cells: sourceCellSchema.array() });
-export const tableSchema = z.object({ id: z.string(), name: z.string(), rows: tableRowSchema.array() });
+export const tableSchema = z.object({ id: z.string(), name: z.string(), parentCell: z.string().nullable().optional(), rows: tableRowSchema.array() });
 export const manifestSchema = z.object({ documentId: z.string(), jobId: z.string(), originalHash: z.string(), parserVersion: z.string(), contractVersion: z.string(), classification: z.enum(["DEMO", "unverified"]), approval: z.literal("draft"), locators: z.string().array(), verifiedCoverage: z.literal(false) });
 export const qualificationSchema = z.object({ unitId: z.string(), locator: z.string(), ruleVersion: z.string(), status: z.literal("Candidate"), purpose: z.string(), audience: z.string(), channel: z.string(), relevance: z.string(), evidenceValue: z.literal("unverified"), factualSupport: z.literal("source passage only"), verification: z.literal("human review required"), freshness: z.literal("not established"), confidence: z.null(), sensitivity: z.literal("not assessed"), consent: z.literal("not established"), contradiction: z.literal("not assessed"), duplication: z.literal("not assessed"), rationale: z.string(), destinations: z.string().array(), blockers: z.string().array() });
-export const generatedOutputSchema = z.object({ type: z.string(), name: z.string(), title: z.string(), body: z.string(), tables: tableSchema.array().optional(), manifest: manifestSchema.optional(), qualification: qualificationSchema.array().optional(), catalogue: z.object({ catalogueId: z.string().nullable(), contractId: z.string().nullable(), support: z.enum(["source-review", "stored-draft-only", "blocked"]), reason: z.string() }).optional() });
+export const generatedOutputSchema = z.object({ type: z.string(), name: z.string(), title: z.string(), body: z.string(), meeting: meetingSchema.optional(), tables: tableSchema.array().optional(), manifest: manifestSchema.optional(), qualification: qualificationSchema.array().optional(), catalogue: z.object({ catalogueId: z.string().nullable(), contractId: z.string().nullable(), support: z.enum(["source-review", "stored-draft-only", "blocked"]), reason: z.string() }).optional() });
 export type GeneratedOutput = z.infer<typeof generatedOutputSchema>;
 export type SourceLine = { seq: number; locator_key: string; content: string; locator: unknown; method_version: string };
 export type SourceManifest = z.infer<typeof manifestSchema>;
@@ -23,10 +24,10 @@ export function qualify(lines: SourceLine[]) {
 export function sourceTables(lines: SourceLine[]) {
   const tables = new Map<string, z.infer<typeof tableSchema>>();
   for (const l of lines) {
-    const p = z.object({ cells: sourceCellSchema.array(), row: z.number(), sheet: z.string().optional(), table: z.number().optional() }).safeParse(l.locator);
+    const p = z.object({ cells: sourceCellSchema.array(), row: z.number(), sheet: z.string().optional(), table: z.number().optional(), parent_cell: z.string().nullable().optional() }).safeParse(l.locator);
     if (!p.success) continue;
     const id = p.data.sheet ?? (p.data.table ? `table${p.data.table}` : "csv");
-    const table = tables.get(id) ?? { id, name: id, rows: [] };
+    const table = tables.get(id) ?? { id, name: id, parentCell: p.data.parent_cell, rows: [] };
     table.rows.push({ locator: l.locator_key, row: p.data.row, cells: p.data.cells }); tables.set(id, table);
   }
   return [...tables.values()];
@@ -57,6 +58,9 @@ export function repairOutputSet(previous: GeneratedOutput[], lines: SourceLine[]
   }
   outputs.push({ type: "extraction_review", name: "Stored extraction review", title: "Stored source text — human review required", body: text, manifest, qualification, catalogue: outputBinding("extraction_review") });
   if (tables.length) outputs.push({ type: "structured_tables", name: "Source tables", title: "Source tables — headers and values require review", body: "Source cells are retained verbatim. No calculated values, inferred owners, decisions or approved evidence.", tables, manifest, qualification, catalogue: outputBinding("structured_tables") });
+  for (const draft of structuredMeetings(lines)) {
+    outputs.push({ type: draft.kind, name: `${draft.meeting.contractId} structured draft`, title: `${draft.kind.replace(/_/g, " ")} — human review required`, body: draft.body, meeting: draft.meeting, tables: tables.filter(t => t.rows.some(r => draft.meeting.records.some(record => record.locator === r.locator))), manifest, qualification, catalogue: outputBinding(draft.kind, true) });
+  }
   for (const name of ["Social image creative", "Carousel", "Rendered video"]) skipped.push({ name, reason: "BLOCKED: no approved renderer; captions and scripts are not image/video artifacts." });
-  return { outputs, skipped, limitations: ["Unapproved source-review drafts; no publication, consent or verified readiness established.", ...(tables.length ? ["Table headers, units and semantic roles require review; stored formulas are not executed."] : ["No cell structure in this stored extraction; flattened historical/OCR tables remain partial. Reprocessing requires explicit authorization."]), "Meeting intelligence and official requirement mappings remain outside this phase."], segmentCount: lines.length, qualification, manifest, contractVersion: CONTRACT_VERSION };
+  return { outputs, skipped, limitations: ["Unapproved source-review drafts; no publication, consent or verified readiness established.", ...(tables.length ? ["Table headers, units and semantic roles require review; stored formulas are not executed."] : ["No cell structure in this stored extraction; flattened historical/OCR tables remain partial. Reprocessing requires explicit authorization."]), "Structured meeting drafts require explicit headers; prose-only, missing and ambiguous fields are not inferred. PDF/XLSX meeting renderings are not implemented. Official requirement mappings remain outside this phase."], segmentCount: lines.length, qualification, manifest, contractVersion: CONTRACT_VERSION };
 }

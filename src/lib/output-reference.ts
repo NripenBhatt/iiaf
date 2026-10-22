@@ -14,10 +14,11 @@ const mappings: Record<string, [string | null, string | null]> = {
 };
 const internalDrafts = new Set(["document_summary", "event_summary", "meeting_summary", "follow_up", "evidence_note"]);
 const structuredOrRendered = new Set(["reel_script", "social_image", "carousel", "decisions", "action_items", "agenda_summary", "meeting_report"]);
-export function outputBinding(type: string): OutputBinding {
+export function outputBinding(type: string, structuredDraft = false): OutputBinding {
   const mapping = mappings[type];
   if (!mapping && !internalDrafts.has(type)) return { catalogueId: null, contractId: null, support: "blocked", reason: "Unknown output type; no reconciled catalogue contract." };
   const [catalogueId, contractId] = mapping ?? [null, null];
+  if (structuredDraft && ["agenda_summary", "meeting_report", "decisions", "action_items"].includes(type)) return { catalogueId, contractId, support: "source-review", reason: "Explicit-source structured draft only; missing/ambiguous fields retained for human review. DOCX/CSV/JSON export; no PDF/XLSX rendering, approval or release." };
   if (structuredOrRendered.has(type)) return { catalogueId, contractId, support: "blocked", reason: "Required structured register, agenda/minutes fields or visual package not validated; prose alone does not satisfy this contract." };
   return { catalogueId, contractId, support: ["extraction_review", "structured_tables"].includes(type) ? "source-review" : "stored-draft-only", reason: "Draft review/export only; catalogue reference is not approval, verified coverage or public release. New authored content is not generated." };
 }

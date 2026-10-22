@@ -36,7 +36,7 @@ export async function outputsZip(list: GeneratedOutput[], source: string) {
     zip.file(`${base}.txt`, outputText(o, source));
     zip.file(`${base}.docx`, await outputDocx(o, source));
     if (o.tables?.length) zip.file(`${base}.csv`, outputCsv(o));
-    if (o.manifest) zip.file(`${base}.manifest.json`, JSON.stringify({ ...o.manifest, catalogue: o.catalogue ?? null, qualification: o.qualification ?? [], tables: o.tables ?? [] }, null, 2));
+    if (o.manifest) zip.file(`${base}.manifest.json`, JSON.stringify({ ...o.manifest, catalogue: o.catalogue ?? null, qualification: o.qualification ?? [], tables: o.tables ?? [], meeting: o.meeting ?? null }, null, 2));
   }
   return zip.generateAsync({ type: "blob" });
 }
