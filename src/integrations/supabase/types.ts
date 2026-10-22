@@ -1210,6 +1210,50 @@ export type Database = {
           },
         ]
       }
+      upload_batches: {
+        Row: {
+          created_at: string
+          created_by: string
+          document_ids: string[]
+          file_results: Json
+          id: string
+          instruction: string | null
+          module: string
+          organization_id: string
+          requested_outputs: string[]
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string
+          document_ids?: string[]
+          file_results?: Json
+          id?: string
+          instruction?: string | null
+          module: string
+          organization_id: string
+          requested_outputs?: string[]
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          document_ids?: string[]
+          file_results?: Json
+          id?: string
+          instruction?: string | null
+          module?: string
+          organization_id?: string
+          requested_outputs?: string[]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "upload_batches_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       uploaded_documents: {
         Row: {
           attempts: number
