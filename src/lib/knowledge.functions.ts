@@ -3,7 +3,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/integrations/supabase/types";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { latestSource } from "./document-source";
-import { buildKnowledgeBundle, knowledgeQuerySchema, type KnowledgeQuery, type KnowledgePassage, type KnowledgeFact } from "./knowledge";
+import { buildKnowledgeBundle, knowledgeLocator, knowledgeQuerySchema, type KnowledgeQuery, type KnowledgePassage, type KnowledgeFact } from "./knowledge";
 
 /** One authenticated, tenant-scoped read path for institutional search and company conversation. */
 export async function retrieveKnowledge(client: SupabaseClient<Database>, userId: string, scope: KnowledgeQuery) {
@@ -20,7 +20,7 @@ export async function retrieveKnowledge(client: SupabaseClient<Database>, userId
   const sources = await Promise.all((documents ?? []).map(async doc => ({ doc, extraction: await latestSource(client, doc.id) })));
   for (const { doc, extraction } of sources) {
     if (!extraction) { incompleteDocuments.push(doc.id); continue; }
-    for (const line of extraction.lines) passages.push({ documentId: doc.id, jobId: extraction.job.id, locatorKey: line.locator_key, locator: line.locator, content: line.content, method: line.method ?? "not stated", parserVersion: line.method_version, seq: line.seq });
+    for (const line of extraction.lines) passages.push({ documentId: doc.id, jobId: extraction.job.id, locatorKey: line.locator_key, locator: knowledgeLocator(line.locator), content: line.content, method: line.method ?? "not stated", parserVersion: line.method_version, seq: line.seq });
     const { data: segments, error: segmentsError } = await client.from("document_segments").select("id").eq("organization_id", scope.organizationId).eq("document_id", doc.id).eq("job_id", extraction.job.id).limit(10000);
     if (segmentsError || segments?.length !== extraction.job.segment_count) throw new Error("Current fact lineage could not be reconciled.");
     currentSegmentIds.push(...(segments ?? []).map(s => s.id));

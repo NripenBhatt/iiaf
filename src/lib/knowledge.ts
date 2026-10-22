@@ -1,5 +1,9 @@
 import { z } from "zod";
 
+export type KnowledgeJson = string | number | boolean | null | KnowledgeJson[] | { [key: string]: KnowledgeJson };
+const jsonSchema: z.ZodType<KnowledgeJson> = z.lazy(() => z.union([z.string(), z.number().finite(), z.boolean(), z.null(), z.array(jsonSchema), z.record(z.string(), jsonSchema)]));
+export function knowledgeLocator(value: unknown): KnowledgeJson { return jsonSchema.parse(value); }
+
 export const knowledgeQuerySchema = z.object({
   organizationId: z.string().uuid(),
   query: z.string().trim().max(200).default(""),
@@ -9,7 +13,7 @@ export const knowledgeQuerySchema = z.object({
 });
 export type KnowledgeQuery = z.infer<typeof knowledgeQuerySchema>;
 export type KnowledgeDocument = { id: string; organization_id: string; original_filename: string; reporting_period: string | null; department_or_owner: string | null; sha256_hash: string; processing_status: string; uploaded_at: string | null };
-export type KnowledgePassage = { documentId: string; jobId: string; locatorKey: string; locator: unknown; content: string; method: string; parserVersion: string; seq: number };
+export type KnowledgePassage = { documentId: string; jobId: string; locatorKey: string; locator: KnowledgeJson; content: string; method: string; parserVersion: string; seq: number };
 export type KnowledgeFact = { id: string; organization_id: string; document_id: string; source_label: string; canonical_field: string | null; extracted_value: string; reviewed_value: string | null; state: string; integrity: string; locator_key: string; locator: unknown; segment_id: string };
 export type KnowledgeConflict = { id: string; source_id: string; target_id: string; status: string };
 export type KnowledgeSource = { documentId: string; filename: string; sha256: string; period: string | null; department: string | null; uploadedAt: string | null; classification: "DEMO" | "unverified" };
@@ -27,7 +31,7 @@ export function buildKnowledgeBundle(input: { scope: KnowledgeQuery; documents: 
     const f = input.facts.find(x => x.id === id && x.organization_id === scope.organizationId);
     const d = f ? owned.get(f.document_id) : undefined;
     if (!f || !d) return { factId: id, available: false as const };
-    return { factId: id, available: true as const, source: source(d), label: f.source_label, field: f.canonical_field, value: f.reviewed_value ?? f.extracted_value, state: f.state, integrity: f.integrity, currentExtraction: current.has(f.segment_id), locatorKey: f.locator_key, locator: f.locator, usableForVerifiedCoverage: false as const };
+    return { factId: id, available: true as const, source: source(d), label: f.source_label, field: f.canonical_field, value: f.reviewed_value ?? f.extracted_value, state: f.state, integrity: f.integrity, currentExtraction: current.has(f.segment_id), locatorKey: f.locator_key, locator: knowledgeLocator(f.locator), usableForVerifiedCoverage: false as const };
   };
   const allPassages = input.passages.flatMap(p => {
     const d = owned.get(p.documentId);
