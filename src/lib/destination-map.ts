@@ -33,7 +33,7 @@ export function mappingCards(set: SetLike | null, lineage: LineageLike, requeste
     const entry = RECONCILED_OUTPUT_CATALOGUE.find(e => e.Output_ID === id);
     if (!entry) continue;
     const made = (set?.outputs ?? []).some(o => o.catalogue?.catalogueId === id);
-    if (!made) cards.push({ key: `req-${id}`, item: `Requested: ${entry.Output_Name}`, locator: null, destinationCode: entry.Primary_Destination, destinationName: destinationName(entry.Primary_Destination), identifier: id, status: "Unsupported", reason: entry.support === "blocked" ? entry.reason : "This source did not qualify for a draft of this output.", persisted: false, created: false });
+    if (!made) cards.push({ key: `req-${id}`, item: `Requested: ${entry.Output_Name}`, locator: null, destinationCode: entry.Primary_Destination, destinationName: destinationName(entry.Primary_Destination), identifier: id, status: entry.support === "blocked" ? "Unsupported" : "Blocked by authorization", reason: entry.support === "blocked" ? entry.reason : "Not written: the saved-output safety gate currently accepts only review, table and meeting drafts (O06–O10, O13). Producing this output needs a separately authorized gate change.", persisted: false, created: false });
   }
   return cards;
 }
