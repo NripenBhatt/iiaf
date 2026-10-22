@@ -16,10 +16,12 @@ export type KnowledgeDocument = { id: string; organization_id: string; original_
 export type KnowledgePassage = { documentId: string; jobId: string; locatorKey: string; locator: KnowledgeJson; content: string; method: string; parserVersion: string; seq: number };
 export type KnowledgeFact = { id: string; organization_id: string; document_id: string; source_label: string; canonical_field: string | null; extracted_value: string; reviewed_value: string | null; state: string; integrity: string; locator_key: string; locator: unknown; segment_id: string };
 export type KnowledgeConflict = { id: string; source_id: string; target_id: string; status: string };
+/** Append-only human review trail; the correction/version history of a fact. */
+export type KnowledgeReview = { fact_id: string; decision: string; previous_state: string | null; value: string | null; note: string | null; created_at: string };
 export type KnowledgeSource = { documentId: string; filename: string; sha256: string; period: string | null; department: string | null; uploadedAt: string | null; classification: "DEMO" | "unverified" };
 
 /** Retrieval is not verification. No missing dates, entities, approvals or conflict winners are inferred. */
-export function buildKnowledgeBundle(input: { scope: KnowledgeQuery; documents: KnowledgeDocument[]; passages: KnowledgePassage[]; facts: KnowledgeFact[]; conflicts: KnowledgeConflict[]; currentSegmentIds: string[]; organizationName: string; totalDocuments: number; incompleteDocuments: string[] }) {
+export function buildKnowledgeBundle(input: { scope: KnowledgeQuery; documents: KnowledgeDocument[]; passages: KnowledgePassage[]; facts: KnowledgeFact[]; conflicts: KnowledgeConflict[]; reviews: KnowledgeReview[]; currentSegmentIds: string[]; organizationName: string; totalDocuments: number; incompleteDocuments: string[] }) {
   const { scope } = input;
   const owned = new Map(input.documents.filter(d => d.organization_id === scope.organizationId).map(d => [d.id, d]));
   const matchesScope = (d: KnowledgeDocument) => (!scope.period || d.reporting_period === scope.period) && (!scope.department || d.department_or_owner === scope.department);
@@ -31,7 +33,8 @@ export function buildKnowledgeBundle(input: { scope: KnowledgeQuery; documents: 
     const f = input.facts.find(x => x.id === id && x.organization_id === scope.organizationId);
     const d = f ? owned.get(f.document_id) : undefined;
     if (!f || !d) return { factId: id, available: false as const };
-    return { factId: id, available: true as const, source: source(d), label: f.source_label, field: f.canonical_field, value: f.reviewed_value ?? f.extracted_value, state: f.state, integrity: f.integrity, currentExtraction: current.has(f.segment_id), locatorKey: f.locator_key, locator: knowledgeLocator(f.locator), usableForVerifiedCoverage: false as const };
+    const history = input.reviews.filter(r => r.fact_id === id).map(r => ({ decision: r.decision, previousState: r.previous_state, value: r.value, note: r.note, at: r.created_at }));
+    return { factId: id, available: true as const, source: source(d), label: f.source_label, field: f.canonical_field, value: f.reviewed_value ?? f.extracted_value, state: f.state, integrity: f.integrity, currentExtraction: current.has(f.segment_id), locatorKey: f.locator_key, locator: knowledgeLocator(f.locator), history, usableForVerifiedCoverage: false as const };
   };
   const allPassages = input.passages.flatMap(p => {
     const d = owned.get(p.documentId);
@@ -46,6 +49,7 @@ export function buildKnowledgeBundle(input: { scope: KnowledgeQuery; documents: 
   const periods = [...new Set([...allPassages.map(p => p.source.period), ...facts.flatMap(f => f.available ? [f.source.period] : [])])].sort((a, b) => (a ?? "").localeCompare(b ?? ""));
   const gaps: string[] = [];
   if (!allPassages.length && !facts.length) gaps.push("No matching stored evidence in this document page; absence is not a finding about the institution.");
+  if (facts.some(f => f.available && !f.currentExtraction)) gaps.push("Some facts belong to an earlier extraction snapshot; they are historical, not current evidence.");
   if (input.incompleteDocuments.length) gaps.push(`${input.incompleteDocuments.length} source document(s) have no eligible stored extraction; no processing was rerun.`);
   if (periods.includes(null) || periods.includes("")) gaps.push("Some sources have no recorded reporting period; upload time is not substituted.");
   if (conflicts.length) gaps.push("Conflicting evidence is preserved; no value has been selected as authoritative.");

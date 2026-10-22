@@ -112,6 +112,16 @@ Current continuation: uploaded Unified Phase 3 Completion: Extraction, OCR, Know
 - [x] Implement exact-header cell proposals, locator-based OCR cautions, PPTX omission disclosures and non-regenerating saved-output reads; final focused regression 93/93 passed. Offline unchanged poster export retains all 183 lines, but only one review draft; hosted acceptance remains blocked.
 - [x] Publish consolidated extraction/knowledge/output acceptance record with exact blocked owner actions: IIAF_Phase_3_Extraction_Acceptance_2026_10_22.md.
 
+## Continue-and-finish cycle (2026-10-22, uploaded "Continue and Finish Phase 3")
+- [x] Correction/version history in shared retrieval: append-only fact_reviews chain now attached to every fact endpoint in buildKnowledgeBundle; retrieveKnowledge reads it org-scoped and paginated; assistant tool description updated. Live UI acceptance still needs an assigned account.
+- [x] Source-change invalidation label: bundle now emits an explicit "earlier extraction snapshot — historical, not current evidence" gap when returned facts are stale.
+- [x] G3 offline proof extended: key-order independence vs JSON.stringify, concurrent-winner canonical equality, type distinction; rollback plan for proposed 0013 documented in .lovable/g3-0013-rollback.md (NOT applied).
+- [ ] G2 A/B isolation — owner: invite/activate ncharvak+iiaf.uni.b@gmail.com, assign University Administrator to University B only.
+- [ ] G3 migration 0013 — owner: review rollback plan and authorize the migration cycle.
+- [ ] G5 live OCR — owner: renew AI allowance or record exclusion; no provider call made.
+- [ ] G6 Q12/Q14 + field bindings — owner: authoritative dispositions; nothing invented.
+- [ ] Phase 4 — not started; awaits Phase 3 acceptance and separate authorization.
+
 Source U = uploaded **IIAF — Phase 3 Unified Completion Programme**, numbered sections; baseline = accepted Phases 1–2 and prior source-linked acceptance matrix. Status refers to complete capability, not test/module existence. No mandatory capability has an approved exclusion.
 
 | Requirement / source | Implementation and precise gap | Changes / dependency | Acceptance evidence required | Status |

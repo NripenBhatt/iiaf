@@ -3,7 +3,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/integrations/supabase/types";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { latestSource } from "./document-source";
-import { buildKnowledgeBundle, knowledgeLocator, knowledgeQuerySchema, type KnowledgeQuery, type KnowledgePassage, type KnowledgeFact } from "./knowledge";
+import { buildKnowledgeBundle, knowledgeLocator, knowledgeQuerySchema, type KnowledgeQuery, type KnowledgePassage, type KnowledgeFact, type KnowledgeReview } from "./knowledge";
 
 /** One authenticated, tenant-scoped read path for institutional search and company conversation. */
 export async function retrieveKnowledge(client: SupabaseClient<Database>, userId: string, scope: KnowledgeQuery) {
@@ -35,12 +35,19 @@ export async function retrieveKnowledge(client: SupabaseClient<Database>, userId
   }
   const factIds = facts.map(f => f.id);
   const conflicts: { id: string; source_id: string; target_id: string; status: string }[] = [];
+  const reviews: KnowledgeReview[] = [];
   for (let offset = 0; offset < factIds.length; offset += 100) {
-    const chunk = factIds.slice(offset, offset + 100).join(",");
+    const chunk = factIds.slice(offset, offset + 100);
     for (let page = 0; ; page += 500) {
-      const { data, error: conflictError } = await client.from("relationships").select("id,source_id,target_id,status").eq("organization_id", scope.organizationId).eq("relation_type", "CONFLICTS_WITH").or(`source_id.in.(${chunk}),target_id.in.(${chunk})`).order("id").range(page, page + 499);
+      const { data, error: conflictError } = await client.from("relationships").select("id,source_id,target_id,status").eq("organization_id", scope.organizationId).eq("relation_type", "CONFLICTS_WITH").or(`source_id.in.(${chunk.join(",")}),target_id.in.(${chunk.join(",")})`).order("id").range(page, page + 499);
       if (conflictError) throw new Error("Conflicting evidence could not be read.");
       conflicts.push(...(data ?? []));
+      if ((data ?? []).length < 500) break;
+    }
+    for (let page = 0; ; page += 500) {
+      const { data, error: reviewError } = await client.from("fact_reviews").select("fact_id,decision,previous_state,value,note,created_at").eq("organization_id", scope.organizationId).in("fact_id", chunk).order("created_at").order("id").range(page, page + 499);
+      if (reviewError) throw new Error("Fact review history could not be read.");
+      reviews.push(...(data ?? []));
       if ((data ?? []).length < 500) break;
     }
   }
@@ -59,7 +66,7 @@ export async function retrieveKnowledge(client: SupabaseClient<Database>, userId
   }
   const { data: organization, error: orgError } = await client.from("organizations").select("name").eq("id", scope.organizationId).maybeSingle();
   if (orgError || !organization) throw new Error("Organization could not be read.");
-  return buildKnowledgeBundle({ scope, documents: allDocuments, passages, facts, conflicts: [...new Map(conflicts.map(c => [c.id, c])).values()], currentSegmentIds, incompleteDocuments, totalDocuments: count, organizationName: organization.name });
+  return buildKnowledgeBundle({ scope, documents: allDocuments, passages, facts, conflicts: [...new Map(conflicts.map(c => [c.id, c])).values()], reviews, currentSegmentIds, incompleteDocuments, totalDocuments: count, organizationName: organization.name });
 }
 
 export const searchKnowledge = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth]).inputValidator(knowledgeQuerySchema).handler(({ context, data }) => retrieveKnowledge(context.supabase, context.userId, data));

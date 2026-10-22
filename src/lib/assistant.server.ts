@@ -60,7 +60,7 @@ export async function handleAssistant(request: Request) {
 
   const tools = {
     search_institutional_knowledge: tool({
-      description: "Read stored institutional passages and facts with recorded periods, source hashes/locators, historical-state cautions and both conflict endpoints. No model/extraction calls, approvals or conflict resolution. Paginated by source documents.",
+      description: "Read stored institutional passages and facts with recorded periods, source hashes/locators, append-only correction history, historical-state cautions and both conflict endpoints. No model/extraction calls, approvals or conflict resolution. Paginated by source documents.",
       inputSchema: z.object({ query: z.string().trim().max(200), period: z.string().trim().max(40), department: z.string().trim().max(120), offset: z.number().int().min(0).max(10000).default(0) }),
       execute: async input => retrieveKnowledge(supabase, userId, { ...input, organizationId }),
     }),
