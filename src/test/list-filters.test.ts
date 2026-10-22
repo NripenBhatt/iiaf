@@ -1,7 +1,26 @@
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
+import { act, renderHook } from "@testing-library/react";
+import { useListFilters } from "@/components/iiaf/list-filters";
 import { dateBounds, EMPTY_FILTERS, listFilterSchema, literalSearch, validateListSearch } from "@/lib/list-filters";
+const router = vi.hoisted(() => ({ search: {} as Record<string, unknown>, navigate: vi.fn(async () => {}) }));
+vi.mock("@tanstack/react-router", () => ({ useNavigate: () => router.navigate, useLocation: () => ({ pathname: "/reports", search: router.search }) }));
+afterEach(() => { vi.useRealTimers(); router.search = {}; router.navigate.mockClear(); });
 
 describe("Shared list rules", () => {
+  it("preserves rapid Workshop typing across intermediate navigation and browser history", async () => {
+    vi.useFakeTimers();
+    const { result, rerender } = renderHook(() => useListFilters());
+    act(() => result.current.update({ q: "W" }));
+    router.search = { q: "W" }; rerender();
+    act(() => { result.current.update({ q: "Work" }); result.current.update({ q: "Workshop" }); result.current.update({ status: "draft" }); });
+    router.search = { q: "Work" }; rerender();
+    expect(result.current.filters).toMatchObject({ q: "Workshop", status: "draft" });
+    await act(async () => { await vi.advanceTimersByTimeAsync(200); });
+    expect(router.navigate).toHaveBeenCalledWith(expect.objectContaining({ search: expect.objectContaining({ q: "Workshop", status: "draft", page: 1 }) }));
+    router.search = { q: "Workshop", status: "draft" }; rerender();
+    router.search = {}; rerender();
+    expect(result.current.filters).toEqual(EMPTY_FILTERS);
+  });
   it("keeps created, uploaded and generated dates distinct", () => {
     expect(["created", "uploaded", "generated"].map(dateField => listFilterSchema.parse({ dateField }).dateField)).toEqual(["created", "uploaded", "generated"]);
   });

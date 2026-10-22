@@ -85,6 +85,13 @@
       "when": 1792633133207,
       "tag": "0011_phase2_historical_output_quarantine",
       "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "7",
+      "when": 1792637675966,
+      "tag": "0012_output_source_integrity",
+      "breakpoints": true
     }
   ]
 }

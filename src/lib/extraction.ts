@@ -4,7 +4,7 @@ import { wordTree, children, descendants, wordText, val } from "./docx-structure
 
 /** Extraction output is untrusted data: it is stored and displayed, never executed or interpreted as instructions. */
 export const PROCESSOR = "iiaf-extractor";
-export const PROCESSOR_VERSION = "1.4.1";
+export const PROCESSOR_VERSION = "1.4.2";
 export const MAX_SEGMENTS = 2000;
 /** Added to every proposed fact whose text came from OCR rather than an embedded text layer. */
 export const OCR_CAUTION = "Recognised by OCR from an image or scanned page; verify against the original before approving.";
@@ -103,7 +103,10 @@ async function pdf(bytes: Uint8Array): Promise<Extraction> {
   return { status: "extracted", method: "pdf-text-layer", segments, error: null };
 }
 
-const xmlText = (x: string) => x.replace(/<[^>]+>/g, "").replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&quot;/g, '"').replace(/&apos;/g, "'").replace(/&amp;/g, "&");
+const xmlText = (x: string) => x.replace(/<[^>]+>/g, "").replace(/&#(x[0-9a-f]+|\d+);/gi, (entity: string, code: string) => {
+  const point = code.toLowerCase().startsWith("x") ? parseInt(code.slice(1), 16) : Number(code);
+  return point > 0 && point <= 0x10ffff && !(point >= 0xd800 && point <= 0xdfff) ? String.fromCodePoint(point) : entity;
+}).replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&quot;/g, '"').replace(/&apos;/g, "'").replace(/&amp;/g, "&");
 
 function docx(bytes: Uint8Array): Extraction {
   const files = unzipSync(bytes, { filter: f => f.name === "word/document.xml" });
