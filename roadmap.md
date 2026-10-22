@@ -45,9 +45,10 @@
 - [x] G1: repaired committed-location subscription, pending typing and tenant-safe intake placeholder; all four browser lists pass.
 - [x] G3: reviewed/applied current-source reference validation; positive/negative rollback tests pass; nine quarantine hashes intact. Semantic payload/cache-key attestation remains restricted, not claimed.
 - [x] G4: new changed synthetic Hindi workbook passes university upload/native extraction/O06–O09 persistence/readback/Word/ZIP; first numeric-entity failure retained, minimal decoding repair tested.
-- [ ] G2: fresh university A/B checks await explicit authorization for a second university/account.
-- [ ] G5/G9: OCR/media tests await separately authorized allowance/provider; no requests made.
-- [ ] G6: authoritative IIAF_Detailed_Concept_Note_v4.docx remains absent; parity cannot be invented.
+- [ ] G2: second synthetic university/account authorized; existing company-admin session and normal invitation/activation required before fresh A/B checks.
+- [ ] G3 follow-up: security review identifies JS/SQL cache serialization parity blocker; no 0013 migration or weaker validation applied.
+- [ ] G5: two-file OCR authorized only within verified included allowance; recorded AI usage exceeds included allowance, so no request permitted. G9 remains deferred.
+- [ ] G6: exact authoritative v4 concept note supplied; reconcile definitions and document unsupported runtime bindings without changing mappings.
 - [x] Regression/protection: 71 targeted/112 full tests; automatic build evidence and consolidated matrix; Phases 3–4 remain paused.
 - [x] Phase 2 remediation: nine legacy sets quarantined with unchanged-payload audit/readback; explicit-header O06–O09 drafts and nested/vertical DOCX fixtures tested; 69 targeted/110 full tests pass; university listing/download/isolation verified. Local OCR transcription retained with title errors; deployed no-paid OCR and live structured-register generation remain blocked/unverified. No Phases 3–4 authorized; release is NO-GO.
 - [x] Phase 2 follow-up: 15 reproducible synthetic files plus existing DOC/PDF tested; all 30 catalogue and 13 blueprint rows reconciled with explicit partial/blocked support; 61 focused tests and automatic build pass; university CSV output/download verified without source reread or model calls.
@@ -56,4 +57,4 @@
 - [ ] Phase 2 blocked acceptance: exact original DBRAU validation (originals absent; synthetic alternatives added), visual packages (no approved renderer), approved semantic mappings/complete structured reports (requires authoritative inputs and separate later-phase work). Historical flattened tables require authorized retry. Full Phase 2 acceptance not claimed.
 - [ ] Phase 3: runtime catalogue/rules, cumulative knowledge, evidence mappings and meeting intelligence — awaiting separate phase authorization.
 - [ ] Phase 4: role intelligence, permitted workspaces, company-only Converse, reminders and final verification — awaiting separate phase authorization.
-- [ ] Missing reference dependency: v4 companion concept note is absent from supplied files; exact Converse v1.2 workbook is present in the v2 bundle. Do not silently substitute an older concept note.
+- [x] Missing reference dependency: exact IIAF_Detailed_Concept_Note_v4.docx supplied on 22 October 2026; older notes are not substitutes.
