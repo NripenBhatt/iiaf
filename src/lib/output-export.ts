@@ -4,7 +4,7 @@ import JSZip from "jszip";
 import type { GeneratedOutput } from "./outputs.functions";
 
 const slug = (s: string) => s.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 60) || "output";
-export const outputFileBase = (o: GeneratedOutput, source: string) => `${slug(source.replace(/\.[^.]+$/, ""))}-${o.type}`;
+export const outputFileBase = (o: Pick<GeneratedOutput, "type">, source: string) => `${slug(source.replace(/\.[^.]+$/, ""))}-${o.type}`;
 const footer = (o: GeneratedOutput, source: string) => `DRAFT — NOT APPROVED — ${o.manifest?.classification ?? "Classification unknown / unverified"}. Not verified coverage.\nSource document: ${source}. Check against the original before publishing.${o.manifest ? `\nDocument ${o.manifest.documentId}; job ${o.manifest.jobId}; original SHA-256 ${o.manifest.originalHash}; parser ${o.manifest.parserVersion}; contract ${o.manifest.contractVersion}.\nSource locators: ${o.manifest.locators.join(", ")}` : "\nHistorical output: exact source manifest not recorded."}`;
 const tableText = (o: GeneratedOutput) => (o.tables ?? []).map(t => `\n${t.name}\n${t.rows.map(r => `[${r.locator}] ${r.cells.map(c => `[${c.ref}] ${c.value}${c.formula ? ` (stored formula: ${c.formula}; raw: ${c.raw})` : ""}`).join(" | ")}`).join("\n")}`).join("\n");
 
