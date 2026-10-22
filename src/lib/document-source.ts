@@ -9,7 +9,7 @@ export async function latestSource(supabase: SupabaseClient<Database>, documentI
   if (!job) return null;
   const lines: SourceLine[] = [];
   for (let offset = 0; offset < job.segment_count; offset += 500) {
-    const { data, error: readError } = await supabase.from("document_segments").select("seq,locator_key,locator,content,method_version").eq("document_id", documentId).eq("job_id", job.id).order("seq").order("id").range(offset, offset + 499);
+    const { data, error: readError } = await supabase.from("document_segments").select("seq,locator_key,locator,content,method,method_version").eq("document_id", documentId).eq("job_id", job.id).order("seq").order("id").range(offset, offset + 499);
     if (readError) throw new Error("Stored source passages could not be retrieved.");
     lines.push(...(data ?? []));
   }

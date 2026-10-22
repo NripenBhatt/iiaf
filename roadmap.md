@@ -85,3 +85,10 @@
 - [x] Existing-versus-proposed Institutional Brain architecture and synthetic A–J acceptance scenarios; scenarios not executed.
 - [x] Consolidated status counts, source gaps, owner actions and smallest safe next batch; no implementation, tests, database changes or Phase 4 start under this documentation scope.
 - [ ] Individual requirement applicability, precise runtime/test bindings and final dispositions — owner review and subsequent scoped authorization required; G2/G3/G5/G6 remain release blockers.
+
+## Controlled cycle 1 (2026-10-22)
+- [x] G6 batch 1: qualification rules Q01-Q16 module + v4 contract state (template/MIME/dimensions/approver/release) — 128/128 tests, build OK
+- [ ] G2: owner invites/activates University B account, then A/B isolation tests
+- [ ] G3: canonical cache-key encoding proof, then authorized migration 0013 + contract version bump
+- [ ] G5: OCR excluded this cycle; bounded live test needs renewed allowance + authorization
+- [ ] G6 remainder: 2,905 field bindings crosswalk; Q12/Q14 unresolved
