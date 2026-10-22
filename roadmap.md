@@ -107,6 +107,13 @@
 
 ## Authoritative unified Phase 3 completion tracker — 22 October 2026
 
+### Bounded University A UI acceptance — 22 October 2026
+- [x] Persisted A-only active University Administrator assignment verified; authenticated A session opened Institutional Information.
+- [x] Saved synthetic text/citations and absent-period cautions read through UI; existing CSV draft downloaded as TXT/DOCX/CSV/ZIP with manifest/cell lineage checked. Six company-only routes and two direct authorizePage calls denied.
+- [ ] Correction/conflict/stale/nonempty-period live acceptance blocked: no suitable saved synthetic fixtures. Correction history is not rendered in KnowledgeSearch; cell locator display exposes [object Object]. No application repair in this verification-only cycle.
+- [x] G1/G4 evidence reused; no unit/full tests, build, extraction/OCR/model calls, migrations or protected writes. Nine quarantined sets retained; output payload fingerprint unchanged over completed checks.
+- [ ] Phase 3 remains NO-GO; G2/G3/G5/G6 and integrated acceptance remain unresolved. Phase 4 not started.
+
 Current continuation: uploaded Unified Phase 3 Completion: Extraction, OCR, Knowledge and Output Acceptance (08:54 UTC). OCR remains mandatory, not excluded. Reconcile stored poster observations; trace text/fact/asset/output gaps and implement safe downstream fixes. No new OCR/provider requests, protected writes, permissions or migration 0013.
 - [x] Reconcile saved poster jobs: 183-line historical source versus 176-line newer duplicate; old nine-output sets quarantined, not verified outputs.
 - [x] Implement exact-header cell proposals, locator-based OCR cautions, PPTX omission disclosures and non-regenerating saved-output reads; final focused regression 93/93 passed. Offline unchanged poster export retains all 183 lines, but only one review draft; hosted acceptance remains blocked.
