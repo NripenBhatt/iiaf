@@ -4,7 +4,7 @@ import { wordTree, children, descendants, wordText, val } from "./docx-structure
 
 /** Extraction output is untrusted data: it is stored and displayed, never executed or interpreted as instructions. */
 export const PROCESSOR = "iiaf-extractor";
-export const PROCESSOR_VERSION = "1.4.2";
+export const PROCESSOR_VERSION = "1.4.3";
 export const MAX_SEGMENTS = 2000;
 /** Added to every proposed fact whose text came from OCR rather than an embedded text layer. */
 export const OCR_CAUTION = "Recognised by OCR from an image or scanned page; verify against the original before approving.";
@@ -75,12 +75,40 @@ const PAIR = /^\s*([\p{L}][\p{L}\p{M}\p{N} _/&().-]{1,60}?)\s*[:=]\s*(.{1,500})$
 /** Proposes facts only from explicit "Label: value" pairs or labelled spreadsheet cells; no keyword inference. */
 export function proposeFacts(segments: Segment[]): Fact[] {
   const facts: Fact[] = [];
+  const headers = new Map<string, { column: number; label: string }[]>();
+  const add = (s: Segment, label: string, value: string, cell?: SourceCell) => {
+    if (facts.length >= 300) return;
+    const f = matchField(label);
+    facts.push({ label, field: f?.field ?? null, spec: f?.spec ?? null, value, locator_key: s.locator_key, locator: cell ? { ...s.locator, cell: cell.ref, column: cell.column } : s.locator, issues: validateFact(f?.field ?? null, value) });
+  };
   for (const s of segments) {
+    const cells = s.locator["cells"];
+    if (Array.isArray(cells)) {
+      const group = String(s.locator["sheet"] ?? s.locator["table"] ?? "csv");
+      const knownHeaders = headers.get(group);
+      if (knownHeaders) {
+        for (const h of knownHeaders) {
+          const cell = cells.find(c => c.column === h.column);
+          if (cell?.value.trim()) add(s, h.label, cell.value, cell);
+        }
+        continue;
+      }
+      const labelled = cells.filter(c => matchField(c.value));
+      if (cells.length === 2 && labelled.length === 1 && matchField(cells[0]?.value ?? "")) {
+        const label = cells[0]; const value = cells[1];
+        if (label && value) add(s, label.value, value.value, value);
+        continue;
+      }
+      if (labelled.length >= 2) {
+        headers.set(group, labelled.map(c => ({ column: c.column, label: c.value })));
+        continue;
+      }
+    }
     if (/^\s*https?:\/\//i.test(s.content)) continue;
     const m = s.content.match(PAIR);
     if (!m) continue;
-    const label = m[1]!.trim(); const value = m[2]!.trim(); const f = matchField(label);
-    facts.push({ label, field: f?.field ?? null, spec: f?.spec ?? null, value, locator_key: s.locator_key, locator: s.locator, issues: validateFact(f?.field ?? null, value) });
+    const label = m[1]?.trim(); const value = m[2]?.trim();
+    if (label && value) add(s, label, value);
     if (facts.length >= 300) break;
   }
   return facts;
@@ -203,8 +231,10 @@ function pptx(bytes: Uint8Array): Extraction {
   const order = (strFromU8(pres).match(/<p:sldId [^>]*\/>/g) ?? []).map(s => targetOf(s.match(/r:id="([^"]+)"/)?.[1] ?? "")).filter((t): t is string => Boolean(t));
   const slideFiles = order.length ? order : Object.keys(files).filter(n => /^ppt\/slides\/slide\d+\.xml$/.test(n)).sort();
   const segments: Segment[] = [];
+  let omittedVisuals = false;
   slideFiles.forEach((file, i) => {
     const xml = files[file]; if (!xml) return;
+    if (/<p:pic\b|<a:tbl\b|<c:chart\b|<a:graphicData\b/.test(strFromU8(xml))) omittedVisuals = true;
     const slide = i + 1; let para = 0;
     for (const p of strFromU8(xml).match(/<a:p>[\s\S]*?<\/a:p>/g) ?? []) {
       para++;
@@ -214,7 +244,7 @@ function pptx(bytes: Uint8Array): Extraction {
       if (segments.length >= MAX_SEGMENTS) return;
     }
   });
-  return { status: segments.length ? "extracted" : "needs_review", method: "pptx-xml", segments, error: segments.length ? null : "Presentation contains no slide text." };
+  return { status: omittedVisuals || !segments.length ? "needs_review" : "extracted", method: "pptx-xml", segments, error: omittedVisuals ? "Partial extraction: slide images, charts and table structure are not extracted; review the original presentation." : segments.length ? null : "Presentation contains no slide text." };
 }
 
 /** Legacy DOC (OLE compound file): text via the validated word-extractor library. */

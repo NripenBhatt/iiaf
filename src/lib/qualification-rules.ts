@@ -129,8 +129,11 @@ export function classifyLines(lines: Line[]): Map<string, RuleApplication[]> {
         apps.push(application(m.ruleId, ["Explicit source headers", "Source locator"], rule(m.ruleId).requiredAttributes.filter(a => !/source|header/i.test(a)), ["Human review required; explicit source values only"]));
       }
     }
-    if (line.method?.includes("ocr")) {
-      apps.push(application("Q13", ["Extracted text", "page/segment locator", `method: ${line.method}`], ["Measured confidence", "review status"], ["OCR_CAUTION: reviewer must compare against the original"]));
+    const source = z.object({ source: z.string().optional() }).safeParse(line.locator);
+    const isOcr = source.success && source.data.source === "ocr";
+    // Mixed-PDF job methods describe native and OCR passages; locators distinguish them.
+    if (isOcr || line.method?.startsWith("ocr")) {
+      apps.push(application("Q13", ["Extracted text", "page/segment locator", `method: ${line.method ?? "stored OCR locator"}`], ["Measured confidence", "review status"], ["OCR_CAUTION: reviewer must compare against the original"]));
     }
     if (DATED_EVENT.test(line.content) && YEAR.test(line.content)) {
       apps.push(application("Q02", ["When (year stated in source)", "source"], ["What", "who", "where", "why", "publication authority"], ["Event status unverified; neutral wording required"]));

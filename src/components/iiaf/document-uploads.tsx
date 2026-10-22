@@ -31,7 +31,7 @@ function typesFor(module: UploadModule, category: string) {
 }
 const blank = { declared_purpose: "", reporting_period: "", document_date_raw: "" };
 const READ_FAILED = ["processing_failed", "ocr_required", "upload_failed", "validation_failed"];
-const simpleStatus = (s: string) => READ_FAILED.includes(s) ? { tone: "danger" as const, text: "Could not be read" } : ["needs_review", "extracted"].includes(s) ? { tone: "success" as const, text: "Read" } : { tone: "neutral" as const, text: "Reading…" };
+const simpleStatus = (s: string) => READ_FAILED.includes(s) ? { tone: "danger" as const, text: "Could not be read" } : s === "needs_review" ? { tone: "warning" as const, text: "Review required" } : s === "extracted" ? { tone: "success" as const, text: "Read" } : { tone: "neutral" as const, text: "Reading…" };
 
 export function DocumentUploads({ module, label }: { module: UploadModule; label: string }) {
   const { workspace } = useWorkspace(); const cache = useQueryClient();
@@ -63,8 +63,12 @@ export function DocumentUploads({ module, label }: { module: UploadModule; label
   }
   async function showOutputs(id: string, name: string) {
     setActive({ id, name }); setOutputsError(null); setOutputs(null);
-    const existing = await load({ data: { documentId: id } }).catch(() => null);
-    if (existing && (existing.outputs[0]?.manifest || !data?.canUpload)) setOutputs(existing); else await makeOutputs(id, name);
+    try {
+      const existing = await load({ data: { documentId: id } });
+      if (existing) setOutputs(existing);
+      else if (data?.canUpload) await makeOutputs(id, name);
+      else setOutputsError("No saved outputs are available. An authorized uploader must create them.");
+    } catch (e) { setOutputsError(e instanceof Error ? e.message : "Saved outputs could not be read."); }
   }
 
   async function upload() {
@@ -153,7 +157,7 @@ export function DocumentUploads({ module, label }: { module: UploadModule; label
           <div><p className="break-all font-medium">{d.original_filename}</p><p className="text-xs text-muted-foreground">{new Date(d.created_at).toLocaleDateString()} · {(d.file_size_bytes / 1024).toFixed(0)} KB · {d.reporting_period || d.document_date_raw || "Period/date not stated"}</p><p className="text-xs text-muted-foreground">Latest activity: {new Date(d.updated_at).toLocaleString()} · Owner: {d.department_or_owner || "not recorded"}</p></div>
           <div className="flex flex-wrap items-center gap-2"><Status tone={st.tone}>{st.text}</Status>
             {isStored(d.processing_status) && <Button size="sm" variant="ghost" onClick={() => void open(d.id)}>Original</Button>}
-            {st.text === "Read" && <Button size="sm" variant="outline" disabled={busy} onClick={() => void showOutputs(d.id, d.original_filename)}>View outputs</Button>}</div>
+            {["extracted", "needs_review"].includes(d.processing_status) && <Button size="sm" variant="outline" disabled={busy} onClick={() => void showOutputs(d.id, d.original_filename)}>View outputs</Button>}</div>
         </li>; })}</ul></div>}
   </section>;
 }
