@@ -78,7 +78,7 @@ export function packageMarkdown(c: PackageContent, meta: { version: number; sha2
   L.push("", "## Attachments", "");
   for (const a of c.attachments) L.push(`${a.number}. **A${a.number}** ${a.filename} · period ${a.reportingPeriod || "not stated"} · SHA-256 \`${a.sha256}\``);
   if (!c.attachments.length) L.push("No attachments.");
-  if (c.conflicts.length) {
+  if (c.conflicts?.length) {
     L.push("", "## Conflicting source records", "");
     for (const conflict of c.conflicts) {
       L.push(`- Status: ${esc(conflict.status)}; no authoritative winner selected.`);

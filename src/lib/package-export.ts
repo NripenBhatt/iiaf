@@ -1,6 +1,6 @@
 /** Browser-side Word and print/PDF renderings of a stored package. Both render the stored content verbatim; nothing is recalculated. */
 import { Document, HeadingLevel, Packer, Paragraph, Table, TableCell, TableRow, TextRun, WidthType } from "docx";
-import type { PackageContent } from "./package-format";
+import { locatorText, type PackageContent } from "./package-format";
 
 export type PackageMeta = { version: number; sha256: string; generatedAt: string; status: string };
 const statusLine = (c: PackageContent, m: PackageMeta) => `${m.status === "reviewed" ? "DRAFT — reviewed (not certified)" : c.status} · package version ${m.version}`;
@@ -14,6 +14,7 @@ function sections(c: PackageContent, m: PackageMeta) {
     evidence: [["#", "Evidence", "Value", "Attachment", "Source locator"], ...c.evidenceIndex.map(e => [String(e.number), `${e.mappingId} · ${e.evidenceId}`, e.value, e.attachment ? `A${e.attachment}` : "—", `${e.filename}: ${e.locator}`])],
     attachments: [["#", "File", "SHA-256", "Period"], ...c.attachments.map(a => [`A${a.number}`, a.filename, a.sha256 ?? "—", a.reportingPeriod ?? "—"])],
     provenance: [["Mapping", "Source row", "Status"], ...c.provenance.mappingRows.map(p => [p.mappingId, String(p.row), p.status])],
+    conflicts: [["Fact", "Status", "File", "Period", "Value", "Locator", "Review / integrity"], ...(c.conflicts ?? []).flatMap(conflict => [conflict.source, conflict.target].map(e => e?.available ? [e.factId, conflict.status, e.filename ?? "—", e.reportingPeriod ?? "—", e.value ?? "—", locatorText(e.locator), `${e.state ?? "—"} / ${e.integrity ?? "—"}`] : [e?.factId ?? "—", conflict.status, "Unavailable", "—", "—", "—", "Not inferred"]))],
   };
 }
 
@@ -34,11 +35,12 @@ export async function packageDocx(c: PackageContent, m: PackageMeta) {
     h("5. Issues, exclusions and limitations"), ...(c.issues.length ? c.issues.map(i => new Paragraph({ text: i, bullet: { level: 0 } })) : [new Paragraph("None recorded.")]),
     h("6. Provenance"), new Paragraph(`Workbook ${c.provenance.workbook} (SHA-256 ${c.provenance.workbookSha256}), requirement row ${c.provenance.requirementSourceRow}.`), table(s.provenance),
     h("7. Certification"), new Paragraph(c.certification),
+    ...(s.conflicts.length > 1 ? [h("8. Conflicting source records — no winner selected"), table(s.conflicts)] : []),
   ] }] });
   return Packer.toBlob(doc);
 }
 
-const esc = (v: string) => v.replace(/[&<>"]/g, ch => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[ch]!);
+const esc = (v: string) => v.replace(/[&<>"]/g, ch => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[ch] ?? ch);
 export function packageHtml(c: PackageContent, m: PackageMeta) {
   const s = sections(c, m);
   const t = (rows: string[][]) => `<table>${rows.map((r, i) => `<tr>${r.map(x => i === 0 ? `<th>${esc(x)}</th>` : `<td>${esc(x || "—")}</td>`).join("")}</tr>`).join("")}</table>`;
@@ -49,7 +51,7 @@ export function packageHtml(c: PackageContent, m: PackageMeta) {
 <h2>4. Attachment references</h2>${s.attachments.length > 1 ? t(s.attachments) : "<p>No attachments.</p>"}
 <h2>5. Issues, exclusions and limitations</h2><ul>${c.issues.map(i => `<li>${esc(i)}</li>`).join("") || "<li>None recorded.</li>"}</ul>
 <h2>6. Provenance</h2><p>Workbook ${esc(c.provenance.workbook)} (SHA-256 ${esc(c.provenance.workbookSha256)}), row ${c.provenance.requirementSourceRow}.</p>${t(s.provenance)}
-<h2>7. Certification</h2><p>${esc(c.certification)}</p></body></html>`;
+<h2>7. Certification</h2><p>${esc(c.certification)}</p>${s.conflicts.length > 1 ? `<h2>8. Conflicting source records — no winner selected</h2>${t(s.conflicts)}` : ""}</body></html>`;
 }
 
 export function saveBlob(blob: Blob, name: string) {
