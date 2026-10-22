@@ -107,6 +107,11 @@
 
 ## Authoritative unified Phase 3 completion tracker — 22 October 2026
 
+Current continuation: uploaded Unified Phase 3 Completion: Extraction, OCR, Knowledge and Output Acceptance (08:54 UTC). OCR remains mandatory, not excluded. Reconcile stored poster observations; trace text/fact/asset/output gaps and implement safe downstream fixes. No new OCR/provider requests, protected writes, permissions or migration 0013.
+- [ ] Reconcile saved poster jobs, segment/fact counts and output lineage; distinguish historical observations from current readback.
+- [ ] Implement demonstrated extraction-to-output and unsupported-asset disclosure fixes; focused tests plus one justified acceptance cycle.
+- [ ] Publish one consolidated extraction/knowledge/output acceptance record with exact blocked owner actions.
+
 Source U = uploaded **IIAF — Phase 3 Unified Completion Programme**, numbered sections; baseline = accepted Phases 1–2 and prior source-linked acceptance matrix. Status refers to complete capability, not test/module existence. No mandatory capability has an approved exclusion.
 
 | Requirement / source | Implementation and precise gap | Changes / dependency | Acceptance evidence required | Status |
