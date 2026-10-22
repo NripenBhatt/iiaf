@@ -16,10 +16,12 @@ export type KnowledgeDocument = { id: string; organization_id: string; original_
 export type KnowledgePassage = { documentId: string; jobId: string; locatorKey: string; locator: KnowledgeJson; content: string; method: string; parserVersion: string; seq: number };
 export type KnowledgeFact = { id: string; organization_id: string; document_id: string; source_label: string; canonical_field: string | null; extracted_value: string; reviewed_value: string | null; state: string; integrity: string; locator_key: string; locator: unknown; segment_id: string };
 export type KnowledgeConflict = { id: string; source_id: string; target_id: string; status: string };
+/** Append-only human review trail; the correction/version history of a fact. */
+export type KnowledgeReview = { fact_id: string; decision: string; previous_state: string | null; value: string | null; note: string | null; created_at: string };
 export type KnowledgeSource = { documentId: string; filename: string; sha256: string; period: string | null; department: string | null; uploadedAt: string | null; classification: "DEMO" | "unverified" };
 
 /** Retrieval is not verification. No missing dates, entities, approvals or conflict winners are inferred. */
-export function buildKnowledgeBundle(input: { scope: KnowledgeQuery; documents: KnowledgeDocument[]; passages: KnowledgePassage[]; facts: KnowledgeFact[]; conflicts: KnowledgeConflict[]; currentSegmentIds: string[]; organizationName: string; totalDocuments: number; incompleteDocuments: string[] }) {
+export function buildKnowledgeBundle(input: { scope: KnowledgeQuery; documents: KnowledgeDocument[]; passages: KnowledgePassage[]; facts: KnowledgeFact[]; conflicts: KnowledgeConflict[]; reviews: KnowledgeReview[]; currentSegmentIds: string[]; organizationName: string; totalDocuments: number; incompleteDocuments: string[] }) {
   const { scope } = input;
   const owned = new Map(input.documents.filter(d => d.organization_id === scope.organizationId).map(d => [d.id, d]));
   const matchesScope = (d: KnowledgeDocument) => (!scope.period || d.reporting_period === scope.period) && (!scope.department || d.department_or_owner === scope.department);
