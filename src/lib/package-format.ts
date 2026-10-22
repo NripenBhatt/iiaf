@@ -1,5 +1,7 @@
 /** Pure, deterministic package building so the same records always produce the same content hash. */
-export type EvidenceItem = { factId: string; documentId: string | null; filename: string; documentSha256: string | null; reportingPeriod: string | null; value: string; field: string | null; locator: Record<string, string | number | boolean | null> | null; method: string | null; integrity: string | null; factState: string | null; identificationStatus: string; usable: boolean; reasons: string[] };
+import type { KnowledgeJson } from "./knowledge";
+export type EvidenceItem = { factId: string; documentId: string | null; filename: string; documentSha256: string | null; reportingPeriod: string | null; value: string; field: string | null; locator: KnowledgeJson; method: string | null; integrity: string | null; factState: string | null; identificationStatus: string; usable: boolean; reasons: string[]; extractionJobId?: string | null; currentExtraction?: boolean };
+export type ConflictEndpoint = { factId: string; available: boolean; filename?: string; documentId?: string; documentSha256?: string; reportingPeriod?: string | null; value?: string; state?: string; integrity?: string; locator?: KnowledgeJson; currentExtraction?: boolean };
 export type Mapping = { mappingId: string; sourceRow: number; evidenceId: string; evidenceName: string; packageName: string; coverage: string; role: string; sourceMappingStatus: string; frameworkVersion: string | null; status: string; evidence: EvidenceItem[] };
 export type Retrieval = {
   organizationId: string; period: string;
@@ -7,7 +9,7 @@ export type Retrieval = {
   requirement: { recordId: string; id: string; sourceRow: number; workbook: string; workbookSha256: string; metric: string; level: string; pillar: string; description: string; officialLabel: string; mandatory: string; validationRule: string; missingValueRule: string; mismatchRule: string; reportingPeriodRule: string; versionLock: string; humanVerification: string; notes: string; officialSource: string };
   fields: { id: string; sourceRow: number; label: string; dataType: string; unit: string | null; mandatory: string; frameworkVersion: string; reportingPeriod: string; fieldLevel: string; versionLock: string; officialSource: string; canonicalMapping: string | null; canonicalMappingStatus: string }[];
   mappings: Mapping[];
-  conflicts: { from: string; to: string; status: string }[];
+  conflicts: { from: string; to: string; status: string; source?: ConflictEndpoint; target?: ConflictEndpoint }[];
 };
 export type PackageContent = ReturnType<typeof buildPackageContent>;
 
@@ -17,8 +19,8 @@ export function buildPackageContent(r: Retrieval) {
   const mappings = [...r.mappings].sort((a, b) => a.mappingId.localeCompare(b.mappingId));
   const usable = mappings.flatMap(m => m.evidence.filter(e => e.usable).map(e => ({ ...e, mappingId: m.mappingId, evidenceId: m.evidenceId })))
     .sort((a, b) => (a.mappingId + a.factId).localeCompare(b.mappingId + b.factId));
-  const attachments = [...new Map(usable.filter(e => e.documentId).map(e => [e.documentId!, e])).values()]
-    .map((e, i) => ({ number: i + 1, documentId: e.documentId!, filename: e.filename, sha256: e.documentSha256, reportingPeriod: e.reportingPeriod }));
+  const attachments = [...new Map(usable.flatMap(e => e.documentId ? [[e.documentId, { documentId: e.documentId, filename: e.filename, sha256: e.documentSha256, reportingPeriod: e.reportingPeriod }] as const] : [])).values()]
+    .map((e, i) => ({ number: i + 1, ...e }));
   const attachmentNo = (id: string | null) => attachments.find(a => a.documentId === id)?.number ?? null;
   const versions = [...new Set(r.fields.map(f => f.frameworkVersion).filter(Boolean))];
   const issues: string[] = [];
@@ -31,12 +33,15 @@ export function buildPackageContent(r: Retrieval) {
     for (const e of m.evidence.filter(x => !x.usable)) issues.push(`${m.mappingId} · ${e.filename}: excluded — ${e.reasons.join("; ")}.`);
   }
   const table = r.fields.map(f => {
-    const vals = f.canonicalMapping ? [...new Set(usable.filter(e => e.field === f.canonicalMapping).map(e => e.value.trim()).filter(Boolean))].sort() : [];
-    const value = vals.length === 1 ? vals[0] : null;
+    const sources = f.canonicalMapping ? usable.filter(e => e.field === f.canonicalMapping) : [];
+    const vals = [...new Set(sources.map(e => e.value.trim()).filter(Boolean))].sort();
+    const periods = [...new Set(sources.map(e => e.reportingPeriod))];
+    const mixedPeriods = !r.period && (periods.length > 1 || periods.includes(null) || periods.includes(""));
+    const value = vals.length === 1 && !mixedPeriods ? vals[0] : null;
     const valueStatus = !f.canonicalMapping ? (f.canonicalMappingStatus === "candidate" ? "Not populated — canonical mapping is a candidate, not approved" : "Not populated — no approved canonical field mapping")
-      : vals.length === 0 ? `Missing — no approved, trusted fact for ${f.canonicalMapping}` : vals.length > 1 ? `Unresolved — conflicting approved values (${vals.join(" / ")})` : `Populated from approved fact via ${f.canonicalMapping}`;
+      : vals.length === 0 ? `Missing — no approved, trusted fact for ${f.canonicalMapping}` : mixedPeriods ? "Unresolved — select one recorded reporting period; periods are not merged" : vals.length > 1 ? `Unresolved — conflicting approved values (${vals.join(" / ")})` : `Populated from approved fact via ${f.canonicalMapping}`;
     if (!value) issues.push(`${f.id} (${f.label}): ${valueStatus}.`);
-    return { fieldId: f.id, label: f.label, dataType: f.dataType, unit: f.unit, mandatory: f.mandatory, canonicalField: f.canonicalMapping, value, valueStatus, sourceRow: f.sourceRow };
+    return { fieldId: f.id, label: f.label, dataType: f.dataType, unit: f.unit, mandatory: f.mandatory, canonicalField: f.canonicalMapping, value, valueStatus, sourceRow: f.sourceRow, sources: sources.map(e => ({ factId: e.factId, documentId: e.documentId, filename: e.filename, value: e.value, reportingPeriod: e.reportingPeriod, locator: e.locator, extractionJobId: e.extractionJobId ?? null })) };
   });
   if (r.requirement.versionLock && !/VERIFIED/i.test(r.requirement.versionLock)) issues.push(`Requirement version lock: ${r.requirement.versionLock}.`);
   for (const c of r.conflicts) issues.push(`Conflict (${c.status}): ${c.from} vs ${c.to}.`);
@@ -48,8 +53,10 @@ export function buildPackageContent(r: Retrieval) {
     methodology: versions.length ? versions : ["Not stated in imported records"],
     requirement: r.requirement,
     reportingPeriod: r.period || "All periods (no filter applied)",
+    temporalSemantics: r.period ? "exact_recorded_reporting_period" : "recorded_periods_separate_not_as_of",
+    conflicts: [...r.conflicts].sort((a, b) => (a.from + a.to).localeCompare(b.from + b.to)),
     dataTable: table,
-    evidenceIndex: usable.map((e, i) => ({ number: i + 1, mappingId: e.mappingId, evidenceId: e.evidenceId, field: e.field, value: e.value, attachment: attachmentNo(e.documentId), filename: e.filename, locator: locatorText(e.locator), method: e.method })),
+    evidenceIndex: usable.map((e, i) => ({ number: i + 1, factId: e.factId, documentId: e.documentId, reportingPeriod: e.reportingPeriod, extractionJobId: e.extractionJobId ?? null, mappingId: e.mappingId, evidenceId: e.evidenceId, field: e.field, value: e.value, attachment: attachmentNo(e.documentId), filename: e.filename, locator: locatorText(e.locator), method: e.method })),
     attachments,
     issues,
     provenance: { workbook: r.requirement.workbook, workbookSha256: r.requirement.workbookSha256, requirementSourceRow: r.requirement.sourceRow, mappingRows: mappings.map(m => ({ mappingId: m.mappingId, row: m.sourceRow, status: m.status })) },
@@ -72,6 +79,13 @@ export function packageMarkdown(c: PackageContent, meta: { version: number; sha2
   L.push("", "## Attachments", "");
   for (const a of c.attachments) L.push(`${a.number}. **A${a.number}** ${a.filename} · period ${a.reportingPeriod || "not stated"} · SHA-256 \`${a.sha256}\``);
   if (!c.attachments.length) L.push("No attachments.");
+  if (c.conflicts?.length) {
+    L.push("", "## Conflicting source records", "");
+    for (const conflict of c.conflicts) {
+      L.push(`- Status: ${esc(conflict.status)}; no authoritative winner selected.`);
+      for (const endpoint of [conflict.source, conflict.target]) L.push(endpoint?.available ? `  - ${esc(endpoint.factId)} · ${esc(endpoint.filename)} · period ${esc(endpoint.reportingPeriod)} · value ${esc(endpoint.value)} · ${esc(locatorText(endpoint.locator))} · state ${esc(endpoint.state)} · integrity ${esc(endpoint.integrity)}` : "  - Endpoint unavailable; no source details inferred.");
+    }
+  }
   L.push("", "## Missing evidence and unresolved issues", "", ...c.issues.map(i => `- ${i}`), "", "## Provenance", "", `- Workbook: ${c.provenance.workbook} (SHA-256 \`${c.provenance.workbookSha256}\`), requirement row ${c.provenance.requirementSourceRow}`);
   for (const m of c.provenance.mappingRows) L.push(`- ${m.mappingId}: source row ${m.row}, status ${m.status}`);
   L.push("", `> ${c.certification}`, "");

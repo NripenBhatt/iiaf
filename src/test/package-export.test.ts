@@ -1,0 +1,8 @@
+import { expect, it } from "vitest";
+import { buildPackageContent, type Retrieval } from "@/lib/package-format";
+import { packageHtml } from "@/lib/package-export";
+it("exports stored conflict source values and escapes their contents without promoting release", () => {
+  const r: Retrieval = { organizationId: "synthetic", period: "2025-26", agency: { id: "demo", name: "DEMO", authority: "synthetic" }, requirement: { recordId: "r", id: "demo", sourceRow: 1, workbook: "synthetic.xlsx", workbookSha256: "x", metric: "Demo", level: "", pillar: "", description: "", officialLabel: "", mandatory: "", validationRule: "", missingValueRule: "", mismatchRule: "", reportingPeriodRule: "", versionLock: "", humanVerification: "", notes: "", officialSource: "" }, fields: [], mappings: [], conflicts: [{ from: "Count", to: "Count", status: "candidate", source: { factId: "f1", available: true, filename: "<source>.pdf", value: "10", locator: { page: 1 }, reportingPeriod: "2025-26" }, target: { factId: "f2", available: true, filename: "b.pdf", value: "20", locator: { page: 2 }, reportingPeriod: "2024-25" } }] };
+  const html = packageHtml(buildPackageContent(r), { version: 1, sha256: "x", generatedAt: "synthetic", status: "draft" });
+  expect(html).toContain("&lt;source&gt;.pdf"); expect(html).toContain("<td>10</td>"); expect(html).toContain("<td>20</td>"); expect(html).toContain("2024-25"); expect(html).toContain("DRAFT — NOT CERTIFIED");
+});

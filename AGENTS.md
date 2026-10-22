@@ -11,7 +11,7 @@
 
 - Shell lives in src/components/iiaf around <Outlet /> in __root.tsx; pages reuse iiaf/ui.tsx for consistency.
 - Company-only modules remain flagged `internalOnly`; server authorization through authorizePage plus organization-scoped RLS protects access, while nav filtering is only presentation.
-- Phases require separate authorization. Offline G3 encoding proposals stay in scripts, never runtime cache code.
+- Phases require separate authorization. Offline G3 decimal/SQL proofs use disposable local clusters, never runtime cache code or hosted migrations.
 - Analytics reuse analytics.tsx, analytics-data.ts and Recharts for consistent semantics and accessible equivalents.
 - Original public addresses live under the _authenticated pathless layout with client-only validated session gating and server page authorization; public auth/reset/invitation routes render without the workspace shell.
 - Output fixtures have explicit institution, audience and lifecycle fields and are filtered through `visibleOutputs`, so every demo output view uses the same visibility rule.
@@ -25,13 +25,13 @@
 - Document intelligence: extraction runs server-side in src/lib/extraction.ts on the unchanged stored original; the user client authorizes via begin_processing, then only the trusted server process writes results with the service role through complete_processing_trusted (the one sanctioned non-provisioning service-role use); facts carry an integrity flag and legacy unverified facts never support packages; idempotent by document + locator + processor version, so retries never duplicate segments or facts.
 - Proposed facts come only from explicit labels matched to upload-spec fields (src/data/fact-fields.json); unmatched labels stay unresolved and cannot be approved, and approval is a separate audited human step.
 - Relationship rules use persisted records in security-definer functions: provenance links auto-approve, mapping/conflict links require review, endpoints cannot dangle or cross tenants.
-- Requirement packages are built deterministically in src/lib/package-format.ts from src/lib/agency.functions.ts retrieval; each version is stored with its SHA-256, reviews bind to that hash, and any content change creates a new version that supersedes (invalidates) prior reviews. Certification is not implemented.
+- Packages use deterministic agency retrieval; reviews bind to version hashes. Retrieval excludes stale, conflicting and recognizable synthetic facts and preserves periods/endpoints; this is not transactional invalidation. Certification is unavailable.
 - Company-only assistant shares agency retrieval/package helpers and knowledge.functions.ts search with institutional UI; caller RLS and membership/roles apply. No approval/import/certification tools; recorded periods are not valid-time and conflicts retain sources.
 - Assistant threads/messages use per-user/organization RLS; /conversation/$threadId shares /conversation access. Browser WAV dictation uses /api/transcribe; audio is never stored.
 - Canonical mappings are organization-scoped, changed only by propose_field_mapping/review_field_mapping. Populate packages only from an approved mapping and one usable value; Word/PDF export stored content verbatim.
 - OCR in ocr.server.ts uses the server-only AI Gateway for images/scanned PDF pages; locators are page-level, facts carry OCR_CAUTION and use trusted processing/human review.
 - Native parsers read stored originals; typed word-extractor/Buffer DOC has conversion fallback. Synthetic offline fixtures are distinct from missing originals.
-- Outputs reuse paginated latest-job segments and drafts without model calls; qualification/manifests persist in document_outputs JSON. Downloads retain draft/classification/lineage and real cell tables; invoker SQL lists drafts without generation.
+- Outputs/search/packages reuse paginated newest-started-job segments; failed/pending jobs never fall back to old success. No model calls; draft manifests retain lineage/cells in downloads.
 - Shared filters subscribe to committed router location and retain pending edits until navigation finishes, preventing intermediate route matches from erasing typed input.
 - Output writes/reads validate source references and draft contracts in the database; hashes remain opaque. Duplicate writes return only a schema-normalized stored winner after version/payload equality, otherwise fail. Extraction accuracy requires review.
 - Table cells persist in locator JSON; flattened historical/OCR tables stay partial. Default processing reuses saved extraction; rereading requires an explicit retry reason.
