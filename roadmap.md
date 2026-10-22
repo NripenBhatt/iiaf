@@ -92,3 +92,14 @@
 - [ ] G3: canonical cache-key encoding proof, then authorized migration 0013 + contract version bump
 - [ ] G5: OCR excluded this cycle; bounded live test needs renewed allowance + authorization
 - [ ] G6 remainder: 2,905 field bindings crosswalk; Q12/Q14 unresolved
+
+## Phase 3 University Brain mandate (2026-10-22)
+- [x] Shared stored-source retrieval/conflict preservation wired into Institutional page and company assistant; 6 pure tests pass. Live readback remains blocked: requesting user's minted session has no active organization role; no alternative identity selected.
+- [x] Output conflict-readback defect repaired without cache/schema changes; 4 focused winner tests pass. Hosted concurrent-write acceptance remains G3-blocked.
+- [x] G3 offline restricted integer/Unicode encoding proposal and 6 proof tests; no runtime key replacement. SQL parity, fractions, hosted concurrency/audit/compatibility/rollback remain review-gated.
+- [ ] G2 separate A/B acceptance — owner must activate B account and assign B-only role.
+- [ ] G6 reviewed field bindings/Q12 official versioned mappings/Q14 sensitivity policy — authoritative owner dispositions needed.
+- [ ] OCR acceptance/exclusion decision — no provider calls authorized.
+- [x] Consolidated Phase 3 batch acceptance report: 12 focused + 38 justified regression tests pass; automatic build OK; authenticated search blocked by unassigned requesting account. Phase 3 NO-GO; Phase 4 unauthorized.
+- [ ] Live knowledge/readback acceptance — owner sign-in to an assigned University A workspace required; current requesting-account session is access-pending.
+- [ ] Valid-time/correction chains, cross-department entity identity, complete output governance and downstream source invalidation — reviewed designs/authoritative policy and scoped schema authorization required.
