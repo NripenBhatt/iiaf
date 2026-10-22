@@ -59,3 +59,11 @@
 - [ ] Phase 3: runtime catalogue/rules, cumulative knowledge, evidence mappings and meeting intelligence — awaiting separate phase authorization.
 - [ ] Phase 4: role intelligence, permitted workspaces, company-only Converse, reminders and final verification — awaiting separate phase authorization.
 - [x] Missing reference dependency: exact IIAF_Detailed_Concept_Note_v4.docx supplied on 22 October 2026; older notes are not substitutes.
+
+# Controlled remaining-blocker review (22 October 2026)
+- [ ] Consolidate current source, historical evidence, hosted status and protected-state readback; no unchanged tests or paid operations.
+- [ ] G2: identify exact manual B invitation/activation and membership action; separate A/B acceptance waits on owner action.
+- [ ] G3: document both encoding designs, compatibility, security acceptance and rollback; no implementation until reviewed design is proven.
+- [ ] G6: reproduce only supported field-level crosswalk and name missing authoritative definitions.
+- [ ] G5: retain zero-allowance blocker; renewal or explicit transcription exclusion required.
+- [ ] Deliver one consolidated evidence-based report; retain Phase 3 NO-GO and Phase 4 not authorized.
