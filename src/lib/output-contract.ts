@@ -3,7 +3,9 @@ import { outputBinding } from "./output-reference";
 import { meetingSchema, structuredMeetings } from "./meeting-contract";
 import { classifyLines, ruleApplicationSchema } from "./qualification-rules";
 
-export const CONTRACT_VERSION = "iiaf-output-2.3";
+// Kept at 2.2: the database output-integrity guard allowlists 2.0–2.2; bumping the version
+// requires the separately authorized migration that extends that allowlist.
+export const CONTRACT_VERSION = "iiaf-output-2.2";
 export const sourceCellSchema = z.object({ column: z.number(), ref: z.string(), raw: z.string(), value: z.string(), formula: z.string().nullable(), type: z.string().nullable(), columnSpan: z.number().optional(), rowSpan: z.number().optional(), verticalMerge: z.string().optional(), mergeOrigin: z.string().nullable().optional() });
 export const tableRowSchema = z.object({ locator: z.string(), row: z.number(), cells: sourceCellSchema.array() });
 export const tableSchema = z.object({ id: z.string(), name: z.string(), parentCell: z.string().nullable().optional(), rows: tableRowSchema.array() });
