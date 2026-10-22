@@ -6,6 +6,7 @@ export const meetingSchema = z.object({ contractId: z.enum(["O06", "O07", "O08",
 type Line = { seq: number; locator_key: string; content: string; locator: unknown };
 type RecordDraft = z.infer<typeof meetingRecordSchema>;
 type Kind = "agenda_summary" | "meeting_report" | "decisions" | "action_items";
+export type MeetingKind = Kind;
 const aliases: Record<string, string[]> = {
   number: ["number", "item number", "क्रमांक"], objective: ["objective", "उद्देश्य"], presenter: ["presenter", "प्रस्तुतकर्ता"], duration: ["duration", "अवधि"], preReads: ["pre reads", "pre-reads", "पूर्व पठन"], outcomes: ["expected outcomes", "अपेक्षित परिणाम"],
   meeting: ["meeting", "meeting id", "बैठक"], date: ["meeting date", "बैठक तिथि"], attendance: ["attendance", "उपस्थिति"], proceedings: ["proceedings", "कार्यवृत्त"],
@@ -16,6 +17,12 @@ const required: Record<Kind, string[]> = { agenda_summary: ["number", "agendaIte
 const ids = { agenda_summary: "O06", meeting_report: "O07", decisions: "O08", action_items: "O09" } as const;
 const normal = (s: string) => s.normalize("NFKC").trim().toLowerCase().replace(/[_\s]+/g, " ");
 const keyFor = (s: string) => Object.keys(aliases).find(k => aliases[k]?.includes(normal(s)));
+
+/** Explicit source headers only; shared by structured drafts and qualification classification. */
+export function meetingHeaderKind(headerValues: string[]): Kind | null {
+  const keys = new Set(headerValues.map(keyFor));
+  return keys.has("wording") ? "decisions" : keys.has("action") ? "action_items" : keys.has("agendaItem") && (keys.has("number") || keys.has("objective")) ? "agenda_summary" : keys.has("proceedings") ? "meeting_report" : null;
+}
 const cellsSchema = z.object({ cells: z.array(z.object({ column: z.number(), ref: z.string(), value: z.string() })), table: z.number().optional(), sheet: z.string().optional() });
 
 /** Explicit source labels/headers only. No prose inference, translation, status inference or approval. */
@@ -30,9 +37,9 @@ export function structuredMeetings(lines: Line[]) {
   const records: Record<Kind, RecordDraft[]> = { agenda_summary: [], meeting_report: [], decisions: [], action_items: [] };
   for (const group of groups.values()) {
     const first = group[0]; if (!first) continue;
-    const header = cellsSchema.parse(first.locator).cells.map(c => ({ column: c.column, key: keyFor(c.value) }));
-    const keys = new Set(header.map(c => c.key));
-    const kind: Kind | null = keys.has("wording") ? "decisions" : keys.has("action") ? "action_items" : keys.has("agendaItem") && (keys.has("number") || keys.has("objective")) ? "agenda_summary" : keys.has("proceedings") ? "meeting_report" : null;
+    const headerCells = cellsSchema.parse(first.locator).cells;
+    const header = headerCells.map(c => ({ column: c.column, key: keyFor(c.value) }));
+    const kind: Kind | null = meetingHeaderKind(headerCells.map(c => c.value));
     if (!kind) continue;
     for (const line of group.slice(1)) {
       const fields: RecordDraft["fields"] = {};

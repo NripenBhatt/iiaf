@@ -1,16 +1,26 @@
 import { z } from "zod";
 import { outputBinding } from "./output-reference";
 import { meetingSchema, structuredMeetings } from "./meeting-contract";
+import { classifyLines, ruleApplicationSchema } from "./qualification-rules";
 
-export const CONTRACT_VERSION = "iiaf-output-2.2";
+export const CONTRACT_VERSION = "iiaf-output-2.3";
 export const sourceCellSchema = z.object({ column: z.number(), ref: z.string(), raw: z.string(), value: z.string(), formula: z.string().nullable(), type: z.string().nullable(), columnSpan: z.number().optional(), rowSpan: z.number().optional(), verticalMerge: z.string().optional(), mergeOrigin: z.string().nullable().optional() });
 export const tableRowSchema = z.object({ locator: z.string(), row: z.number(), cells: sourceCellSchema.array() });
 export const tableSchema = z.object({ id: z.string(), name: z.string(), parentCell: z.string().nullable().optional(), rows: tableRowSchema.array() });
 export const manifestSchema = z.object({ documentId: z.string(), jobId: z.string(), originalHash: z.string(), parserVersion: z.string(), contractVersion: z.string(), classification: z.enum(["DEMO", "unverified"]), approval: z.literal("draft"), locators: z.string().array(), verifiedCoverage: z.literal(false) });
-export const qualificationSchema = z.object({ unitId: z.string(), locator: z.string(), ruleVersion: z.string(), status: z.literal("Candidate"), purpose: z.string(), audience: z.string(), channel: z.string(), relevance: z.string(), evidenceValue: z.literal("unverified"), factualSupport: z.literal("source passage only"), verification: z.literal("human review required"), freshness: z.literal("not established"), confidence: z.null(), sensitivity: z.literal("not assessed"), consent: z.literal("not established"), contradiction: z.literal("not assessed"), duplication: z.literal("not assessed"), rationale: z.string(), destinations: z.string().array(), blockers: z.string().array() });
-export const generatedOutputSchema = z.object({ type: z.string(), name: z.string(), title: z.string(), body: z.string(), meeting: meetingSchema.optional(), tables: tableSchema.array().optional(), manifest: manifestSchema.optional(), qualification: qualificationSchema.array().optional(), catalogue: z.object({ catalogueId: z.string().nullable(), contractId: z.string().nullable(), support: z.enum(["source-review", "stored-draft-only", "blocked"]), reason: z.string() }).optional() });
+export const qualificationSchema = z.object({ unitId: z.string(), locator: z.string(), ruleVersion: z.string(), status: z.literal("Candidate"), purpose: z.string(), audience: z.string(), channel: z.string(), relevance: z.string(), evidenceValue: z.literal("unverified"), factualSupport: z.literal("source passage only"), verification: z.literal("human review required"), freshness: z.literal("not established"), confidence: z.null(), sensitivity: z.literal("not assessed"), consent: z.literal("not established"), contradiction: z.literal("not assessed"), duplication: z.literal("not assessed"), rationale: z.string(), destinations: z.string().array(), blockers: z.string().array(), rules: ruleApplicationSchema.array().default([]) });
+/**
+ * v4 output contract (Detailed Concept Note v4.0, "Output contract", page 7): template/version,
+ * format/MIME, dimensions, approver and release state are mandatory on every output. Draft
+ * outputs fail closed: no template selected, stored body is markdown text, no rendered
+ * image/video asset exists, no approver, release not authorized. Literal/null schema members
+ * make any stronger claim unparseable.
+ */
+export const outputContractStateSchema = z.object({ template: z.null(), mimeType: z.literal("text/markdown"), dimensions: z.null(), approver: z.null(), release: z.literal("not_authorized") });
+export const DRAFT_CONTRACT_STATE: z.infer<typeof outputContractStateSchema> = { template: null, mimeType: "text/markdown", dimensions: null, approver: null, release: "not_authorized" };
+export const generatedOutputSchema = z.object({ type: z.string(), name: z.string(), title: z.string(), body: z.string(), meeting: meetingSchema.optional(), tables: tableSchema.array().optional(), manifest: manifestSchema.optional(), qualification: qualificationSchema.array().optional(), catalogue: z.object({ catalogueId: z.string().nullable(), contractId: z.string().nullable(), support: z.enum(["source-review", "stored-draft-only", "blocked"]), reason: z.string() }).optional(), contract: outputContractStateSchema.default(DRAFT_CONTRACT_STATE) });
 export type GeneratedOutput = z.infer<typeof generatedOutputSchema>;
-export type SourceLine = { seq: number; locator_key: string; content: string; locator: unknown; method_version: string };
+export type SourceLine = { seq: number; locator_key: string; content: string; locator: unknown; method_version: string; method?: string | null };
 export type SourceManifest = z.infer<typeof manifestSchema>;
 
 /** Candidates only: source structure is not approval, consent, or official evidence. */
