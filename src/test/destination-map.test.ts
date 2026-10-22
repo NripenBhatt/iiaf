@@ -20,3 +20,9 @@ describe("mapping truthfulness", () => {
     expect(t).toContain("[a.pdf] [p1] Hello"); expect(t).toContain("[b.pdf] [r1] Bye");
   });
 });
+describe("review-only drafts", () => {
+  it("contract-only outputs are not mapped to a catalogue destination", () => {
+    const c = mappingCards({ outputs: [{ type: "extraction_review", name: "r", title: "t", body: "", catalogue: { catalogueId: null, contractId: "O13", support: "source-review", reason: "" } } as never], skipped: [] }, null);
+    expect(c[0]!.destinationCode).toBeNull(); expect(c[0]!.destinationName).toContain("O13"); expect(c[0]!.destinationName).not.toBe("Not catalogued");
+  });
+});
