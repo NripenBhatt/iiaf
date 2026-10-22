@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { keepPreviousData, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { Download, FileText, Upload } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -40,7 +40,7 @@ export function DocumentUploads({ module, label }: { module: UploadModule; label
   const process = useServerFn(processDocument); const fail = useServerFn(markDocumentFailed); const link = useServerFn(getDocumentLink);
   const generate = useServerFn(generateOutputs); const load = useServerFn(getOutputs);
   const key = ["documents", workspace.id, module];
-  const { data, isLoading, isFetching, error } = useQuery({ queryKey: [...key, filters], queryFn: () => list({ data: { organizationId: workspace.id, module, filters } }) });
+  const { data, isLoading, isFetching, error } = useQuery({ queryKey: [...key, filters], queryFn: () => list({ data: { organizationId: workspace.id, module, filters } }), placeholderData: keepPreviousData });
   const [file, setFile] = useState<File | null>(null); const [preview, setPreview] = useState<string | null>(null);
   const [category, setCategory] = useState(""); const [docType, setDocType] = useState("UNKNOWN");
   const [meta, setMeta] = useState(blank); const [stage, setStage] = useState<string | null>(null); const [dragging, setDragging] = useState(false);
