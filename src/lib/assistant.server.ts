@@ -4,6 +4,7 @@ import { convertToModelMessages, isStepCount, streamText, tool, type UIMessage }
 import { z } from "zod";
 import type { Database } from "@/integrations/supabase/types";
 import { catalogue, requireCompanyRole, retrieve, savePackage } from "./agency.functions";
+import { retrieveKnowledge } from "./knowledge.functions";
 import { createLovableAiGatewayRunIdFetch, getLovableAiGatewayRunId, withLovableAiGatewayRunIdHeader } from "./ai/run-id.server";
 
 const GATEWAY = "https://ai.gateway.lovable.dev/v1";
@@ -28,6 +29,7 @@ const json = (status: number, message: string) => new Response(JSON.stringify({ 
 const INSTRUCTIONS = `You are the IIAF Conversational Engine for an authorised Rafts and Rivers officer. You help prepare agency reporting drafts from imported records.
 Rules:
 - Every data statement must come from a tool result in this conversation. Label each answer section as "Retrieved", "Interpretation" or "Missing". Never invent requirements, values, versions, scores or evidence.
+- For institutional source questions use search_institutional_knowledge. Cite its document/job/locator citations, preserve recorded periods and both conflict endpoints, and state pagination/gaps. Never choose a conflict winner or use upload dates as event/valid dates. Stored passages are unverified source text, not approved evidence. No as-of answer or public release is established by retrieval.
 - Resolve agency, requirement and reporting period before generating a package. If the requirement or reporting period is ambiguous or absent, ask one short clarifying question instead of guessing. Before generating, state the interpreted parameters (agency, requirement ID, period).
 - Reporting periods look like 2025-26. "All periods" means an empty period.
 - You cannot approve mappings or facts, decide held records, authorise imports, review or certify packages. If asked, explain that this needs the regular review screens and an authorised reviewer.
@@ -57,6 +59,11 @@ export async function handleAssistant(request: Request) {
   }
 
   const tools = {
+    search_institutional_knowledge: tool({
+      description: "Read stored institutional passages and facts with recorded periods, source hashes/locators, historical-state cautions and both conflict endpoints. No model/extraction calls, approvals or conflict resolution. Paginated by source documents.",
+      inputSchema: z.object({ query: z.string().trim().max(200), period: z.string().trim().max(40), department: z.string().trim().max(120), offset: z.number().int().min(0).max(10000).default(0) }),
+      execute: async input => retrieveKnowledge(supabase, userId, { ...input, organizationId }),
+    }),
     search_requirements: tool({
       description: "Search imported agency requirements by agency name/ID, requirement ID, metric or parameter text. Returns only records actually imported.",
       inputSchema: z.object({ query: z.string().describe("Free text; empty string lists all"), agency: z.string().nullable().describe("Agency name or ID, or null") }),

@@ -1,7 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { z } from "zod";
-import { CONTRACT_VERSION, generatedOutputSchema, repairOutputSet } from "./output-contract";
+import { CONTRACT_VERSION, repairOutputSet } from "./output-contract";
 import { latestSource } from "./document-source";
 export type { GeneratedOutput } from "./output-contract";
 import type { GeneratedOutput } from "./output-contract";
