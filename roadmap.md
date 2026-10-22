@@ -92,3 +92,12 @@
 - [ ] G3: canonical cache-key encoding proof, then authorized migration 0013 + contract version bump
 - [ ] G5: OCR excluded this cycle; bounded live test needs renewed allowance + authorization
 - [ ] G6 remainder: 2,905 field bindings crosswalk; Q12/Q14 unresolved
+
+## Phase 3 University Brain mandate (2026-10-22)
+- [ ] Shared source-grounded historical retrieval and conflict preservation, wired into existing authorized surfaces; focused execution and acceptance evidence.
+- [ ] Repair demonstrated output conflict-readback defect without changing cache domain, schema or protected rows.
+- [ ] G3 bounded encoding proof preparation; SQL parity, hosted concurrency/audit/compatibility/rollback and migration remain review-gated.
+- [ ] G2 separate A/B acceptance — owner must activate B account and assign B-only role.
+- [ ] G6 reviewed field bindings/Q12 official versioned mappings/Q14 sensitivity policy — authoritative owner dispositions needed.
+- [ ] OCR acceptance/exclusion decision — no provider calls authorized.
+- [ ] Consolidated Phase 3 acceptance report; Phase 4 remains unauthorized.
