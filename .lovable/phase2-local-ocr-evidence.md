@@ -13,7 +13,7 @@ tesseract /tmp/scanned-page1.png stdout -l eng
 ```
 
 Image SHA-256: 4f5bd3049ccbdf64d55bc4a3fd22c5c891440c2662dc3f3442044fd5b21e1931
-PDF SHA-256: 7528ab35fae1d0a1134231186633f8fd36d555e6269c9c7943e99a0a7f5533
+PDF SHA-256: 7528ab35fae1d0a1134231186633f8fd36d555e6269c9c7944e3f99a0a7f5533
 
 Persisted verbatim image transcription:
 ```text
