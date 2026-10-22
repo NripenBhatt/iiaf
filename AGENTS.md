@@ -35,7 +35,7 @@
 - Shared filters subscribe to committed router location and retain pending edits until navigation finishes, preventing intermediate route matches from erasing typed input.
 - Output writes and ordinary reads validate current document/job/hash/ordered locators and supported draft contracts in the database; cache hashes are opaque, and byte-level extraction accuracy still requires human review.
 - Table cells persist in locator JSON; flattened historical/OCR tables stay partial. Default processing reuses saved extraction; rereading requires an explicit retry reason.
-- Output catalogue rows are verbatim references; variant bindings grant no approval/access and unsupported contracts fail closed.
+- Catalogue/crosswalk matches are source references, not executed behavior or approved bindings; retain unresolved fields and fail closed for unsupported contracts.
 - Historical output quarantine is persisted, immutable and enforced by RLS; new sets require source-linked draft manifests and the Phase 3 output gate remains fail-closed to prevent legacy/prose labels granting eligibility.
 - Meeting contracts use explicit source table headers only, retaining per-field provenance, missing values and alternatives; deterministic drafts never infer proceedings or promote facts.
 - DOCX uses a depth-aware OOXML tree for nested tables and merge-origin metadata; embedded-image omissions force manual review and existing originals are never automatically reread.
