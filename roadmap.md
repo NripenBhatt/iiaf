@@ -79,3 +79,8 @@
 - [ ] G3: owner to approve DDR scope and proof-test cycle before any migration
 - [ ] G5: OCR gate closed (zero AI allowance) — owner renews allowance or excludes image transcription
 - [ ] Phase 3 NO-GO until G2/G3/G5/G6 owner decisions; Phase 4 not started
+
+## Master product acceptance planning (22 October 2026)
+- [ ] Consolidated read-only evidence inventory and full source-linked Markdown/CSV acceptance matrix.
+- [ ] Existing-versus-proposed Institutional Brain architecture and synthetic A–J acceptance scenarios.
+- [ ] Consolidated status counts, source gaps, owner actions and smallest safe next batch; no implementation, tests, database changes or Phase 4 start under this documentation scope.
