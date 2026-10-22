@@ -1469,6 +1469,10 @@ export type Database = {
       }
       may_review_facts: { Args: { _org: string }; Returns: boolean }
       may_upload: { Args: { _org: string }; Returns: boolean }
+      output_source_current: {
+        Args: { _doc: string; _org: string; _payload: Json; _version: string }
+        Returns: boolean
+      }
       process_master_import: {
         Args: { _rows: Json; _run: string }
         Returns: number
