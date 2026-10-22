@@ -100,7 +100,8 @@ export function proposeFacts(segments: Segment[]): Fact[] {
         continue;
       }
       if (labelled.length >= 2) {
-        headers.set(group, labelled.map(c => ({ column: c.column, label: c.value })));
+        // Repeated labels cannot fit the existing fact uniqueness contract; leave them unresolved in source review.
+        headers.set(group, cells.filter(c => c.value.trim() && cells.filter(other => norm(other.value) === norm(c.value)).length === 1).map(c => ({ column: c.column, label: c.value })));
         continue;
       }
     }

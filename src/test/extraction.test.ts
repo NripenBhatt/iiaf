@@ -185,7 +185,7 @@ describe("fact validation", () => {
     }
     const r = await extract(extension, data);
     const facts = proposeFacts(r.segments);
-    expect(facts.map(f => [f.field, f.value])).toEqual([["Evidence_ID", "EV-0042"], ["Meeting_Date", "2026-10-13"], ["Evidence_ID", "EV-0043"]]);
+    expect(facts.map(f => [f.field, f.value])).toEqual([["Evidence_ID", "EV-0042"], ["Meeting_Date", "2026-10-13"], [null, "83%"], ["Evidence_ID", "EV-0043"], [null, "142"]]);
     expect(facts[0]?.locator).toMatchObject({ column: 1, cell: extension === "csv" ? "row2:col1" : "A2" });
     expect(facts.every(f => f.locator_key === r.segments[1]?.locator_key || f.locator_key === r.segments[2]?.locator_key)).toBe(true);
   });
