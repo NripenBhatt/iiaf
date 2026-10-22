@@ -9,6 +9,18 @@ const enc = (s: string) => new TextEncoder().encode(s);
 
 describe("Phase 2 real-file synthetic fixtures", () => {
   const fixture = (name: string) => new Uint8Array(readFileSync(`src/test/fixtures/phase2/${name}`));
+  it("decodes numeric XML Hindi characters before explicit-header O06–O09 drafting", async () => {
+    const result = await extract("xlsx", fixture("synthetic-hindi-register.xlsx"));
+    expect(result.segments[0]?.content).toContain("कार्यसूची मद");
+    expect(result.segments.map(s => s.content).join("\n")).not.toContain("&#");
+    const set = repairOutputSet([], result.segments.map(s => ({ ...s, method_version: "1.4.2" })), { documentId: "synthetic-register", jobId: "fixture-job", originalHash: "offline", parserVersion: "1.4.2", contractVersion: CONTRACT_VERSION, classification: "DEMO", approval: "draft", locators: result.segments.map(s => s.locator_key), verifiedCoverage: false });
+    expect(set.outputs.flatMap(o => o.meeting ? [o.meeting.contractId] : [])).toEqual(["O06", "O07", "O08", "O09"]);
+    const agenda = set.outputs.find(o => o.meeting?.contractId === "O06");
+    expect(agenda?.meeting?.records.map(r => r.fields["number"]?.[0]?.value)).toEqual(["2", "1"]);
+    const action = set.outputs.find(o => o.meeting?.contractId === "O09");
+    expect(action?.meeting?.records[0]?.missing).toEqual(["owner", "completionProof"]);
+    expect(action?.meeting?.records[0]?.fields["action"]?.[0]).toMatchObject({ value: "नमूना समीक्षा", cell: "A2", locator: "SYNTHETIC Actions!A2:G2" });
+  });
   it.each([
     ["docx", "synthetic-hindi-agenda.docx", "कार्यसूची"],
     ["docx", "synthetic-minutes.docx", "Minutes"],
