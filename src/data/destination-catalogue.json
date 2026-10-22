@@ -1,0 +1,119 @@
+{
+ "source": "IIAF_Relationship_Engine_Rule_Model_v2_1.xlsx",
+ "sheet": "DESTINATION_MASTER",
+ "bindingStatus": "reference-only",
+ "destinations": [
+  {
+   "Destination_Code": "DST-001",
+   "Destination_Name": "CANONICAL_ENTITY_STORE",
+   "What_Goes_Here": "All normalized entities, facts, identifiers, time scopes and provenance",
+   "Visibility_Default": "Rafts and Rivers internal; tenant-scoped data rules apply",
+   "Eligibility_Rule": "Always eligible for normalized fact storage if extraction succeeds",
+   "Safety_or_Quality_Control": "No public release; no unsupported inference"
+  },
+  {
+   "Destination_Code": "DST-002",
+   "Destination_Name": "AGENCY_REQUIREMENT_LINKS",
+   "What_Goes_Here": "Fact/evidence -> agency framework/version/requirement/field",
+   "Visibility_Default": "Rafts and Rivers internal; university may see only approved released views",
+   "Eligibility_Rule": "Only mappings supported by current official source or explicitly labelled candidate",
+   "Safety_or_Quality_Control": "Version-lock exact agency fields; candidate crosswalks not submission-ready"
+  },
+  {
+   "Destination_Code": "DST-003",
+   "Destination_Name": "AGENCY_EVIDENCE_BUNDLES",
+   "What_Goes_Here": "Evidence bundle per requirement; missing/available/verified status",
+   "Visibility_Default": "Rafts and Rivers internal by default; release is controlled",
+   "Eligibility_Rule": "Use mapped evidence and visible document names/package names",
+   "Safety_or_Quality_Control": "No automatic claim of evidence sufficiency"
+  },
+  {
+   "Destination_Code": "DST-004",
+   "Destination_Name": "AGENCY_SUBMISSION_VIEW",
+   "What_Goes_Here": "Agency-ready values/tables/files for a specific cycle/version",
+   "Visibility_Default": "Rafts and Rivers internal by default; released deliverables only to university",
+   "Eligibility_Rule": "Verified data, reconciliation, approved mapping, correct reporting period",
+   "Safety_or_Quality_Control": "No direct submission without authorization and version check"
+  },
+  {
+   "Destination_Code": "DST-005",
+   "Destination_Name": "INSTITUTIONAL_PROFILE_DIRECTORY",
+   "What_Goes_Here": "Institution, units, programmes, faculty/staff, contacts, research, infrastructure, placements",
+   "Visibility_Default": "University can view/download its own permitted institutional outputs; Rafts and Rivers full workspace",
+   "Eligibility_Rule": "Current, scoped, approved institutional records",
+   "Safety_or_Quality_Control": "Privacy and role-based access"
+  },
+  {
+   "Destination_Code": "DST-006",
+   "Destination_Name": "MEETING_GOVERNANCE_OUTPUTS",
+   "What_Goes_Here": "Meeting, agenda, attendance, minutes, decisions, actions, ATR, implementation evidence",
+   "Visibility_Default": "University can view/download own permitted records; sensitive committee items role-restricted",
+   "Eligibility_Rule": "Meeting linkage and approval state required",
+   "Safety_or_Quality_Control": "Draft vs approved status must be visible"
+  },
+  {
+   "Destination_Code": "DST-007",
+   "Destination_Name": "PUBLIC_COMMUNICATION_OUTPUTS",
+   "What_Goes_Here": "Website articles, news, press releases, social posts/reels, LinkedIn articles, X, Instagram, Facebook",
+   "Visibility_Default": "University can view/download outputs for its institution; R&R full workspace",
+   "Eligibility_Rule": "Use approved facts and assets; channel adaptation may be generated as draft",
+   "Safety_or_Quality_Control": "Human approval and rights check before publication"
+  },
+  {
+   "Destination_Code": "DST-008",
+   "Destination_Name": "OUTREACH_CAMPAIGNS",
+   "What_Goes_Here": "Email, WhatsApp and other outreach drafts, audiences, recipient lists and delivery logs",
+   "Visibility_Default": "University can view/download its permitted campaign outputs; R&R full workspace",
+   "Eligibility_Rule": "Purpose, audience, consent/lawful basis, contact validity and approval required",
+   "Safety_or_Quality_Control": "Generation does not mean sending; connected service and authorization required"
+  },
+  {
+   "Destination_Code": "DST-009",
+   "Destination_Name": "DEPARTMENT_ACADEMIC_ANALYSIS",
+   "What_Goes_Here": "Department/programme/faculty/student/academic-period analysis",
+   "Visibility_Default": "Rafts and Rivers internal by default; shareable deliverables may be released",
+   "Eligibility_Rule": "Defined denominator, time period, completeness and methodology",
+   "Safety_or_Quality_Control": "No unsupported causal claims; privacy thresholds for small groups"
+  },
+  {
+   "Destination_Code": "DST-010",
+   "Destination_Name": "THEMATIC_SDG_REPORTS",
+   "What_Goes_Here": "SDG/thematic/impact outputs",
+   "Visibility_Default": "Rafts and Rivers internal by default; approved deliverables may be released",
+   "Eligibility_Rule": "Explicit indicator definitions, source evidence and scope",
+   "Safety_or_Quality_Control": "No SDG impact claim from keyword alone"
+  },
+  {
+   "Destination_Code": "DST-011",
+   "Destination_Name": "INDUSTRY_PLACEMENT_INTELLIGENCE",
+   "What_Goes_Here": "Employers, recruiter contacts, placement records, internships, offers, MoUs",
+   "Visibility_Default": "Rafts and Rivers full workspace; university-visible contact/placement outputs by policy",
+   "Eligibility_Rule": "Entity resolution, period, contact provenance and permissions",
+   "Safety_or_Quality_Control": "Personal contact data and employer confidentiality"
+  },
+  {
+   "Destination_Code": "DST-012",
+   "Destination_Name": "CUSTOM_ON_DEMAND_OUTPUTS",
+   "What_Goes_Here": "Custom reports, queries, extracts and bespoke output packages",
+   "Visibility_Default": "Rafts and Rivers internal by default; explicit release required",
+   "Eligibility_Rule": "Request specification, source snapshot, reproducible query/template",
+   "Safety_or_Quality_Control": "Check access and privacy before export"
+  },
+  {
+   "Destination_Code": "DST-013",
+   "Destination_Name": "DATA_QUALITY_RECONCILIATION",
+   "What_Goes_Here": "Duplicates, contradictions, stale values, missing provenance, validation issues",
+   "Visibility_Default": "Rafts and Rivers internal; selected actionable issues may be released",
+   "Eligibility_Rule": "Rule-driven checks and human resolution",
+   "Safety_or_Quality_Control": "Do not overwrite conflicting source facts silently"
+  },
+  {
+   "Destination_Code": "DST-014",
+   "Destination_Name": "OUTPUT_LINEAGE_AUDIT",
+   "What_Goes_Here": "Output-to-facts-to-artifacts-to-locators-to-rules/templates/approvals",
+   "Visibility_Default": "Rafts and Rivers full workspace; audit excerpt may accompany release",
+   "Eligibility_Rule": "Persist source snapshot and version metadata",
+   "Safety_or_Quality_Control": "Required for traceability/reproducibility"
+  }
+ ]
+}
