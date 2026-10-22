@@ -48,7 +48,7 @@ describe("Phase 2 real-file synthetic fixtures", () => {
   it("retains vertical merge origin and span without filling continuation values", async () => {
     const r = await extract("docx", fixture("synthetic-vertical-merge.docx"));
     expect(r.status).toBe("extracted");
-    expect(r.segments.find(s => s.locator_key === "table1:row2")?.locator["cells"]).toMatchObject([{ value: "Merged owner\n", verticalMerge: "restart", mergeOrigin: "table1:r2:c1", rowSpan: 2 }]);
+    expect(r.segments.find(s => s.locator_key === "table1:row2")?.locator["cells"]).toMatchObject([{ value: "Merged owner\n", verticalMerge: "restart", mergeOrigin: "table1:r2:c1", rowSpan: 2 }, { value: "Action one" }]);
     expect(r.segments.find(s => s.locator_key === "table1:row3")?.locator["cells"]).toMatchObject([{ value: "", verticalMerge: "continue", mergeOrigin: "table1:r2:c1" }, { value: "Action two" }]);
   });
   it("marks embedded-image omission partial rather than claiming image extraction", async () => {
