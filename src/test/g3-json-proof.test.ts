@@ -22,4 +22,19 @@ describe("offline full JSON decimal proposal — not runtime migration acceptanc
     const cycle: unknown[] = []; cycle.push(cycle);
     for (const value of [NaN, Infinity, undefined, 1n, { a: undefined }, new Date(), cycle, Array(2), { [Symbol("x")]: 1 }, "\ud800"]) expect(() => proposedJsonEncoding(value)).toThrow();
   });
+  it("is key-order independent where JSON.stringify is not — the exact runtime gap 0013 would close", () => {
+    const a = { x: 1, y: [2, 3] }; const b = { y: [2, 3], x: 1 };
+    expect(JSON.stringify(a)).not.toBe(JSON.stringify(b));
+    expect(proposedJsonEncoding(a)).toBe(proposedJsonEncoding(b));
+  });
+  it("two concurrent writers with equal content in different key order produce one canonical winner", () => {
+    const writerA = { outputs: [{ name: "n", body: "b" }], segmentCount: 2, skipped: [] };
+    const writerB = { segmentCount: 2, skipped: [], outputs: [{ body: "b", name: "n" }] };
+    expect(JSON.stringify(writerA)).not.toBe(JSON.stringify(writerB));
+    expect(proposedJsonEncoding(writerA)).toBe(proposedJsonEncoding(writerB));
+  });
+  it("still distinguishes semantically different payloads that share a key set", () => {
+    expect(proposedJsonEncoding({ v: 1 })).not.toBe(proposedJsonEncoding({ v: "1" }));
+    expect(proposedJsonEncoding({ v: 1 })).not.toBe(proposedJsonEncoding({ v: 1.5 }));
+  });
 });
