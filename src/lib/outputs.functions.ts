@@ -5,6 +5,7 @@ import { CONTRACT_VERSION, generatedOutputSchema, repairOutputSet } from "./outp
 import { latestSource } from "./document-source";
 export type { GeneratedOutput } from "./output-contract";
 import type { GeneratedOutput } from "./output-contract";
+import { confirmedCacheWinner, storedOutputSetSchema } from "./output-cache";
 
 export type OutputSet = { outputs: GeneratedOutput[]; skipped: { name: string; reason: string }[]; limitations: string[]; sourceVersion: string; segmentCount: number; createdAt: string; cached: boolean };
 
@@ -13,7 +14,7 @@ async function sha256(text: string) {
   return [...new Uint8Array(d)].map(b => b.toString(16).padStart(2, "0")).join("");
 }
 
-const stored = z.object({ outputs: generatedOutputSchema.array(), skipped: z.array(z.object({ name: z.string(), reason: z.string() })).default([]), limitations: z.string().array().default([]), segmentCount: z.number().default(0) });
+const stored = storedOutputSetSchema;
 
 export const getOutputs = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
   .inputValidator(z.object({ documentId: z.string().uuid() }))
@@ -48,6 +49,10 @@ export const generateOutputs = createServerFn({ method: "POST" }).middleware([re
     const set = repairOutputSet(previous ? stored.parse(previous.outputs).outputs : [], lines, { documentId: doc.id, jobId: job.id, originalHash: doc.sha256_hash, parserVersion: version, contractVersion: CONTRACT_VERSION, classification, approval: "draft", locators: lines.map(l => l.locator_key), verifiedCoverage: false });
     const { data: saved, error } = await context.supabase.from("document_outputs").upsert({ organization_id: doc.organization_id, document_id: doc.id, source_version: version, source_hash: hash, model: "none:stored-source-contract", outputs: JSON.parse(JSON.stringify(set)) }, { onConflict: "document_id,source_hash", ignoreDuplicates: true }).select("created_at").maybeSingle();
     if (error) throw new Error("Repaired outputs could not be saved.");
-    if (!saved) { const { data: existing } = await context.supabase.from("document_outputs").select("created_at").eq("document_id", doc.id).eq("source_hash", hash).single(); return { ...set, sourceVersion: version, createdAt: existing?.created_at ?? "", cached: true }; }
+    if (!saved) {
+      const { data: existing, error: readbackError } = await context.supabase.from("document_outputs").select("outputs,source_version,created_at").eq("document_id", doc.id).eq("source_hash", hash).maybeSingle();
+      if (readbackError) throw new Error("Saved output winner could not be read.");
+      return confirmedCacheWinner(set, existing, version);
+    }
     return { ...set, sourceVersion: version, createdAt: saved.created_at, cached: false };
   });
