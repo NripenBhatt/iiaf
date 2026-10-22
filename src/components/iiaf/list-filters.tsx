@@ -29,7 +29,9 @@ export function useListFilters() {
     setFilters(next);
     if (timer.current) clearTimeout(timer.current);
     timer.current = setTimeout(() => {
-      void navigate({ to: pathname, search: next }).catch(() => {
+      void navigate({ to: pathname, search: next }).then(() => {
+        if (pending.current === next) pending.current = null;
+      }).catch(() => {
         if (pending.current !== next) return;
         pending.current = null;
         setFilters(validateListSearch(search));
