@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { CONTRACT_VERSION, repairOutputSet, type SourceLine, type SourceManifest } from "@/lib/output-contract";
+import { CONTRACT_VERSION, DRAFT_CONTRACT_STATE, repairOutputSet, type SourceLine, type SourceManifest } from "@/lib/output-contract";
 import { outputCsv, outputDocx, outputText, outputsZip } from "@/lib/output-export";
 import { unzipSync, strFromU8 } from "fflate";
 import { OUTPUT_CATALOGUE, OUTPUT_REFERENCE, RECONCILED_OUTPUT_CATALOGUE } from "@/lib/output-catalogue";
@@ -66,27 +66,27 @@ describe("source qualification and output contracts", () => {
   });
   it("blocks unknown output types and unsupported official report bindings", () => {
     expect(outputBinding("agency_submission").support).toBe("blocked");
-    const r = repairOutputSet([{ type: "invented_report", name: "Unknown", title: "Unknown", body: "unsupported" }], englishSource("English source"), manifest);
+    const r = repairOutputSet([{ type: "invented_report", name: "Unknown", title: "Unknown", body: "unsupported", contract: DRAFT_CONTRACT_STATE }], englishSource("English source"), manifest);
     expect(r.outputs.map(o => o.type)).not.toContain("invented_report");
     expect(r.skipped.find(o => o.name === "Unknown")?.reason).toContain("Unknown output type");
   });
   it("does not represent prose as a validated structured decision register", () => {
     const source = englishSource("Minutes: Resolution recorded");
-    const r = repairOutputSet([{ type: "decisions", name: "Decisions", title: "Register", body: "Resolution recorded" }], source, manifest);
+    const r = repairOutputSet([{ type: "decisions", name: "Decisions", title: "Register", body: "Resolution recorded", contract: DRAFT_CONTRACT_STATE }], source, manifest);
     expect(r.outputs.map(o => o.type)).not.toContain("decisions");
     expect(r.skipped.find(o => o.name === "Decisions")?.reason).toContain("structured register");
   });
   it("blocks X copy beyond its 270-character channel contract", () => {
-    const r = repairOutputSet([{ type: "x_post", name: "X", title: "X", body: "a".repeat(271) }], englishSource("English source"), manifest);
+    const r = repairOutputSet([{ type: "x_post", name: "X", title: "X", body: "a".repeat(271), contract: DRAFT_CONTRACT_STATE }], englishSource("English source"), manifest);
     expect(r.outputs.map(o => o.type)).not.toContain("x_post");
     expect(r.skipped.find(o => o.name === "X")?.reason).toContain("270");
   });
   it("keeps a supported historical caption as an unapproved draft variant", () => {
-    const r = repairOutputSet([{ type: "x_post", name: "X", title: "X", body: "a".repeat(270) }], englishSource("English source"), manifest);
+    const r = repairOutputSet([{ type: "x_post", name: "X", title: "X", body: "a".repeat(270), contract: DRAFT_CONTRACT_STATE }], englishSource("English source"), manifest);
     expect(r.outputs.find(o => o.type === "x_post")).toMatchObject({ catalogue: { catalogueId: "OUT-009", support: "stored-draft-only" }, manifest: { approval: "draft", verifiedCoverage: false } });
   });
   it("never derives decisions or minutes from an agenda alone", () => {
-    const result = repairOutputSet([{ type: "decisions", name: "Decisions", title: "False", body: "Approved" }], lines, manifest);
+    const result = repairOutputSet([{ type: "decisions", name: "Decisions", title: "False", body: "Approved", contract: DRAFT_CONTRACT_STATE }], lines, manifest);
     expect(result.outputs.map(o => o.type)).not.toContain("decisions");
     expect(result.skipped.find(s => s.name === "Decisions")?.reason).toContain("Agenda alone");
   });
@@ -96,12 +96,12 @@ describe("source qualification and output contracts", () => {
     expect(result.outputs.every(o => o.manifest?.classification === "DEMO" && o.manifest.verifiedCoverage === false && o.manifest.approval === "draft")).toBe(true);
   });
   it("blocks text masquerading as image or video", () => {
-    const result = repairOutputSet([{ type: "social_image", name: "Image", title: "Image", body: "Caption" }], lines, manifest);
+    const result = repairOutputSet([{ type: "social_image", name: "Image", title: "Image", body: "Caption", contract: DRAFT_CONTRACT_STATE }], lines, manifest);
     expect(result.outputs.map(o => o.type)).not.toContain("social_image");
     expect(result.skipped.find(s => s.name === "Image")?.reason).toContain("BLOCKED");
   });
   it("does not force news without dated event support", () => {
-    const result = repairOutputSet([{ type: "press_release", name: "News", title: "News", body: "Policy announcement" }], lines, manifest);
+    const result = repairOutputSet([{ type: "press_release", name: "News", title: "News", body: "Policy announcement", contract: DRAFT_CONTRACT_STATE }], lines, manifest);
     expect(result.outputs.map(o => o.type)).not.toContain("press_release");
   });
   it("retains the exact stored text and does not manufacture historical table cells", () => {
