@@ -125,7 +125,7 @@ export function DocumentUploads({ module, label }: { module: UploadModule; label
 
     {active && <div className="space-y-4 border bg-card p-5" aria-live="polite">
       <div className="flex flex-wrap items-center justify-between gap-2"><h2 className="font-semibold">2 · Outputs from {active.name}</h2>
-        {outputs && outputs.outputs.length > 0 && <Button size="sm" variant="outline" onClick={() => void outputsZip(outputs.outputs, active.name).then(b => saveBlob(b, `${outputFileBase({ type: "outputs", name: "", title: "", body: "" }, active.name)}.zip`))}><Download /> Download all (ZIP)</Button>}</div>
+        {outputs && outputs.outputs.length > 0 && <Button size="sm" variant="outline" onClick={() => void outputsZip(outputs.outputs, active.name).then(b => saveBlob(b, `${outputFileBase({ type: "outputs" }, active.name)}.zip`))}><Download /> Download all (ZIP)</Button>}</div>
       {stage && !outputs && <p className="text-sm text-muted-foreground">{stage}</p>}
       {outputsError && <p role="alert" className="text-sm text-destructive">{outputsError}</p>}
       {outputs && <>
