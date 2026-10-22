@@ -98,7 +98,7 @@ export function UploadResults({ results, requested, instruction }: { results: Fi
     {instruction && <p className="text-xs text-muted-foreground">Your instruction was saved with this batch. It does not change the drafts, because no AI writing is authorized; drafts use stored source text only.</p>}
     {ok.length > 1 && <div className="flex flex-wrap items-center gap-3 border-l-4 border-primary bg-primary/5 p-3 text-sm"><span>Combined output from {ok.length} files — every line keeps its file and locator; conflicts are not merged.</span>
       <Button size="sm" variant="outline" onClick={() => saveBlob(new Blob([consolidatedReview(ok.map(r => ({ name: r.name, documentId: r.documentId, set: r.set })))], { type: "text/plain" }), "consolidated-source-review.txt")}><Download /> Combined review (Text)</Button></div>}
-    <Tabs defaultValue={results[0]?.documentId}>
+    <Tabs defaultValue={results[0]?.documentId ?? ""}>
       {results.length > 1 && <TabsList className="flex h-auto flex-wrap">{results.map(r => <TabsTrigger key={r.documentId} value={r.documentId}>{r.name}</TabsTrigger>)}</TabsList>}
       {results.map(r => <TabsContent key={r.documentId} value={r.documentId}><h2 className="mb-2 font-semibold break-all">{r.name}</h2><OneFile r={r} requested={requested} detailed={detailed} /></TabsContent>)}
     </Tabs>

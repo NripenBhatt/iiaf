@@ -81,7 +81,7 @@ export function DocumentUploads({ module, label }: { module: UploadModule; label
     if (!queue.length || !category || anyErrors) return;
     setResults(null); const done: FileResult[] = []; const fileResults: { name: string; status: string; documentId: string | null; error: string | null }[] = [];
     for (let i = 0; i < queue.length; i++) {
-      const file = queue[i].file; let docId: string | null = null;
+      const file = queue[i]!.file; let docId: string | null = null;
       try {
         patch(i, { status: "uploading", error: null }); setStage(`Uploading ${i + 1} of ${queue.length}: ${file.name}`);
         const sha256 = await sha256Hex(await file.arrayBuffer());
