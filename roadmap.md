@@ -70,3 +70,12 @@
 - [ ] G6 blocked by explicit reviewed developer-field bindings/unsupported dispositions and qualification/output behavior acceptance; reference equality is not runtime parity.
 - [ ] G5 blocked by exhausted included allowance; owner must await renewal or explicitly exclude image/scanned transcription. No provider call permitted.
 - [x] Consolidated controlled-closure report and CSV delivered; Phase 3 NO-GO and Phase 4 not authorized.
+
+## 2026-10-22 Consolidated execution (G2/G3/G6)
+- [x] G6 crosswalk v2: 3,400 entries reclassified (367 exact / 16 partial / 2,900 unsupported / 117 unresolved); CSV in Files
+- [x] G3 DDR: database-owned db2: cache key designed; verdict BLOCKED pending proof tests (no migration applied)
+- [x] Protected state verified: 9 quarantined sets intact, 0 full imports, facts/mappings unchanged
+- [ ] G2: owner to invite/activate University B admin via Lovable Cloud Users, then authorize A/B session tests
+- [ ] G3: owner to approve DDR scope and proof-test cycle before any migration
+- [ ] G5: OCR gate closed (zero AI allowance) — owner renews allowance or excludes image transcription
+- [ ] Phase 3 NO-GO until G2/G3/G5/G6 owner decisions; Phase 4 not started
