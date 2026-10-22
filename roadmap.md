@@ -59,3 +59,14 @@
 - [ ] Phase 3: runtime catalogue/rules, cumulative knowledge, evidence mappings and meeting intelligence — awaiting separate phase authorization.
 - [ ] Phase 4: role intelligence, permitted workspaces, company-only Converse, reminders and final verification — awaiting separate phase authorization.
 - [x] Missing reference dependency: exact IIAF_Detailed_Concept_Note_v4.docx supplied on 22 October 2026; older notes are not substitutes.
+
+# Controlled remaining-blocker review (22 October 2026)
+- [x] Consolidated source/history and read hosted successful status once; protected readback unchanged at 05:13:40 UTC. No tests/browser/provider calls.
+- [x] G2 manual invitation and existing-account membership steps documented; TUB has zero active members/roles and proposed B account does not exist.
+- [ ] G2 acceptance blocked by owner invitation/activation and B-only role assignment; genuine separate A/B sessions required.
+- [x] G3 two designs, acceptance vectors, security requirements and rollback limits documented; neither proven or implemented.
+- [ ] G3 blocked by reviewed encoding/key-domain decision, exact parity/security proof and tested rollback; no migration authorized by this review.
+- [x] G6 crosswalk reproduced: all 2,905 developer-field IDs unresolved; 32 exact metadata identifiers and 335 exact contract/catalogue reference cells; no invented bindings.
+- [ ] G6 blocked by explicit reviewed developer-field bindings/unsupported dispositions and qualification/output behavior acceptance; reference equality is not runtime parity.
+- [ ] G5 blocked by exhausted included allowance; owner must await renewal or explicitly exclude image/scanned transcription. No provider call permitted.
+- [x] Consolidated controlled-closure report and CSV delivered; Phase 3 NO-GO and Phase 4 not authorized.
