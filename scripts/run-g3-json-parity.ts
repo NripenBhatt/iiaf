@@ -12,7 +12,7 @@ for (let i = 0; i < 200; i++) vector({ index: i, value: (i - 100) / 37, nested: 
 const literal = (s: string) => "'" + s.replace(/'/g, "''") + "'";
 const reference = readFileSync("scripts/g3-json-proof.sql", "utf8");
 const query = reference + "\n" + vectors.map(v => `SELECT encode(convert_to(pg_temp.iiaf_json_proof(${literal(v.json)}::jsonb),'UTF8'),'hex');`).join("\n");
-const result = execFileSync("psql", ["-X", "-qAt", "-v", "ON_ERROR_STOP=1", "-h", socket, "-p", "55439", "-U", "nobody", "-d", "postgres"], { input: query, encoding: "utf8" });
+const result = execFileSync("psql", ["-X", "-qAt", "-v", "ON_ERROR_STOP=1", "-h", socket, "-p", "55439", "-U", "lovable", "-d", "postgres"], { input: query, encoding: "utf8" });
 const rows = result.trim().split("\n");
 if (rows.length !== vectors.length) throw new Error("Incomplete SQL parity output");
 vectors.forEach((v, i) => { if (Buffer.from(v.expected, "utf8").toString("hex") !== rows[i]) throw new Error(`Parity mismatch at synthetic vector ${i}`); });
