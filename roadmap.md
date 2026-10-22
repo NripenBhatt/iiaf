@@ -61,9 +61,12 @@
 - [x] Missing reference dependency: exact IIAF_Detailed_Concept_Note_v4.docx supplied on 22 October 2026; older notes are not substitutes.
 
 # Controlled remaining-blocker review (22 October 2026)
-- [ ] Consolidate current source, historical evidence, hosted status and protected-state readback; no unchanged tests or paid operations.
-- [ ] G2: identify exact manual B invitation/activation and membership action; separate A/B acceptance waits on owner action.
-- [ ] G3: document both encoding designs, compatibility, security acceptance and rollback; no implementation until reviewed design is proven.
-- [ ] G6: reproduce only supported field-level crosswalk and name missing authoritative definitions.
-- [ ] G5: retain zero-allowance blocker; renewal or explicit transcription exclusion required.
-- [ ] Deliver one consolidated evidence-based report; retain Phase 3 NO-GO and Phase 4 not authorized.
+- [x] Consolidated source/history and read hosted successful status once; protected readback unchanged at 05:13:40 UTC. No tests/browser/provider calls.
+- [x] G2 manual invitation and existing-account membership steps documented; TUB has zero active members/roles and proposed B account does not exist.
+- [ ] G2 acceptance blocked by owner invitation/activation and B-only role assignment; genuine separate A/B sessions required.
+- [x] G3 two designs, acceptance vectors, security requirements and rollback limits documented; neither proven or implemented.
+- [ ] G3 blocked by reviewed encoding/key-domain decision, exact parity/security proof and tested rollback; no migration authorized by this review.
+- [x] G6 crosswalk reproduced: all 2,905 developer-field IDs unresolved; 32 exact metadata identifiers and 335 exact contract/catalogue reference cells; no invented bindings.
+- [ ] G6 blocked by explicit reviewed developer-field bindings/unsupported dispositions and qualification/output behavior acceptance; reference equality is not runtime parity.
+- [ ] G5 blocked by exhausted included allowance; owner must await renewal or explicitly exclude image/scanned transcription. No provider call permitted.
+- [x] Consolidated controlled-closure report and CSV delivered; Phase 3 NO-GO and Phase 4 not authorized.
