@@ -17,7 +17,8 @@ export function mappingCards(set: SetLike | null, lineage: LineageLike, requeste
   const cards: MapCard[] = [];
   for (const o of set?.outputs ?? []) {
     const cat = o.catalogue?.catalogueId ? CAT.get(o.catalogue.catalogueId) : undefined;
-    cards.push({ key: `out-${o.type}`, item: o.name, locator: o.manifest?.locators.slice(0, 3).join(", ") ?? null, destinationCode: cat?.Primary_Destination ?? null, destinationName: destinationName(cat?.Primary_Destination ?? null), identifier: [o.catalogue?.catalogueId, o.catalogue?.contractId].filter(Boolean).join(" · ") || null, status: "Output generated", reason: "Review-labelled draft saved from stored source text; not approved or released.", persisted: true, created: true });
+    const contractOnly = !cat && o.catalogue?.contractId;
+    cards.push({ key: `out-${o.type}`, item: o.name, locator: o.manifest?.locators.slice(0, 3).join(", ") ?? null, destinationCode: cat?.Primary_Destination ?? null, destinationName: !o.catalogue ? "Legacy draft — saved before catalogue binding was recorded; no destination claimed" : contractOnly ? `Review output only — Blueprint contract ${o.catalogue!.contractId}; no OUT-001…030 catalogue entry` : destinationName(cat?.Primary_Destination ?? null), identifier: [o.catalogue?.catalogueId, o.catalogue?.contractId].filter(Boolean).join(" · ") || null, status: "Output generated", reason: contractOnly ? "Correctly uncatalogued: the 30-entry output catalogue has no extraction-review or table-extraction output, so this review draft is not mapped to a publication destination. Saved from stored text; not approved." : "Review-labelled draft saved from stored source text; not approved or released.", persisted: true, created: true });
   }
   const rules = new Map<string, { cls: string; locators: string[]; resolution: string; missing: string[] }>();
   for (const q of set?.outputs[0]?.qualification ?? []) for (const r of q.rules) {
@@ -32,7 +33,7 @@ export function mappingCards(set: SetLike | null, lineage: LineageLike, requeste
     const entry = RECONCILED_OUTPUT_CATALOGUE.find(e => e.Output_ID === id);
     if (!entry) continue;
     const made = (set?.outputs ?? []).some(o => o.catalogue?.catalogueId === id);
-    if (!made) cards.push({ key: `req-${id}`, item: `Requested: ${entry.Output_Name}`, locator: null, destinationCode: entry.Primary_Destination, destinationName: destinationName(entry.Primary_Destination), identifier: id, status: "Unsupported", reason: entry.support === "blocked" ? entry.reason : "This source did not qualify for a draft of this output.", persisted: false, created: false });
+    if (!made) cards.push({ key: `req-${id}`, item: `Requested: ${entry.Output_Name}`, locator: null, destinationCode: entry.Primary_Destination, destinationName: destinationName(entry.Primary_Destination), identifier: id, status: entry.support === "blocked" ? "Unsupported" : "Blocked by authorization", reason: entry.support === "blocked" ? entry.reason : "Not written: the saved-output safety gate currently accepts only review, table and meeting drafts (O06–O10, O13). Producing this output needs a separately authorized gate change.", persisted: false, created: false });
   }
   return cards;
 }

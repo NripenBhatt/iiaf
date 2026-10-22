@@ -9,7 +9,7 @@ describe("mapping truthfulness", () => {
   });
   it("a requested output that was not produced is reported, not claimed", () => {
     const c = mappingCards({ outputs: [], skipped: [] }, null, ["OUT-009"]);
-    expect(c[0]!.status).toBe("Unsupported"); expect(c[0]!.created).toBe(false);
+    expect(c[0]!.status).toBe("Blocked by authorization"); expect(c[0]!.created).toBe(false);
   });
   it("an unapproved relationship is a candidate, not persisted-approved", () => {
     const c = mappingCards(null, { facts: [], relationships: [{ id: "r", relation_type: "conflicts_with", target_type: "fact", target_label: "x", rule_id: "R1", status: "proposed" }] });
@@ -18,5 +18,11 @@ describe("mapping truthfulness", () => {
   it("combined review keeps each file's name on every line", () => {
     const t = consolidatedReview([{ name: "a.pdf", documentId: "1", set: { outputs: [out({})], skipped: [] } }, { name: "b.pdf", documentId: "2", set: { outputs: [out({ body: "[r1] Bye" })], skipped: [] } }]);
     expect(t).toContain("[a.pdf] [p1] Hello"); expect(t).toContain("[b.pdf] [r1] Bye");
+  });
+});
+describe("review-only drafts", () => {
+  it("contract-only outputs are not mapped to a catalogue destination", () => {
+    const c = mappingCards({ outputs: [{ type: "extraction_review", name: "r", title: "t", body: "", catalogue: { catalogueId: null, contractId: "O13", support: "source-review", reason: "" } } as never], skipped: [] }, null);
+    expect(c[0]!.destinationCode).toBeNull(); expect(c[0]!.destinationName).toContain("O13"); expect(c[0]!.destinationName).not.toBe("Not catalogued");
   });
 });
