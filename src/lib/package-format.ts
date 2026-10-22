@@ -1,6 +1,7 @@
 /** Pure, deterministic package building so the same records always produce the same content hash. */
-export type EvidenceItem = { factId: string; documentId: string | null; filename: string; documentSha256: string | null; reportingPeriod: string | null; value: string; field: string | null; locator: unknown; method: string | null; integrity: string | null; factState: string | null; identificationStatus: string; usable: boolean; reasons: string[]; extractionJobId?: string | null; currentExtraction?: boolean };
-export type ConflictEndpoint = { factId: string; available: boolean; filename?: string; documentId?: string; documentSha256?: string; reportingPeriod?: string | null; value?: string; state?: string; integrity?: string; locator?: unknown; currentExtraction?: boolean };
+import type { KnowledgeJson } from "./knowledge";
+export type EvidenceItem = { factId: string; documentId: string | null; filename: string; documentSha256: string | null; reportingPeriod: string | null; value: string; field: string | null; locator: KnowledgeJson; method: string | null; integrity: string | null; factState: string | null; identificationStatus: string; usable: boolean; reasons: string[]; extractionJobId?: string | null; currentExtraction?: boolean };
+export type ConflictEndpoint = { factId: string; available: boolean; filename?: string; documentId?: string; documentSha256?: string; reportingPeriod?: string | null; value?: string; state?: string; integrity?: string; locator?: KnowledgeJson; currentExtraction?: boolean };
 export type Mapping = { mappingId: string; sourceRow: number; evidenceId: string; evidenceName: string; packageName: string; coverage: string; role: string; sourceMappingStatus: string; frameworkVersion: string | null; status: string; evidence: EvidenceItem[] };
 export type Retrieval = {
   organizationId: string; period: string;
