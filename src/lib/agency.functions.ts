@@ -131,9 +131,11 @@ export const getRequirementEvidence = createServerFn({ method: "POST" }).middlew
   .handler(async ({ context, data }) => {
     await requireCompanyRole(context.supabase, context.userId, data.organizationId);
     const r = await retrieve(context.supabase, data.organizationId, data.recordId, data.period);
-    const { data: packages } = await context.supabase.from("evidence_packages").select("id,version,content_sha256,status,certification_status,generated_at,reporting_period,content").eq("organization_id", data.organizationId).eq("requirement_record_id", data.recordId).order("version", { ascending: false }).limit(20);
+    const { data: packages, error: packageError } = await context.supabase.from("evidence_packages").select("id,version,content_sha256,status,certification_status,generated_at,reporting_period,content").eq("organization_id", data.organizationId).eq("requirement_record_id", data.recordId).order("version", { ascending: false }).limit(20);
+    if (packageError) throw new Error("Stored packages could not be read.");
     const ids = (packages ?? []).map(p => p.id);
-    const { data: reviews } = ids.length ? await context.supabase.from("package_reviews").select("package_id,decision,content_sha256,note,created_at").in("package_id", ids).order("created_at") : { data: [], error: null };
+    const { data: reviews, error: reviewError } = ids.length ? await context.supabase.from("package_reviews").select("package_id,decision,content_sha256,note,created_at").in("package_id", ids).order("created_at") : { data: [], error: null };
+    if (reviewError) throw new Error("Package reviews could not be read.");
     return { retrieval: r, packages: packages ?? [], reviews: reviews ?? [] };
   });
 

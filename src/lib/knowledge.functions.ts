@@ -21,9 +21,7 @@ export async function retrieveKnowledge(client: SupabaseClient<Database>, userId
   for (const { doc, extraction } of sources) {
     if (!extraction) { incompleteDocuments.push(doc.id); continue; }
     for (const line of extraction.lines) passages.push({ documentId: doc.id, jobId: extraction.job.id, locatorKey: line.locator_key, locator: knowledgeLocator(line.locator), content: line.content, method: line.method ?? "not stated", parserVersion: line.method_version, seq: line.seq });
-    const { data: segments, error: segmentsError } = await client.from("document_segments").select("id").eq("organization_id", scope.organizationId).eq("document_id", doc.id).eq("job_id", extraction.job.id).limit(10000);
-    if (segmentsError || segments?.length !== extraction.job.segment_count) throw new Error("Current fact lineage could not be reconciled.");
-    currentSegmentIds.push(...(segments ?? []).map(s => s.id));
+    currentSegmentIds.push(...extraction.segmentIds);
   }
   const ids = (documents ?? []).map(d => d.id);
   const facts: KnowledgeFact[] = [];
