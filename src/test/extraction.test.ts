@@ -175,6 +175,29 @@ describe("document extraction", () => {
 });
 
 describe("fact validation", () => {
+  it.each(["csv", "xlsx", "xls"])("proposes %s exact-header facts with value-cell provenance, not header values", async extension => {
+    const rows = [["Evidence_ID", "Meeting_Date", "Unknown metric"], ["EV-0042", "2026-10-13", "83%"], ["EV-0043", "", "142"]];
+    let data = enc(rows.map(r => r.join(",")).join("\n"));
+    if (extension !== "csv") {
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(rows), "Evidence");
+      data = new Uint8Array(XLSX.write(wb, { type: "array", bookType: extension as "xlsx" | "xls" }) as ArrayBuffer);
+    }
+    const r = await extract(extension, data);
+    const facts = proposeFacts(r.segments);
+    expect(facts.map(f => [f.field, f.value])).toEqual([["Evidence_ID", "EV-0042"], ["Meeting_Date", "2026-10-13"], [null, "83%"], ["Evidence_ID", "EV-0043"], [null, "142"]]);
+    expect(facts[0]?.locator).toMatchObject({ column: 1, cell: extension === "csv" ? "row2:col1" : "A2" });
+    expect(facts.every(f => f.locator_key === r.segments[1]?.locator_key || f.locator_key === r.segments[2]?.locator_key)).toBe(true);
+  });
+  it("marks PPTX image and table omissions partial while retaining slide text", async () => {
+    const r = await extract("pptx", zipSync({
+      "ppt/presentation.xml": strToU8("<p:presentation/>"),
+      "ppt/slides/slide1.xml": strToU8('<p:sld><p:pic/><a:tbl/><a:p><a:r><a:t>Source text</a:t></a:r></a:p></p:sld>'),
+    }));
+    expect(r.status).toBe("needs_review");
+    expect(r.error).toContain("images, charts and table structure are not extracted");
+    expect(r.segments[0]).toMatchObject({ content: "Source text", locator: { slide: 1 } });
+  });
   it("marks bounded extraction partial instead of silently claiming completeness", async () => {
     const r = await extract("txt", enc(Array.from({ length: 2001 }, (_, i) => `Line ${i}`).join("\n")));
     expect(r.status).toBe("needs_review");

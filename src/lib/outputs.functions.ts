@@ -21,7 +21,11 @@ export const getOutputs = createServerFn({ method: "POST" }).middleware([require
   .handler(async ({ context, data }) => {
     const { data: row, error } = await context.supabase.from("document_outputs").select("outputs,source_version,created_at").eq("document_id", data.documentId).order("created_at", { ascending: false }).limit(1).maybeSingle();
     if (error) throw new Error("Outputs could not be read.");
-    return row ? { ...stored.parse(row.outputs), sourceVersion: row.source_version, createdAt: row.created_at, cached: true } : null;
+    if (!row) return null;
+    const source = await latestSource(context.supabase, data.documentId);
+    if (!source) throw new Error("The latest document reading is unavailable; saved drafts were not presented as current.");
+    const set = stored.parse(row.outputs);
+    return { ...set, limitations: [...set.limitations, ...(source.job.error ? [source.job.error] : [])], sourceVersion: row.source_version, createdAt: row.created_at, cached: true };
   });
 
 /** No-credit repair: reuse historical drafts and stored text, persist qualification/lineage in the existing JSON cache. */
