@@ -4,12 +4,54 @@ import { outputCsv, outputDocx, outputText, outputsZip } from "@/lib/output-expo
 import { unzipSync, strFromU8 } from "fflate";
 import { OUTPUT_CATALOGUE, OUTPUT_REFERENCE, RECONCILED_OUTPUT_CATALOGUE } from "@/lib/output-catalogue";
 import { outputBinding } from "@/lib/output-reference";
+import { structuredMeetings } from "@/lib/meeting-contract";
 const bytes = (blob: Blob) => new Promise<Uint8Array>((resolve, reject) => { const reader = new FileReader(); reader.onload = () => reader.result instanceof ArrayBuffer ? resolve(new Uint8Array(reader.result)) : reject(new Error("Invalid blob")); reader.onerror = () => reject(reader.error); reader.readAsArrayBuffer(blob); });
 
 const manifest: SourceManifest = { documentId: "synthetic-doc", jobId: "synthetic-job", originalHash: "test-original-hash", parserVersion: "1.4.0", contractVersion: CONTRACT_VERSION, classification: "DEMO", approval: "draft", locators: ["table1:row1"], verifiedCoverage: false };
 const lines: SourceLine[] = [{ seq: 0, locator_key: "table1:row1", content: "कार्यसूची | 10:00", method_version: "1.4.0", locator: { table: 1, row: 1, cells: [{ column: 1, ref: "table1:r1:c1", raw: "कार्यसूची", value: "कार्यसूची", formula: null, type: "text" }, { column: 2, ref: "table1:r1:c2", raw: "=1+1", value: "10:00", formula: "1+1", type: "n" }] } }];
 const englishSource = (content: string): SourceLine[] => [{ seq: 0, locator_key: "l1", method_version: "1.4.0", locator: { line: 1 }, content }];
 describe("source qualification and output contracts", () => {
+  const meetingTable = (headers: string[], rows: string[][], table = 1): SourceLine[] => [headers, ...rows].map((values, i) => ({ seq: i, locator_key: `table${table}:row${i + 1}`, content: values.join(" | "), method_version: "1.4.1", locator: { table, row: i + 1, cells: values.map((value, j) => ({ column: j + 1, ref: `table${table}:r${i + 1}:c${j + 1}`, raw: value, value, formula: null, type: "text" })) } }));
+  it("creates distinct O06–O09 explicit-source drafts without promoting evidence", () => {
+    const inputs = [
+      meetingTable(["क्रमांक", "कार्यसूची मद", "उद्देश्य", "प्रस्तुतकर्ता", "अवधि", "पूर्व पठन", "अपेक्षित परिणाम"], [["2", "प्रवेश समीक्षा", "समीक्षा", "डॉ. राव", "10 मिनट", "नोट", "प्रस्ताव"], ["1", "वित्त", "चर्चा", "सचिव", "5 मिनट", "पत्र", "मसौदा"]], 1),
+      meetingTable(["Meeting", "Meeting date", "Attendance", "Proceedings"], [["M-1", "2026-10-13", "Dr Rao", "Reviewed draft"]], 2),
+      meetingTable(["Decision ID", "Agenda item", "Decision wording", "Status", "Authority", "Owner", "Decision date"], [["D-1", "2", "Return revised draft", "deferred", "Council", "Secretary", "2026-10-13"]], 3),
+      meetingTable(["Action", "Meeting", "Decision reference", "Owner", "Due date", "Status", "Completion proof"], [["Revise draft", "M-1", "D-1", "Secretary", "2026-11-01", "pending", "not supplied"]], 4),
+    ].flat().map((l, seq) => ({ ...l, seq }));
+    const r = repairOutputSet([], inputs, manifest);
+    const drafts = r.outputs.filter(o => o.meeting);
+    expect(drafts.map(o => o.meeting?.contractId)).toEqual(["O06", "O07", "O08", "O09"]);
+    expect(drafts.every(o => o.meeting?.validation === "complete" && o.manifest?.approval === "draft" && o.manifest.verifiedCoverage === false)).toBe(true);
+    expect(drafts[0]?.meeting?.records.map(r => r.fields["number"]?.[0]?.value)).toEqual(["2", "1"]);
+    expect(drafts[0]?.body).toContain("प्रवेश समीक्षा");
+    expect(drafts[2]?.meeting?.records[0]?.fields["status"]?.[0]).toMatchObject({ value: "deferred", locator: "table3:row2", cell: "table3:r2:c4" });
+    expect(drafts[3]?.meeting?.records[0]?.fields["status"]?.[0]?.value).toBe("pending");
+  });
+  it("retains missing owner/deadline/status without invention", () => {
+    const r = structuredMeetings(meetingTable(["Action", "Meeting"], [["Review", "M-1"]]));
+    expect(r[0]?.meeting.validation).toBe("incomplete");
+    expect(r[0]?.meeting.records[0]?.missing).toEqual(["decision", "owner", "dueDate", "status", "completionProof"]);
+    expect(r[0]?.meeting.records[0]?.fields["owner"]).toBeUndefined();
+  });
+  it("preserves conflicting owner columns and ambiguous deadlines for review", () => {
+    const r = structuredMeetings(meetingTable(["Action", "Owner", "Owner", "Due date"], [["Review", "A", "B", "soon"]]));
+    expect(r[0]?.meeting.validation).toBe("ambiguous");
+    expect(r[0]?.meeting.records[0]?.fields["owner"]?.map(f => f.value)).toEqual(["A", "B"]);
+    expect(r[0]?.meeting.records[0]?.issues.join(" ")).toContain("no overdue inference");
+  });
+  it("does not assign semantic contracts to prose or unknown table headers", () => {
+    expect(structuredMeetings(englishSource("Minutes: approved budget by someone"))).toEqual([]);
+    expect(structuredMeetings(meetingTable(["Notes", "Person"], [["Approved", "Rao"]]))).toEqual([]);
+  });
+  it("exports structured registers and original cell provenance in downloadable manifests", async () => {
+    const o = repairOutputSet([], meetingTable(["Decision ID", "Agenda item", "Decision wording", "Status"], [["D-1", "1", "Hold for review", "held"]]), manifest).outputs.find(o => o.type === "decisions");
+    if (!o) throw new Error("Decision draft missing");
+    const files = unzipSync(await bytes(await outputsZip([o], "synthetic-register.docx")));
+    const name = Object.keys(files).find(n => n.endsWith(".manifest.json")); if (!name) throw new Error("Manifest absent");
+    expect(JSON.parse(strFromU8(files[name] ?? new Uint8Array())).meeting.records[0].fields.status[0].value).toBe("held");
+    expect(outputCsv(o)).toContain("table1:r2:c3");
+  });
   it("accounts for all 30 authoritative catalogue IDs without granting release", () => {
     expect(RECONCILED_OUTPUT_CATALOGUE.map(o => o.Output_ID)).toEqual(Array.from({ length: 30 }, (_, i) => `OUT-${String(i + 1).padStart(3, "0")}`));
     expect(OUTPUT_REFERENCE.contracts.map(c => c.Output_ID)).toEqual(Array.from({ length: 13 }, (_, i) => `O${String(i + 1).padStart(2, "0")}`));

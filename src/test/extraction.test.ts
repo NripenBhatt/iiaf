@@ -35,6 +35,28 @@ describe("Phase 2 real-file synthetic fixtures", () => {
     expect(r.segments.find(s => s.locator_key === "table1:row2")?.locator["cells"]).toMatchObject([{ value: "10:00", column: 1 }, { value: "प्रवेश समीक्षा", column: 2 }, { value: "", column: 3 }]);
     expect(proposeFacts(r.segments).find(f => f.label === "बैठक तिथि")?.field).toBeNull();
   });
+  it("preserves real DOCX nested table identity without truncation or duplicate content", async () => {
+    const r = await extract("docx", fixture("synthetic-nested-tables.docx"));
+    expect(r.status).toBe("extracted");
+    const outer = r.segments.find(s => s.locator_key === "table1:row2");
+    expect(outer?.locator["cells"]).toMatchObject([{ value: "Parent text\n" }, { value: "Outer tail" }]);
+    const nested = r.segments.find(s => s.locator_key === "table2:row1");
+    expect(nested?.locator).toMatchObject({ parent_cell: "table1:r2:c1", cells: [{ value: "भीतर" }, { value: "Nested value" }] });
+    expect(r.segments.filter(s => s.content.includes("Nested value"))).toHaveLength(1);
+    expect(r.segments.at(-1)?.content).toBe("After table");
+  });
+  it("retains vertical merge origin and span without filling continuation values", async () => {
+    const r = await extract("docx", fixture("synthetic-vertical-merge.docx"));
+    expect(r.status).toBe("extracted");
+    expect(r.segments.find(s => s.locator_key === "table1:row2")?.locator["cells"]).toMatchObject([{ value: "Merged owner\n", verticalMerge: "restart", mergeOrigin: "table1:r2:c1", rowSpan: 2 }, { value: "Action one" }]);
+    expect(r.segments.find(s => s.locator_key === "table1:row3")?.locator["cells"]).toMatchObject([{ value: "", verticalMerge: "continue", mergeOrigin: "table1:r2:c1" }, { value: "Action two" }]);
+  });
+  it("marks embedded-image omission partial rather than claiming image extraction", async () => {
+    const r = await extract("docx", fixture("synthetic-embedded-image.docx"));
+    expect(r.status).toBe("needs_review");
+    expect(r.error).toContain("embedded images are not transcribed");
+    expect(r.segments.map(s => s.content).join(" ")).not.toContain("Synthetic Hall");
+  });
   it.each(["xlsx", "xls"])("preserves real %s worksheet values and date formatting", async extension => {
     const r = await extract(extension, fixture(`synthetic-performance.${extension}`));
     expect(r.segments[1]?.locator["cells"]).toMatchObject([{ ref: "A2", raw: "142" }, { ref: "B2", raw: "0.83", value: "83%" }, { ref: "C2", value: "2026-10-13" }, { ref: "D2", raw: "118" }, { ref: "E2", value: "" }]);

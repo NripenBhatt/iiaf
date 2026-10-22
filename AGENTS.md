@@ -34,3 +34,6 @@
 - Outputs reuse paginated latest-job segments and drafts without model calls; qualification/manifests persist in document_outputs JSON. Downloads retain draft/classification/lineage and real cell tables; invoker SQL lists drafts without generation.
 - Table cells persist in locator JSON; flattened historical/OCR tables stay partial. Default processing reuses saved extraction; rereading requires an explicit retry reason.
 - Output catalogue rows are verbatim references; variant bindings grant no approval/access and unsupported contracts fail closed.
+- Historical output quarantine is persisted, immutable and enforced by RLS; new sets require source-linked draft manifests and the Phase 3 output gate remains fail-closed to prevent legacy/prose labels granting eligibility.
+- Meeting contracts use explicit source table headers only, retaining per-field provenance, missing values and alternatives; deterministic drafts never infer proceedings or promote facts.
+- DOCX uses a depth-aware OOXML tree for nested tables and merge-origin metadata; embedded-image omissions force manual review and existing originals are never automatically reread.

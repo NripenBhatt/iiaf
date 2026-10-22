@@ -235,6 +235,8 @@ export type Database = {
           model: string
           organization_id: string
           outputs: Json
+          phase2_gate: Json | null
+          phase2_quarantined: boolean
           source_hash: string
           source_version: string
         }
@@ -246,6 +248,8 @@ export type Database = {
           model: string
           organization_id: string
           outputs: Json
+          phase2_gate?: Json | null
+          phase2_quarantined?: boolean
           source_hash: string
           source_version: string
         }
@@ -257,6 +261,8 @@ export type Database = {
           model?: string
           organization_id?: string
           outputs?: Json
+          phase2_gate?: Json | null
+          phase2_quarantined?: boolean
           source_hash?: string
           source_version?: string
         }
@@ -1356,7 +1362,45 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      phase3_output_gate: {
+        Row: {
+          document_id: string | null
+          eligible: boolean | null
+          id: string | null
+          organization_id: string | null
+          reason: string | null
+        }
+        Insert: {
+          document_id?: string | null
+          eligible?: never
+          id?: string | null
+          organization_id?: string | null
+          reason?: never
+        }
+        Update: {
+          document_id?: string | null
+          eligible?: never
+          id?: string | null
+          organization_id?: string | null
+          reason?: never
+        }
+        Relationships: [
+          {
+            foreignKeyName: "document_outputs_document_id_fkey"
+            columns: ["document_id"]
+            isOneToOne: false
+            referencedRelation: "uploaded_documents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "document_outputs_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Functions: {
       apply_fact_rules: { Args: { _fact: string }; Returns: Json }

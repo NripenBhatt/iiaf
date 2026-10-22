@@ -1,14 +1,15 @@
 import { unzipSync, strFromU8 } from "fflate";
 import fieldSpec from "@/data/fact-fields.json";
+import { wordTree, children, descendants, wordText, val } from "./docx-structure";
 
 /** Extraction output is untrusted data: it is stored and displayed, never executed or interpreted as instructions. */
 export const PROCESSOR = "iiaf-extractor";
-export const PROCESSOR_VERSION = "1.4.0";
+export const PROCESSOR_VERSION = "1.4.1";
 export const MAX_SEGMENTS = 2000;
 /** Added to every proposed fact whose text came from OCR rather than an embedded text layer. */
 export const OCR_CAUTION = "Recognised by OCR from an image or scanned page; verify against the original before approving.";
 
-export type SourceCell = { column: number; ref: string; raw: string; value: string; formula: string | null; type: string | null; rowSpan?: number; columnSpan?: number };
+export type SourceCell = { column: number; ref: string; raw: string; value: string; formula: string | null; type: string | null; rowSpan?: number; columnSpan?: number; verticalMerge?: string; mergeOrigin?: string | null };
 export type Locator = Record<string, string | number | null | SourceCell[]>;
 export type Segment = { seq: number; locator_key: string; locator: Locator; page: number | null; sheet: string | null; cell: string | null; content: string };
 export type Fact = { label: string; field: string | null; spec: string | null; value: string; locator_key: string; locator: Locator; issues: string[] };
@@ -107,33 +108,44 @@ const xmlText = (x: string) => x.replace(/<[^>]+>/g, "").replace(/&lt;/g, "<").r
 function docx(bytes: Uint8Array): Extraction {
   const files = unzipSync(bytes, { filter: f => f.name === "word/document.xml" });
   const xml = files["word/document.xml"]; if (!xml) return { status: "processing_failed", method: "docx-xml", segments: [], error: "word/document.xml missing; not a valid DOCX." };
-  const body = strFromU8(xml); const segments: Segment[] = []; let heading: string | null = null; let p = 0; let table = 0;
-  const parts = body.split(/(<w:tbl[ >][\s\S]*?<\/w:tbl>)/);
-  for (const part of parts) {
-    if (/^<w:tbl[ >]/.test(part)) {
-      table++;
-      let row = 0;
-      for (const tr of part.match(/<w:tr[ >][\s\S]*?<\/w:tr>/g) ?? []) {
-        row++; let column = 1;
-        const cells: SourceCell[] = (tr.match(/<w:tc[ >][\s\S]*?<\/w:tc>/g) ?? []).map(tc => {
-          const value = (tc.match(/<w:p[ >][\s\S]*?<\/w:p>/g) ?? []).map(para => xmlText((para.match(/<w:t[^>]*>[\s\S]*?<\/w:t>/g) ?? []).join(""))).join("\n");
-          const span = Number(tc.match(/<w:gridSpan[^>]*w:val="(\d+)"/)?.[1] ?? 1);
-          const cell = { column, ref: `table${table}:r${row}:c${column}`, raw: value, value, formula: null, type: "text", columnSpan: span };
-          column += span; return cell;
-        });
-        segments.push({ seq: segments.length, locator_key: `table${table}:row${row}`, locator: { table, row, heading, cells, header_status: "unverified", vertical_merge: /<w:vMerge/.test(tr) ? "present; verify against original" : null }, page: null, sheet: null, cell: null, content: cells.map(c => c.value).join(" | ") });
-      }
-      continue;
-    }
-    for (const para of part.match(/<w:p[ >][\s\S]*?<\/w:p>/g) ?? []) {
-      p++; const t = xmlText((para.match(/<w:t[^>]*>[\s\S]*?<\/w:t>|<w:tab\/>/g) ?? []).map(x => x === "<w:tab/>" ? "\t" : x).join("")).replace(/\s+/g, " ").trim();
-      if (!t) continue;
-      const style = para.match(/<w:pStyle w:val="([^"]+)"/)?.[1] ?? null;
-      if (style && /heading|title/i.test(style)) heading = t;
-      segments.push({ seq: segments.length, locator_key: `para${p}`, locator: { paragraph: p, style, heading, table: null }, page: null, sheet: null, cell: null, content: t });
-    }
+  const root = wordTree(strFromU8(xml)); const body = descendants(root, "w:body")[0];
+  const segments: Segment[] = []; let heading: string | null = null; let p = 0; let table = 0;
+  type WordNode = ReturnType<typeof wordTree>;
+  function readTable(node: WordNode, parentCell: string | null) {
+    const id = ++table; const active = new Map<number, SourceCell>();
+    children(node, "w:tr").forEach((tr, index) => {
+      const row = index + 1; let column = 1; const nested: { node: WordNode; ref: string }[] = [];
+      const cells: SourceCell[] = children(tr, "w:tc").map(tc => {
+        const value = children(tc, "w:p").map(wordText).join("\n");
+        const props = children(tc, "w:tcPr")[0];
+        const span = Math.max(1, Number(val(props ? children(props, "w:gridSpan")[0] : undefined) ?? 1));
+        const merge = props ? children(props, "w:vMerge")[0] : undefined;
+        const ref = `table${id}:r${row}:c${column}`;
+        const origin = active.get(column);
+        const cell: SourceCell = { column, ref, raw: value, value, formula: null, type: "text", columnSpan: span };
+        if (merge) {
+          cell.verticalMerge = val(merge) === "restart" ? "restart" : "continue";
+          cell.mergeOrigin = cell.verticalMerge === "restart" ? ref : origin?.ref ?? null;
+          if (cell.verticalMerge === "restart") { cell.rowSpan = 1; active.set(column, cell); }
+          else if (origin) origin.rowSpan = (origin.rowSpan ?? 1) + 1;
+        } else active.delete(column);
+        for (const child of children(tc, "w:tbl")) nested.push({ node: child, ref });
+        column += span; return cell;
+      });
+      segments.push({ seq: segments.length, locator_key: `table${id}:row${row}`, locator: { table: id, row, heading, parent_cell: parentCell, cells, header_status: "unverified" }, page: null, sheet: null, cell: null, content: cells.map(c => c.value).join(" | ") });
+      for (const n of nested) readTable(n.node, n.ref);
+    });
   }
-  return { status: segments.length ? "extracted" : "needs_review", method: "docx-xml", segments, error: segments.length ? null : "DOCX contains no text paragraphs." };
+  for (const node of body?.children ?? []) {
+    if (node.tag === "w:tbl") readTable(node, null);
+    if (node.tag !== "w:p") continue;
+    p++; const t = wordText(node).replace(/\s+/g, " ").trim(); if (!t) continue;
+    const style = val(descendants(node, "w:pStyle")[0]) ?? null;
+    if (style && /heading|title/i.test(style)) heading = t;
+    segments.push({ seq: segments.length, locator_key: `para${p}`, locator: { paragraph: p, style, heading, table: null }, page: null, sheet: null, cell: null, content: t });
+  }
+  const embedded = descendants(root, "w:drawing").length + descendants(root, "w:pict").length;
+  return { status: embedded || !segments.length ? "needs_review" : "extracted", method: "docx-xml", segments, error: embedded ? "Partial extraction: embedded images are not transcribed; review the original." : segments.length ? null : "DOCX contains no text paragraphs." };
 }
 
 function colIndex(ref: string) { let n = 0; for (const c of ref.replace(/\d+/g, "")) n = n * 26 + c.charCodeAt(0) - 64; return n; }

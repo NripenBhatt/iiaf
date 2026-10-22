@@ -25,3 +25,11 @@ the saved bytes, rather than treating minimal XML fragments as whole files.
 
 Raster routing tests do not prove successful OCR transcription. No fresh OCR
 operational claim is made. Existing stored poster extraction is reused elsewhere.
+
+22 October remediation additions: synthetic-nested-tables.docx,
+synthetic-vertical-merge.docx and synthetic-embedded-image.docx. These are actual
+python-docx packages; the last demonstrates honest omission, not embedded OCR.
+The installed sandbox Tesseract/Poppler tools can transcribe the synthetic PNG
+and scanned page offline; this is local evidence only, not the deployed gateway
+execution path. Local transcription contains an Ideas/19685 error and requires
+review. XLS BIFF formulas remain unclaimed.
