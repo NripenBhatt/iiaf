@@ -9,7 +9,7 @@ describe("mapping truthfulness", () => {
   });
   it("a requested output that was not produced is reported, not claimed", () => {
     const c = mappingCards({ outputs: [], skipped: [] }, null, ["OUT-009"]);
-    expect(c[0]!.status).toBe("Unsupported"); expect(c[0]!.created).toBe(false);
+    expect(c[0]!.status).toBe("Blocked by authorization"); expect(c[0]!.created).toBe(false);
   });
   it("an unapproved relationship is a candidate, not persisted-approved", () => {
     const c = mappingCards(null, { facts: [], relationships: [{ id: "r", relation_type: "conflicts_with", target_type: "fact", target_label: "x", rule_id: "R1", status: "proposed" }] });
