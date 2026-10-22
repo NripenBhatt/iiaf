@@ -4,7 +4,7 @@ import { buildKnowledgeBundle, knowledgeQuerySchema, type KnowledgeDocument, typ
 const org = "b655c3a9-329b-41ec-87c0-d5cb68c55790";
 const docs: KnowledgeDocument[] = ["2025", "2026", null].map((period, i) => ({ id: `d${i}`, organization_id: org, original_filename: `synthetic-${i}.txt`, reporting_period: period, department_or_owner: "IQAC", sha256_hash: `hash${i}`, processing_status: "needs_review", uploaded_at: "2026-10-22" }));
 const facts: KnowledgeFact[] = docs.map((d, i) => ({ id: `f${i}`, organization_id: org, document_id: d.id, source_label: "Students", canonical_field: "students", extracted_value: String(10 + i), reviewed_value: null, state: "proposed", integrity: "verified_source", locator_key: `line${i}`, locator: { line: i }, segment_id: `s${i}` }));
-const make = (period = "", overrides: Partial<Parameters<typeof buildKnowledgeBundle>[0]> = {}) => buildKnowledgeBundle({ scope: knowledgeQuerySchema.parse({ organizationId: org, period }), documents: docs, passages: docs.map((d, i) => ({ documentId: d.id, jobId: `j${i}`, locatorKey: `line${i}`, locator: { line: i }, content: "Students data", method: "native", parserVersion: "1.4", seq: i })), facts, conflicts: [{ id: "c1", source_id: "f0", target_id: "f1", status: "proposed" }], currentSegmentIds: ["s1"], organizationName: "IIAF Test University A SYNTHETIC DEMO", totalDocuments: 3, incompleteDocuments: [], ...overrides });
+const make = (period = "", overrides: Partial<Parameters<typeof buildKnowledgeBundle>[0]> = {}) => buildKnowledgeBundle({ scope: knowledgeQuerySchema.parse({ organizationId: org, period }), documents: docs, passages: docs.map((d, i) => ({ documentId: d.id, jobId: `j${i}`, locatorKey: `line${i}`, locator: { line: i }, content: "Students data", method: "native", parserVersion: "1.4", seq: i })), facts, conflicts: [{ id: "c1", source_id: "f0", target_id: "f1", status: "proposed" }], reviews: [], currentSegmentIds: ["s1"], organizationName: "IIAF Test University A SYNTHETIC DEMO", totalDocuments: 3, incompleteDocuments: [], ...overrides });
 
 describe("source-grounded historical knowledge", () => {
   it("keeps reporting periods separate and never substitutes upload time", () => {
@@ -26,5 +26,24 @@ describe("source-grounded historical knowledge", () => {
   });
   it("uses exact department selection and all query words", () => {
     const scope = knowledgeQuerySchema.parse({ organizationId: org, department: "Other", query: "Students data" }); expect(make("", { scope }).passages).toEqual([]);
+  });
+  it("attaches the append-only correction chain to each fact in review order", () => {
+    const reviews = [
+      { fact_id: "f1", decision: "correct", previous_state: "proposed", value: "11", note: "typo", created_at: "2026-10-20T09:00:00Z" },
+      { fact_id: "f1", decision: "approve", previous_state: "corrected", value: null, note: "verified against register", created_at: "2026-10-21T09:00:00Z" },
+      { fact_id: "f0", decision: "reject", previous_state: "proposed", value: null, note: "not institutional", created_at: "2026-10-20T10:00:00Z" },
+    ];
+    const r = make("", { reviews });
+    const f1 = r.facts.find(f => f.factId === "f1");
+    expect(f1?.available && f1.history.map(h => h.decision)).toEqual(["correct", "approve"]);
+    expect(f1?.available && f1.history[0]).toMatchObject({ previousState: "proposed", value: "11", note: "typo" });
+    const f0 = r.facts.find(f => f.factId === "f0");
+    expect(f0?.available && f0.history).toHaveLength(1);
+  });
+  it("labels facts from earlier extraction snapshots as historical, not current evidence", () => {
+    const r = make();
+    expect(r.gaps.join(" ")).toContain("earlier extraction snapshot");
+    const currentOnly = make("", { currentSegmentIds: ["s0", "s1", "s2"] });
+    expect(currentOnly.gaps.join(" ")).not.toContain("earlier extraction snapshot");
   });
 });

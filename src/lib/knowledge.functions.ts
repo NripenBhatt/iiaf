@@ -3,7 +3,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/integrations/supabase/types";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { latestSource } from "./document-source";
-import { buildKnowledgeBundle, knowledgeLocator, knowledgeQuerySchema, type KnowledgeQuery, type KnowledgePassage, type KnowledgeFact } from "./knowledge";
+import { buildKnowledgeBundle, knowledgeLocator, knowledgeQuerySchema, type KnowledgeQuery, type KnowledgePassage, type KnowledgeFact, type KnowledgeReview } from "./knowledge";
 
 /** One authenticated, tenant-scoped read path for institutional search and company conversation. */
 export async function retrieveKnowledge(client: SupabaseClient<Database>, userId: string, scope: KnowledgeQuery) {
@@ -66,7 +66,7 @@ export async function retrieveKnowledge(client: SupabaseClient<Database>, userId
   }
   const { data: organization, error: orgError } = await client.from("organizations").select("name").eq("id", scope.organizationId).maybeSingle();
   if (orgError || !organization) throw new Error("Organization could not be read.");
-  return buildKnowledgeBundle({ scope, documents: allDocuments, passages, facts, conflicts: [...new Map(conflicts.map(c => [c.id, c])).values()], currentSegmentIds, incompleteDocuments, totalDocuments: count, organizationName: organization.name });
+  return buildKnowledgeBundle({ scope, documents: allDocuments, passages, facts, conflicts: [...new Map(conflicts.map(c => [c.id, c])).values()], reviews, currentSegmentIds, incompleteDocuments, totalDocuments: count, organizationName: organization.name });
 }
 
 export const searchKnowledge = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth]).inputValidator(knowledgeQuerySchema).handler(({ context, data }) => retrieveKnowledge(context.supabase, context.userId, data));
