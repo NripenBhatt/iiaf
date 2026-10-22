@@ -5,6 +5,7 @@ import { sha256Hex } from "./upload-rules";
 import { buildPackageContent, type Retrieval } from "./package-format";
 import { latestSource } from "./document-source";
 import { evidenceExclusions } from "./evidence-eligibility";
+import { knowledgeLocator } from "./knowledge";
 
 type Fields = Record<string, unknown>;
 const str = (v: unknown) => (v === null || v === undefined ? "" : String(v));
@@ -90,7 +91,7 @@ export async function retrieve(supabase: any, org: string, recordId: string, per
     const fact = allFacts.find(f => f.id === id);
     const doc = fact ? (docs ?? []).find((d: { id: string }) => d.id === fact.document_id) : null;
     if (!fact || !doc) return { factId: id, available: false };
-    return { factId: id, available: true, documentId: doc.id, filename: doc.original_filename, documentSha256: doc.sha256_hash, reportingPeriod: doc.reporting_period, value: str(fact.reviewed_value ?? fact.extracted_value), state: fact.state, integrity: fact.integrity, locator: fact.locator, currentExtraction: snapshots.get(doc.id)?.segmentIds.includes(fact.segment_id) ?? false };
+    return { factId: id, available: true, documentId: doc.id, filename: doc.original_filename, documentSha256: doc.sha256_hash, reportingPeriod: doc.reporting_period, value: str(fact.reviewed_value ?? fact.extracted_value), state: fact.state, integrity: fact.integrity, locator: knowledgeLocator(fact.locator), currentExtraction: snapshots.get(doc.id)?.segmentIds.includes(fact.segment_id) ?? false };
   };
 
   const mappings = (mapRows ?? []).map((m: any) => {
@@ -108,7 +109,7 @@ export async function retrieve(supabase: any, org: string, recordId: string, per
       if (period && doc && (doc.reporting_period ?? "") !== period) reasons.push(`Reporting period is “${doc.reporting_period || "not stated"}”, not ${period}`);
       if (p?.status !== "approved") reasons.push("Provenance link is not approved");
       return { factId: i.source_id, documentId: doc?.id ?? null, filename: doc?.original_filename ?? "Unavailable", documentSha256: doc?.sha256_hash ?? null, reportingPeriod: doc?.reporting_period ?? null,
-        value: fact ? str(fact.reviewed_value ?? fact.extracted_value) : "", field: fact?.canonical_field ?? null, locator: fact?.locator ?? null, method: fact ? `${fact.method} v${fact.method_version}` : null, integrity: fact?.integrity ?? null, factState: fact?.state ?? null, extractionJobId: snapshot?.job.id ?? null, currentExtraction: snapshot?.segmentIds.includes(fact?.segment_id) ?? false, identificationStatus: i.status, usable: reasons.length === 0, reasons };
+        value: fact ? str(fact.reviewed_value ?? fact.extracted_value) : "", field: fact?.canonical_field ?? null, locator: knowledgeLocator(fact?.locator ?? null), method: fact ? `${fact.method} v${fact.method_version}` : null, integrity: fact?.integrity ?? null, factState: fact?.state ?? null, extractionJobId: snapshot?.job.id ?? null, currentExtraction: snapshot?.segmentIds.includes(fact?.segment_id) ?? false, identificationStatus: i.status, usable: reasons.length === 0, reasons };
     });
     return { mappingId: m.source_identifier, sourceRow: m.source_row, evidenceId: str(f["Evidence_ID"]), evidenceName: ev ? str(ev.source_fields["Evidence_Record"] ?? ev.source_fields["Evidence_Name"] ?? ev.source_fields["Package_Name"]) : "", packageName: str(f["Package_Name"]), coverage: str(f["Coverage_Type"]), role: str(f["Evidence_Role"]), sourceMappingStatus: str(f["Mapping_Status"]), frameworkVersion: str(f["Framework_Version"]) || null, status, evidence };
   });
