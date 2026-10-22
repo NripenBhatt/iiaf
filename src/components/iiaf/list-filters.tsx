@@ -1,4 +1,5 @@
 import { useLocation, useNavigate, useSearch } from "@tanstack/react-router";
+import { useEffect, useRef, useState } from "react";
 import { ChevronLeft, ChevronRight, X, RotateCcw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -8,10 +9,32 @@ export function useListFilters() {
   const search = useSearch({ strict: false });
   const navigate = useNavigate();
   const { pathname } = useLocation();
-  const filters = validateListSearch(search);
+  const committed = validateListSearch(search);
+  const [filters, setFilters] = useState(committed);
+  const pending = useRef<ListFilters | null>(null);
+  const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const committedKey = JSON.stringify(committed);
+  useEffect(() => {
+    const next = validateListSearch(JSON.parse(committedKey));
+    // Intermediate navigations must not erase letters entered since they started.
+    if (pending.current && JSON.stringify(pending.current) !== committedKey) return;
+    pending.current = null;
+    setFilters(next);
+  }, [committedKey, pathname]);
+  useEffect(() => () => { if (timer.current) clearTimeout(timer.current); }, []);
   const update = (patch: Partial<ListFilters>) => {
     if (pathname !== "/reports" && pathname !== "/institutional" && pathname !== "/meetings" && pathname !== "/evidence") return;
-    void navigate({ to: pathname, search: { ...filters, ...patch, page: patch.page ?? 1 } });
+    const next = { ...(pending.current ?? filters), ...patch, page: patch.page ?? 1 };
+    pending.current = next;
+    setFilters(next);
+    if (timer.current) clearTimeout(timer.current);
+    timer.current = setTimeout(() => {
+      void navigate({ to: pathname, search: next }).catch(() => {
+        if (pending.current !== next) return;
+        pending.current = null;
+        setFilters(validateListSearch(search));
+      });
+    }, 200);
   };
   return { filters, update };
 }
