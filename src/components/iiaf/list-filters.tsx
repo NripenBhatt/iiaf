@@ -1,4 +1,4 @@
-import { useLocation, useNavigate, useSearch } from "@tanstack/react-router";
+import { useLocation, useNavigate } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
 import { ChevronLeft, ChevronRight, X, RotateCcw } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -6,9 +6,8 @@ import { Input } from "@/components/ui/input";
 import { EMPTY_FILTERS, validateListSearch, PAGE_SIZE, type ListFilters } from "@/lib/list-filters";
 
 export function useListFilters() {
-  const search = useSearch({ strict: false });
+  const { pathname, search } = useLocation();
   const navigate = useNavigate();
-  const { pathname } = useLocation();
   const committed = validateListSearch(search);
   const [filters, setFilters] = useState(committed);
   const pending = useRef<ListFilters | null>(null);

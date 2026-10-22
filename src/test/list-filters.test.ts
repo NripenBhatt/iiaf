@@ -3,7 +3,7 @@ import { act, renderHook } from "@testing-library/react";
 import { useListFilters } from "@/components/iiaf/list-filters";
 import { dateBounds, EMPTY_FILTERS, listFilterSchema, literalSearch, validateListSearch } from "@/lib/list-filters";
 const router = vi.hoisted(() => ({ search: {} as Record<string, unknown>, navigate: vi.fn(async () => {}) }));
-vi.mock("@tanstack/react-router", () => ({ useSearch: () => router.search, useNavigate: () => router.navigate, useLocation: () => ({ pathname: "/reports" }) }));
+vi.mock("@tanstack/react-router", () => ({ useNavigate: () => router.navigate, useLocation: () => ({ pathname: "/reports", search: router.search }) }));
 afterEach(() => { vi.useRealTimers(); router.search = {}; router.navigate.mockClear(); });
 
 describe("Shared list rules", () => {
