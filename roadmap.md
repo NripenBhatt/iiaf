@@ -113,6 +113,14 @@
 - [ ] Correction/conflict/stale/nonempty-period live acceptance blocked: no suitable saved synthetic fixtures. Correction history is not rendered in KnowledgeSearch; cell locator display exposes [object Object]. No application repair in this verification-only cycle.
 - [x] G1/G4 evidence reused; no unit/full tests, build, extraction/OCR/model calls, migrations or protected writes. Nine quarantined sets retained; output payload fingerprint unchanged over completed checks.
 - [ ] Phase 3 remains NO-GO; G2/G3/G5/G6 and integrated acceptance remain unresolved. Phase 4 not started.
+- Status: executed; evidence retained (IIAF_University_A_Live_UI_Acceptance_2026_10_22.md + evidence ZIP). Awaiting owner acceptance. Do not rerun unchanged checks.
+
+### Work item W2 — Frozen-scope unified upload → extraction → mapping → Brain → outputs (uploaded 22 Oct 10:40 UTC)
+Priority: immediate, before final University Brain acceptance. Distinct from the University A acceptance item above; does not supersede it.
+- Dependencies/reuse: the shared upload component, the extraction pipeline, qualification rules, the output contract and catalogue, knowledge retrieval and the A acceptance evidence. The two A display defects (correction history not shown; cell refs show [object Object]) are fixed once here, not in a separate pass.
+- [ ] Owner decisions pending (conflicts reported 22 Oct): (1) mandatory card-based UI redesign vs. earlier "no redesign"; (2) "1,800+ deliverable catalogue" not confirmed in stored sources (the project holds the reconciled output catalogue only); (3) whether persisting mappings/multi-file batches may use a new migration (migration 0013 and new schema remain unauthorized).
+- [ ] Safe work (once decisions are made): multi-file select/review/remove in the shared upload component, an optional Desired Output card area plus automatic discovery from the existing catalogue, a five-step workspace, mapping/qualification panel (candidate vs. persisted shown separately), Brain lineage panel built from existing records.
+- [ ] Acceptance scenarios 1–12 with PASS/FAIL/BLOCKED evidence; owner acceptance required. A/B (scenario 12) blocked on University B activation. No paid OCR/model calls; no Phase 4.
 
 Current continuation: uploaded Unified Phase 3 Completion: Extraction, OCR, Knowledge and Output Acceptance (08:54 UTC). OCR remains mandatory, not excluded. Reconcile stored poster observations; trace text/fact/asset/output gaps and implement safe downstream fixes. No new OCR/provider requests, protected writes, permissions or migration 0013.
 - [x] Reconcile saved poster jobs: 183-line historical source versus 176-line newer duplicate; old nine-output sets quarantined, not verified outputs.
