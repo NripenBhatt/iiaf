@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { localDrafts, localDraftText } from "@/lib/local-artifacts";
 import type { DraftSource } from "@/lib/authored-drafts";
-const source = (values: string[]): DraftSource => ({ documentId: "d1", jobId: "j1", filename: "SYNTHETIC.txt", originalHash: "hash1", parserVersion: "p1", classification: "DEMO", lines: values.map((content, seq) => ({ content, seq, locator_key: `ocr:l${seq + 1}`, method_version: "p1" })) });
+const source = (values: string[]): DraftSource => ({ documentId: "d1", jobId: "j1", filename: "SYNTHETIC.txt", originalHash: "hash1", parserVersion: "p1", classification: "DEMO", lines: values.map((content, seq) => ({ content, seq, locator_key: `ocr:l${seq + 1}`, locator: { line: seq + 1 }, method_version: "p1" })) });
 describe("local source-linked artifacts", () => {
   it("authors an explicit profile with exact lineage, DEMO and no saved or release claim", () => {
     const drafts = localDrafts(source(["Institution Name: Test University A", "Established: 2001", "Campus: Synthetic City"]));
