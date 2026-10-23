@@ -11,6 +11,14 @@ const manifest: SourceManifest = { documentId: "synthetic-doc", jobId: "syntheti
 const lines: SourceLine[] = [{ seq: 0, locator_key: "table1:row1", content: "कार्यसूची | 10:00", method_version: "1.4.0", locator: { table: 1, row: 1, cells: [{ column: 1, ref: "table1:r1:c1", raw: "कार्यसूची", value: "कार्यसूची", formula: null, type: "text" }, { column: 2, ref: "table1:r1:c2", raw: "=1+1", value: "10:00", formula: "1+1", type: "n" }] } }];
 const englishSource = (content: string): SourceLine[] => [{ seq: 0, locator_key: "l1", method_version: "1.4.0", locator: { line: 1 }, content }];
 describe("source qualification and output contracts", () => {
+  it("exported OCR drafts retain cautions even when historical qualification omitted Q13", () => {
+    const o = repairOutputSet([], englishSource("Saved poster"), { ...manifest, locators: ["ocr:l24"] }).outputs[0];
+    if (!o) throw new Error("Review draft missing");
+    expect(outputText(o, "poster.png")).toContain("OCR_CAUTION");
+    expect(outputCsv(o)).toContain("synthetic-job");
+    expect(outputCsv(o)).toContain("test-original-hash");
+    expect(outputCsv(o)).toContain("OCR_CAUTION");
+  });
   it("keeps Q13 on stored OCR locators without tagging native passages in mixed jobs", () => {
     const result = repairOutputSet([], [
       { seq: 0, locator_key: "ocr:p2:l1", content: "Poster source", locator: { source: "ocr", page: 2 }, method_version: "1.3.0+ocr-1.0.0" },
