@@ -3,7 +3,7 @@ import { sourceTables } from "./output-contract";
 import type { Json } from "@/integrations/supabase/types";
 
 export type ArchivedSegment = SourceLine & { id: string; job_id: string; locator: Json; method: string };
-export type ContactCandidate = { candidateKey: string; kind: "email" | "phone"; raw: string; normalized: string; documentId: string; jobId: string; segmentId: string; filename: string; locatorKey: string; locator: Json; review: "human_review_required"; persisted: false; consent: "not_established"; affiliation: null };
+export type ContactCandidate = { candidateKey: string; kind: "email" | "phone"; raw: string; normalized: string; documentId: string; jobId: string; segmentId: string; filename: string; locatorKey: string; locator: Json; review: "human_review_required"; persisted: false; consent: "not_established"; affiliation: null; numberingPlan: "international" | "not_established" };
 
 /** Read-only proposals from saved text, never contact ownership, consent or a new truth store. */
 export function contactCandidates(documentId: string, filename: string, segments: ArchivedSegment[]): ContactCandidate[] {
@@ -18,8 +18,13 @@ export function contactCandidates(documentId: string, filename: string, segments
       const raw = match[0];
       const normalized = kind === "phone" ? raw.replace(/[ ()-]/g, "") : raw.replace(/@([^@]+)$/, (_, domain: string) => `@${domain.toLowerCase()}`);
       if (kind === "phone" && !/^\+[1-9]\d{7,14}$/.test(normalized)) continue;
-      found.push({ candidateKey: `${segment.id}:${kind}:${match.index}`, kind, raw, normalized, documentId, filename, jobId: segment.job_id, segmentId: segment.id, locatorKey: segment.locator_key, locator: segment.locator, review: "human_review_required", persisted: false, consent: "not_established", affiliation: null });
+      found.push({ candidateKey: `${segment.id}:${kind}:${match.index}`, kind, raw, normalized, documentId, filename, jobId: segment.job_id, segmentId: segment.id, locatorKey: segment.locator_key, locator: segment.locator, review: "human_review_required", persisted: false, consent: "not_established", affiliation: null, numberingPlan: kind === "phone" ? "international" : "not_established" });
     }
+    // Local numbers require an explicit phone label; retain digits without inventing a country code.
+    const labelled = /^\s*(?:phone|telephone|mobile|contact number)\s*:\s*([\d ()-]+)\s*$/i.exec(segment.content);
+    const localRaw = labelled?.[1]?.trim();
+    const localDigits = localRaw?.replace(/[ ()-]/g, "");
+    if (localRaw && localDigits && /^\d{7,15}$/.test(localDigits)) found.push({ candidateKey: `${segment.id}:phone:labelled`, kind: "phone", raw: localRaw, normalized: localDigits, documentId, filename, jobId: segment.job_id, segmentId: segment.id, locatorKey: segment.locator_key, locator: segment.locator, review: "human_review_required", persisted: false, consent: "not_established", affiliation: null, numberingPlan: "not_established" });
     return found;
   });
 }

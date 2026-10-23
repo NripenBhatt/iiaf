@@ -3,6 +3,11 @@ import { authoredEventDrafts, type DraftSource } from "@/lib/authored-drafts";
 const source = (text: string[]): DraftSource => ({ documentId: "d1", jobId: "j1", filename: "SYNTHETIC-notice.txt", originalHash: "hash", parserVersion: "v1", classification: "DEMO", lines: text.map((content, seq) => ({ seq, content, locator_key: `line:${seq + 1}`, locator: { line: seq + 1 }, method_version: "v1" })) });
 const notice = ["Event title: SYNTHETIC Ideas Workshop", "Event date: 23 October 2026", "Venue: Test Hall", "Workshop subject: Enterprise planning"];
 describe("staged source-cited authoring", () => {
+  it("accepts explicit Event/Date notice labels only together, without filename inference", () => {
+    expect(authoredEventDrafts(source(["Event: Synthetic workshop", "Date: 14 November 2026"]))[0]?.body).toContain("Synthetic workshop is announced for 14 November 2026");
+    expect(authoredEventDrafts(source(["Date: 14 November 2026"]))).toEqual([]);
+    expect(authoredEventDrafts(source(["Event: Synthetic workshop", "Date: 14 November 2026", "Event date: 15 November 2026"]))).toEqual([]);
+  });
   it("authors catalogue text with exact source citations but makes no persistence/release claim", () => {
     const drafts = authoredEventDrafts(source(notice)); expect(drafts).toHaveLength(6);
     expect(drafts[0]).toMatchObject({ type: "press_release", catalogueId: "OUT-008", persisted: false, release: "not_authorized", review: "human_review_required" });

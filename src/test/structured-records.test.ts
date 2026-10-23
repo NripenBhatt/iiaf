@@ -8,6 +8,10 @@ import type { Lineage } from "@/lib/lineage.functions";
 const segment: ArchivedSegment = { id: "segment1", job_id: "job1", seq: 1, locator_key: "line:1", locator: { line: 1 }, method: "native", method_version: "v1", content: "SYNTHETIC: Test.User@EXAMPLE.ORG; +91 98765 43210. Date 2026-10-23; count 1234567890" };
 const bytes = (blob: Blob) => new Promise<ArrayBuffer>((resolve, reject) => { const reader = new FileReader(); reader.onerror = reject; reader.onload = () => reader.result instanceof ArrayBuffer ? resolve(reader.result) : reject(new Error("Not bytes")); reader.readAsArrayBuffer(blob); });
 describe("structured archive readback", () => {
+  it("retains explicitly labelled local phone numbers without inventing country or consent", () => {
+    expect(contactCandidates("doc1", "SYNTHETIC.txt", [{ ...segment, content: "Mobile: 98765 43210" }])[0]).toMatchObject({ kind: "phone", raw: "98765 43210", normalized: "9876543210", numberingPlan: "not_established", persisted: false, consent: "not_established" });
+    expect(contactCandidates("doc1", "SYNTHETIC.txt", [{ ...segment, content: "Total students: 9876543210" }])).toEqual([]);
+  });
   it("retains exact raw contact/source IDs without inventing affiliation, persistence or consent", () => {
     const contacts = contactCandidates("doc1", "SYNTHETIC.txt", [segment]);
     expect(contacts).toHaveLength(2);
