@@ -31,7 +31,7 @@ describe("structured archive readback", () => {
     const lineage = { document: { id: "doc1", organization_id: "org", original_filename: "SYNTHETIC.txt", file_extension: "txt", sha256_hash: "hash", reporting_period: "2026", document_date_raw: null, processing_status: "needs_review", module: "institutional" }, job: null, methodCounts: { native: 1 }, segments: [segment], tables: [], contacts, reconciliation: archiveReconciliation([segment], 1, [], contacts), facts: [], relationships: [], reviews: [], reviewCount: 0, outputRecords: [], outputRecord: null, generatedOutputCount: 0, outputReadbackStatus: "none" } satisfies Lineage;
     const blob = structuredExcel(lineage);
     const book = XLSX.read(await bytes(blob), { type: "array" });
-    const sheet = book.Sheets.segments;
+    const sheet = book.Sheets["segments"];
     if (!sheet) throw new Error("Missing segments sheet");
     const rows = XLSX.utils.sheet_to_json<Record<string, string>>(sheet);
     expect(rows[0]).toMatchObject({ document_id: "doc1", id: "segment1", job_id: "job1", locator_key: "line:1", recorded_period: "2026" });
