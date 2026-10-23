@@ -4,7 +4,7 @@ import { recordsCsv } from "./structured-records";
 import type { Lineage } from "./lineage.functions";
 
 export function lineageSheets(lineage: Lineage): Record<string, Record<string, unknown>[]> {
-  const source = { document_id: lineage.document.id, filename: lineage.document.original_filename, original_hash: lineage.document.sha256_hash, recorded_period: lineage.document.reporting_period, release: "not_authorized" };
+  const source = { document_id: lineage.document.id, filename: lineage.document.original_filename, original_hash: lineage.document.sha256_hash, recorded_period: lineage.document.reporting_period, classification: /synthetic|demo|fictional|dummy|काल्पनिक|नमूना/i.test(lineage.document.original_filename) ? "DEMO" : "unverified", review: "human_review_required", release: "not_authorized" };
   return {
     documents: [{ ...source, ...lineage.document }],
     jobs: lineage.job ? [{ ...source, ...lineage.job }] : [],

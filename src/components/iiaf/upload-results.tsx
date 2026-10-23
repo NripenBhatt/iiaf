@@ -66,7 +66,8 @@ function OneFile({ r, requested, detailed }: { r: FileResult; requested: string[
         <div><dt className="text-muted-foreground">File</dt><dd className="break-all">{lineage.document.original_filename} · {lineage.document.file_extension.toUpperCase()}</dd></div>
         <div><dt className="text-muted-foreground">Status</dt><dd>{lineage.document.processing_status.replace(/_/g, " ")}</dd></div>
         <div><dt className="text-muted-foreground">How text was read</dt><dd>{Object.keys(lineage.methodCounts).length ? Object.entries(lineage.methodCounts).map(([m, n]) => `${methodLabel(m)}: ${n} segments`).join("; ") : "No stored text"}</dd></div>
-        <div><dt className="text-muted-foreground">Recorded period</dt><dd>{lineage.document.reporting_period || lineage.document.document_date_raw || "Not stated (upload time is not used as a period)"}</dd></div>
+        <div><dt className="text-muted-foreground">Recorded reporting period</dt><dd>{lineage.document.reporting_period || "Not stated (document/upload dates are not substituted)"}</dd></div>
+        <div><dt className="text-muted-foreground">Recorded document date</dt><dd>{lineage.document.document_date_raw || "Not stated"}</dd></div>
         {isImage && <div className="sm:col-span-2"><dt className="text-muted-foreground">Image asset</dt><dd>Original image is stored and downloadable from the document list. No image or video creative is generated; only text read from the image is used.</dd></div>}
       </dl>}
       <p className="text-xs text-muted-foreground">Text shown below is the saved reading with its locators. It was not re-read for this view.</p>

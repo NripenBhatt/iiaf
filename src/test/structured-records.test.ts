@@ -34,7 +34,7 @@ describe("structured archive readback", () => {
     const sheet = book.Sheets["segments"];
     if (!sheet) throw new Error("Missing segments sheet");
     const rows = XLSX.utils.sheet_to_json<Record<string, string>>(sheet);
-    expect(rows[0]).toMatchObject({ document_id: "doc1", id: "segment1", job_id: "job1", locator_key: "line:1", recorded_period: "2026" });
+    expect(rows[0]).toMatchObject({ document_id: "doc1", id: "segment1", job_id: "job1", locator_key: "line:1", recorded_period: "2026", classification: "DEMO", review: "human_review_required", release: "not_authorized" });
     expect(book.SheetNames).toContain("relationships");
     const zip = await JSZip.loadAsync(await bytes(await structuredCsvZip(lineage)));
     expect(await zip.file("segments.csv")?.async("string")).toContain('"segment1"');
