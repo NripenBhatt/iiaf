@@ -12,6 +12,7 @@ import { saveBlob } from "@/lib/package-export";
 import type { OutputSet } from "@/lib/outputs.functions";
 import { OutputPreview } from "./output-preview";
 import { Status } from "./ui";
+import { structuredCsvZip, structuredExcel } from "@/lib/structured-export";
 
 export type FileResult = { documentId: string; name: string; set: OutputSet | null; error: string | null };
 
@@ -86,6 +87,16 @@ function OneFile({ r, requested, detailed }: { r: FileResult; requested: string[
       </article>)}</div>
     </TabsContent>
     <TabsContent value="brain" className="pt-3 text-sm">
+      {lineage && <section className="mb-4 space-y-3" aria-label="Structured record reconciliation">
+        <h3 className="font-semibold">Extraction and stored records</h3>
+        <p>{lineage.reconciliation.persistedSegments} / {lineage.reconciliation.expectedSegments} saved segments · {lineage.reconciliation.structuredRows} table rows · {lineage.reconciliation.structuredCells} cells · {lineage.reconciliation.currentFacts} current-run facts · {lineage.reconciliation.historicalFacts} historical facts</p>
+        <p className="text-xs text-muted-foreground">{lineage.reconciliation.structuredStorage} {lineage.reconciliation.segmentsWithoutFact} segments have no derived fact; their source text remains stored.</p>
+        <p>{lineage.contacts.length} contact candidates · 0 structured contact records saved · consent not established</p>
+        <p className="text-xs text-muted-foreground">Contact candidates are computed from saved segments, not a saved contact directory. Names, affiliations and permission to contact are not inferred.</p>
+        {lineage.contacts.length > 0 && <details><summary>Contact candidates requiring review</summary><ul className="mt-2 space-y-1">{lineage.contacts.map(c => <li key={c.candidateKey} className="break-all">{c.kind}: {c.raw} · {c.locatorKey} · segment {c.segmentId} · human review required</li>)}</ul></details>}
+        <div className="flex flex-wrap gap-2"><Button size="sm" variant="outline" onClick={() => saveBlob(structuredExcel(lineage), `${r.documentId}-structured-readback.xlsx`)}><Download /> Structured Excel</Button><Button size="sm" variant="outline" onClick={() => void structuredCsvZip(lineage).then(blob => saveBlob(blob, `${r.documentId}-structured-csv.zip`))}><Download /> Structured CSV (ZIP)</Button></div>
+        <p className="text-xs text-muted-foreground">Separate record sheets preserve identifiers, raw locators and relationship endpoints. Exports are readback, not authored deliverables; release is not authorized.</p>
+      </section>}
       {lineage ? <table className="w-full text-left text-xs"><thead><tr className="border-b"><th className="py-1">Stored as</th><th>Record type</th><th>Identifier / count</th></tr></thead><tbody className="divide-y">
         <tr><td className="py-1">Original source</td><td>uploaded_documents</td><td className="break-all">{lineage.document.id} · SHA-256 {lineage.document.sha256_hash.slice(0, 16)}…</td></tr>
         <tr><td className="py-1">Extraction run</td><td>document_processing_jobs</td><td className="break-all">{lineage.job ? `${lineage.job.id} · ${lineage.job.processor ?? ""} ${lineage.job.processor_version ?? ""} · ${lineage.job.state}` : "None"}</td></tr>

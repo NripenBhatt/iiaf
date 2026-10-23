@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { buildPackageContent, packageMarkdown, type Retrieval } from "@/lib/package-format";
+import { buildPackageContent, packageMarkdown, locatorText, type Retrieval } from "@/lib/package-format";
 
 const ev = (over: Partial<Retrieval["mappings"][number]["evidence"][number]> = {}) => ({ factId: "f1", documentId: "d1", filename: "a.pdf", documentSha256: "ab", reportingPeriod: "2025-26", value: "EV-0001", field: "Evidence_ID", locator: { page: 1, line: 2 }, method: "pdf v1.1.0", integrity: "trusted_processor", factState: "approved", identificationStatus: "approved", usable: true, reasons: [], ...over });
 const base = (evidence = [ev()], status = "approved"): Retrieval => ({
@@ -10,6 +10,10 @@ const base = (evidence = [ev()], status = "approved"): Retrieval => ({
 });
 
 describe("requirement package", () => {
+  it("retains nested cell and merge provenance without object coercion", () => {
+    const text = locatorText({ row: 2, cells: [{ ref: "A2", mergeOrigin: "A1" }] });
+    expect(text).toContain('"ref":"A2"'); expect(text).toContain('"mergeOrigin":"A1"'); expect(text).not.toContain("[object Object]");
+  });
   it("indexes only usable evidence and numbers attachments", () => {
     const c = buildPackageContent(base([ev(), ev({ factId: "f2", usable: false, reasons: ["Fact is not human-approved"] })]));
     expect(c.evidenceIndex).toHaveLength(1);

@@ -13,7 +13,11 @@ export type Retrieval = {
 };
 export type PackageContent = ReturnType<typeof buildPackageContent>;
 
-export const locatorText = (l: unknown) => Object.entries((l ?? {}) as Record<string, unknown>).filter(([, v]) => v !== null && v !== undefined && v !== "").map(([k, v]) => `${k} ${v}`).join(", ") || "No locator recorded";
+export const locatorText = (l: unknown): string => {
+  if (l === null || l === undefined || l === "") return "No locator recorded";
+  if (typeof l !== "object") return String(l);
+  return Object.entries(l).filter(([, v]) => v !== null && v !== undefined && v !== "").map(([k, v]) => `${k} ${typeof v === "object" ? JSON.stringify(v) : String(v)}`).join(", ") || "No locator recorded";
+};
 
 export function buildPackageContent(r: Retrieval) {
   const mappings = [...r.mappings].sort((a, b) => a.mappingId.localeCompare(b.mappingId));
