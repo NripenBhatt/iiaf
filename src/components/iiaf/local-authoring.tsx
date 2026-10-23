@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import { Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { localDrafts, localDraftText, localDraftWord, localVisualZip } from "@/lib/local-artifacts";
+import { localDrafts, localDraftText, localDraftWord, localVisualZip, renderDraftImage } from "@/lib/local-artifacts";
 import { saveBlob } from "@/lib/package-export";
 import type { Lineage } from "@/lib/lineage.functions";
 
@@ -24,6 +24,7 @@ export function LocalAuthoring({ lineage }: { lineage: Lineage }) {
       <div className="mt-3 flex flex-wrap gap-2">
         <Button size="sm" variant="outline" onClick={() => saveBlob(new Blob([localDraftText(d)], { type: "text/plain" }), `${d.type}-unsaved.txt`)}><Download /> Draft text</Button>
         <Button size="sm" variant="outline" disabled={busy !== null} onClick={() => void download(d.type, () => localDraftWord(d), `${d.type}-unsaved.docx`)}><Download /> Draft Word</Button>
+        {d.type === "press_release" && <Button size="sm" variant="outline" disabled={busy !== null} onClick={() => void download(d.type + "-png", () => renderDraftImage(d, `${d.title}\n\n${d.body}`), "news-creative-unsaved.png")}><Download /> PNG creative</Button>}
         {d.type === "instagram" && <><Button size="sm" variant="outline" disabled={busy !== null} onClick={() => void download(d.type, () => localVisualZip(d, false), "local-image-with-lineage.zip")}><Download /> Image + lineage</Button><Button size="sm" variant="outline" disabled={busy !== null} onClick={() => void download(d.type, () => localVisualZip(d, true), "local-carousel-with-lineage.zip")}><Download /> Carousel + lineage</Button></>}
       </div>
     </article>)}</div>
