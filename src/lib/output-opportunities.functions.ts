@@ -4,6 +4,7 @@ import { z } from "zod";
 import { latestSource } from "./document-source";
 import { discoverOutputOpportunities } from "./output-opportunities";
 import { storedOutputSetSchema } from "./output-cache";
+import { OUTPUT_REFERENCE } from "./output-reference";
 
 /** Read-only: recompute discovery from current saved segments, not historical cached rules. */
 export const getOutputOpportunities = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
@@ -16,5 +17,5 @@ export const getOutputOpportunities = createServerFn({ method: "POST" }).middlew
     const { data: row, error: readError } = await context.supabase.from("document_outputs").select("id,outputs").eq("document_id", doc.id).order("created_at", { ascending: false }).limit(1).maybeSingle();
     if (readError) throw new Error("Saved output status could not be verified.");
     return { documentId: doc.id, filename: doc.original_filename, jobId: source.job.id, outputRecordId: row?.id ?? null,
-      catalogueDefinitionsEvaluated: 30, opportunities: discoverOutputOpportunities(source.lines, row ? storedOutputSetSchema.parse(row.outputs).outputs : [], data.requested, doc.original_filename) };
+      catalogueDefinitionsEvaluated: OUTPUT_REFERENCE.outputs.length, opportunities: discoverOutputOpportunities(source.lines, row ? storedOutputSetSchema.parse(row.outputs).outputs : [], data.requested, doc.original_filename) };
   });

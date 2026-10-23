@@ -13,6 +13,9 @@ import type { OutputSet } from "@/lib/outputs.functions";
 import { OutputPreview } from "./output-preview";
 import { Status } from "./ui";
 import { structuredCsvZip, structuredExcel } from "@/lib/structured-export";
+import { LocalAuthoring } from "./local-authoring";
+import { StructuredRecordBrowser } from "./structured-record-browser";
+import { useState } from "react";
 
 export type FileResult = { documentId: string; name: string; set: OutputSet | null; error: string | null };
 
@@ -26,22 +29,33 @@ const METHOD_LABEL: Record<string, string> = { ocr: "OCR / image-based text", na
 const methodLabel = (m: string) => METHOD_LABEL[m] ?? (/ocr|vision|image/i.test(m) ? `OCR / image-based text (${m})` : `Native text extraction (${m})`);
 
 function OneFile({ r, requested, detailed }: { r: FileResult; requested: string[]; detailed: boolean }) {
+  const [generatedSet, setGeneratedSet] = useState<OutputSet | null>(null);
+  const [generationError, setGenerationError] = useState("");
+  const [generating, setGenerating] = useState(false);
+  const set = generatedSet ?? r.set;
   const read = useServerFn(getLineage);
   const discover = useServerFn(getOutputOpportunities);
   const generate = useServerFn(generateOutputs);
-  const discovery = useQuery({ queryKey: ["output-opportunities", r.documentId, requested, r.set?.createdAt], queryFn: () => discover({ data: { documentId: r.documentId, requested } }) });
-  const { data: lineage, error } = useQuery({ queryKey: ["lineage", r.documentId, r.set?.createdAt], queryFn: () => read({ data: { documentId: r.documentId } }) });
-  const cards = mappingCards(r.set, lineage ?? null, requested);
-  const review = r.set?.outputs.find(o => o.type === "extraction_review");
+  const discovery = useQuery({ queryKey: ["output-opportunities", r.documentId, requested, set?.createdAt], queryFn: () => discover({ data: { documentId: r.documentId, requested } }) });
+  const { data: lineage, error } = useQuery({ queryKey: ["lineage", r.documentId, set?.createdAt], queryFn: () => read({ data: { documentId: r.documentId } }) });
+  const cards = mappingCards(set, lineage ?? null, requested);
+  const review = set?.outputs.find(o => o.type === "extraction_review");
+  async function generateDraft() {
+    setGenerating(true); setGenerationError("");
+    try { setGeneratedSet(await generate({ data: { documentId: r.documentId } })); }
+    catch (e) { setGenerationError(e instanceof Error ? e.message : "The draft could not be saved."); }
+    finally { setGenerating(false); }
+  }
   const isImage = lineage && ["png", "jpg", "jpeg"].includes(lineage.document.file_extension);
   return <Tabs defaultValue="outputs">
     <TabsList className="flex h-auto flex-wrap">
       <TabsTrigger value="extraction">2 · Extraction</TabsTrigger>
       <TabsTrigger value="mapping">3–4 · Where this information goes ({cards.length})</TabsTrigger>
       <TabsTrigger value="brain">University Brain</TabsTrigger>
-      <TabsTrigger value="outputs">5 · Outputs ({r.set?.outputs.length ?? 0})</TabsTrigger>
+      <TabsTrigger value="outputs">5 · Outputs ({set?.outputs.length ?? 0})</TabsTrigger>
     </TabsList>
     {r.error && <p role="alert" className="mt-3 text-sm text-destructive">{r.error}</p>}
+    {generationError && <p role="alert" className="mt-3 text-sm text-destructive">{generationError}</p>}
     <section className="mt-4 space-y-3" aria-label="Automatic output opportunities">
       <h3 className="font-semibold">Automatic output opportunities</h3>
       {discovery.isPending && <p className="text-sm text-muted-foreground">Reading saved source qualifications…</p>}
@@ -55,7 +69,7 @@ function OneFile({ r, requested, detailed }: { r: FileResult; requested: string[
           <details className="mt-2 text-xs"><summary className="cursor-pointer">Source citations ({o.locators.length}) and missing attributes</summary><p className="mt-1 break-all">{r.name} · {o.locators.join(", ") || "No qualified source locator"}</p><p className="mt-1">Missing / needs review: {o.missing.join(", ") || "Not established by discovery"}</p></details>
           <p className="mt-2 text-xs">Supported: {o.supported ? "Yes, governed draft path" : "No"} · Generated: {o.generated ? "Yes" : "No"} · Persisted: {o.persisted ? "Yes" : "No"}</p>
           {o.dependency && <p className="mt-2 text-xs text-muted-foreground">{o.dependency}</p>}
-          {o.supported && !o.generated && <Button className="mt-2" size="sm" variant="outline" onClick={() => void generate({ data: { documentId: r.documentId } }).then(() => discovery.refetch()).catch(() => discovery.refetch())}>Generate governed draft</Button>}
+          {o.supported && !o.generated && <Button className="mt-2" size="sm" variant="outline" disabled={generating} onClick={() => void generateDraft()}>{generating ? "Saving draft…" : "Generate governed draft"}</Button>}
         </article>)}</div>
         {!discovery.data.opportunities.some(o => !o.artifact) && <p className="text-sm text-muted-foreground">No catalogue opportunity established from the saved source. Extraction artifacts remain separate.</p>}
       </>}
@@ -108,10 +122,12 @@ function OneFile({ r, requested, detailed }: { r: FileResult; requested: string[
         <tr><td className="py-1">Saved output set</td><td>document_outputs → DST-014</td><td className="break-all">{lineage.outputRecord ? `${lineage.outputRecord.id}${lineage.outputRecord.phase2_quarantined ? " (quarantined)" : ""}` : "None"}</td></tr>
       </tbody></table> : <p className="text-muted-foreground">Reading stored records…</p>}
       <p className="mt-2 text-xs text-muted-foreground">Everything here is read back from the database under your own access. Proposed facts are not approved evidence.</p>
+      {lineage && <StructuredRecordBrowser lineage={lineage} />}
     </TabsContent>
     <TabsContent value="outputs" className="pt-3">
-      {r.set && r.set.outputs.length > 0 && <Button size="sm" variant="outline" className="mb-3" onClick={() => { const set = r.set; if (set) void outputsZip(set.outputs, r.name).then(b => saveBlob(b, `${outputFileBase({ type: "outputs" }, r.name)}.zip`)); }}><Download /> Download all (ZIP)</Button>}
-      <div className="grid gap-4 lg:grid-cols-2">{(r.set?.outputs ?? []).map(o => <article key={o.type} className="flex flex-col border bg-background p-4">
+      {lineage && <LocalAuthoring lineage={lineage} />}
+      {set && set.outputs.length > 0 && <Button size="sm" variant="outline" className="mb-3" onClick={() => { if (set) void outputsZip(set.outputs, r.name).then(b => saveBlob(b, `${outputFileBase({ type: "outputs" }, r.name)}.zip`)); }}><Download /> Download saved outputs (ZIP)</Button>}
+      <div className="grid gap-4 lg:grid-cols-2">{(set?.outputs ?? []).map(o => <article key={o.type} className="flex flex-col border bg-background p-4">
         <div className="flex items-start justify-between gap-2"><p className="text-xs uppercase tracking-wide text-muted-foreground">{o.name}</p><Status tone="warning">Draft · review required</Status></div>
         <h3 className="mt-1 font-semibold">{o.title}</h3>
         <div className="mt-2 max-h-64 min-w-0 flex-1 overflow-auto"><OutputPreview output={o} /></div>
@@ -120,7 +136,7 @@ function OneFile({ r, requested, detailed }: { r: FileResult; requested: string[
           <Button size="sm" variant="ghost" onClick={() => saveBlob(new Blob([outputText(o, r.name)], { type: "text/plain" }), `${outputFileBase(o, r.name)}.txt`)}><Download /> Text</Button>
           {o.tables?.length ? <Button size="sm" variant="ghost" onClick={() => saveBlob(new Blob([outputCsv(o)], { type: "text/csv" }), `${outputFileBase(o, r.name)}.csv`)}><Download /> CSV</Button> : null}</div>
       </article>)}</div>
-      {r.set && r.set.skipped.length > 0 && <details className="mt-3 text-xs text-muted-foreground"><summary className="cursor-pointer font-medium">Not produced ({r.set.skipped.length}) and why</summary><ul className="mt-2 list-disc pl-5">{r.set.skipped.map(s => <li key={s.name}>{s.name}: {s.reason}</li>)}</ul></details>}
+      {set && set.skipped.length > 0 && <details className="mt-3 text-xs text-muted-foreground"><summary className="cursor-pointer font-medium">Not produced ({set.skipped.length}) and why</summary><ul className="mt-2 list-disc pl-5">{set.skipped.map(s => <li key={s.name}>{s.name}: {s.reason}</li>)}</ul></details>}
     </TabsContent>
   </Tabs>;
 }
