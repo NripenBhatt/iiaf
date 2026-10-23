@@ -34,6 +34,7 @@
 - Output writes/reads validate source references and draft contracts in the database; hashes remain opaque. Duplicate writes return only a schema-normalized stored winner after version/payload equality, otherwise fail. Extraction accuracy requires review.
 - Table cells persist in locator JSON; flattened historical/OCR tables stay partial. Default processing reuses saved extraction; rereading requires an explicit retry reason.
 - Catalogue/crosswalk matches are source references, not executed behavior or approved bindings; retain unresolved fields and fail closed for unsupported contracts.
+- Automatic output opportunities are recomputed from current RLS-scoped saved segments via output-opportunities; Desired Output only adds entries. A saved output record, never a rule match or local rendering, establishes generated/persisted status; protected output-contract gates must not be bypassed by relabelling deliverables as review artifacts.
 - Historical output quarantine is persisted, immutable and enforced by RLS; new sets require source-linked draft manifests and the Phase 3 output gate remains fail-closed to prevent legacy/prose labels granting eligibility.
 - Meeting contracts use explicit source table headers only, retaining per-field provenance, missing values and alternatives; deterministic drafts never infer proceedings or promote facts.
 - DOCX uses a depth-aware OOXML tree for nested tables and merge-origin metadata; embedded-image omissions force manual review and existing originals are never automatically reread.
