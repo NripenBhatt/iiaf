@@ -21,6 +21,11 @@ describe("automatic output discovery without unsafe generation", () => {
     expect(found.some(o => o.type === "linkedin")).toBe(true);
     expect(news).toMatchObject({ generated: false, persisted: false, supported: false });
   });
+  it("source filename can signal an event but never supplies a missing date", () => {
+    const found = discoverOutputOpportunities(lines(["From Ideas to Enterprises", "13 October 2026"]), [], [], "Workshop Board.png");
+    expect(found.find(o => o.type === "press_release")?.locators).toEqual(["ocr:l2"]);
+    expect(discoverOutputOpportunities(lines(["From Ideas to Enterprises"]), [], [], "Workshop Board.png").some(o => o.type === "press_release")).toBe(false);
+  });
   it("Desired Output supplements discovery and never suppresses automatic opportunities", () => {
     const source = lines(["Workshop announced for 2026"]);
     const automatic = discoverOutputOpportunities(source).map(o => o.key);

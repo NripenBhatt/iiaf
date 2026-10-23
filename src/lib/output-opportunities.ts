@@ -33,8 +33,8 @@ const visualDependency: Record<string, string> = {
  * Requested IDs add entries, never filter automatic discovery. Q13 is a caution, not a blocker.
  * Saved outputs, not qualification cards or rendered previews, establish generation/persistence.
  */
-export function discoverOutputOpportunities(lines: SourceLine[], outputs: GeneratedOutput[] = [], requested: string[] = []): OutputOpportunity[] {
-  const applications = classifyLines(lines);
+export function discoverOutputOpportunities(lines: SourceLine[], outputs: GeneratedOutput[] = [], requested: string[] = [], sourceName = ""): OutputOpportunity[] {
+  const applications = classifyLines(lines, sourceName);
   const meetings = structuredMeetings(lines);
   const found: OutputOpportunity[] = [];
   for (const entry of OUTPUT_REFERENCE.outputs) {
