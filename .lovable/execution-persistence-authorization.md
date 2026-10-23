@@ -1,5 +1,7 @@
 # Protected persistence step — NOT AUTHORIZED / NOT APPLIED
 
+23 October update: superseded only for the owner-authorized single-source article/PNG extension in migration 0014_source_authored_artifacts. Existing document_outputs and tenant-private original bucket are reused; legacy guards and quarantine remain intact. The other dependencies below remain unapproved/unimplemented; this does not authorize Phase 4 or release.
+
 The working local authoring and rendering paths deliberately do not write authored content into an extraction-review type or create an alternative store that bypasses the current output safety gate.
 
 ## Separate authorization needed

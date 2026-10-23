@@ -1,5 +1,7 @@
 # Exact protected step awaiting review — not applied
 
+23 October update: the owner’s real-fix mandate authorized the first source-backed article/PNG extension, applied as 0014_source_authored_artifacts. The original validator was captured verbatim; no G3 cache migration was applied. The proposal below is historical, not the current article/PNG status. Multi-source, broader authored workflows and release remain outside the verified first scenario.
+
 ## Observed failure
 Original A batch `4a49ace1-0908-4588-855c-6f8833a1a32b` selects OUT-005/006/009/008/007/004/010/011 for saved DOCX `df5cbe0e-d291-4c3b-8fbd-1727b61544e3`. Selections were only saved as batch metadata, not passed to generation or restored on read. This is now repaired. Exact action headers produce O09 through the current gate; absent source fields remain explicit gaps.
 
