@@ -3,8 +3,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { FileText, Upload, X } from "lucide-react";
-import { Textarea } from "@/components/ui/textarea";
-import { RECONCILED_OUTPUT_CATALOGUE } from "@/lib/output-reference";
+import { OutputPicker } from "./output-picker";
 import { getDocumentBatch, recordBatch } from "@/lib/lineage.functions";
 import { StepIndicator, UploadResults, type FileResult } from "./upload-results";
 import { Button } from "@/components/ui/button";
@@ -19,16 +18,11 @@ import { processDocument } from "@/lib/intelligence.functions";
 import { generateOutputs, getOutputs } from "@/lib/outputs.functions";
 import { ALLOWED_EXTENSIONS, isStored, UPLOAD_BUCKET, sha256Hex, validateSelection, type UploadModule } from "@/lib/upload-rules";
 import { ListFilterControls, useListFilters } from "./list-filters";
-import intakeGuidance from "@/data/intake-guidance.json";
 
 const EVIDENCE_FRAMEWORKS = ["NAAC", "NIRF", "QS", "THE", "UI GreenMetric", "Other / not stated"];
 function categoriesFor(module: UploadModule) {
   if (module === "evidence") return EVIDENCE_FRAMEWORKS.map(f => ({ code: `EVID-${(f.split(" ")[0] ?? f).toUpperCase()}`, name: `Declared framework: ${f}` }));
   return catalogue[module === "institutional" ? "institutional" : "meeting"].categories;
-}
-function typesFor(module: UploadModule, category: string) {
-  if (module === "evidence") return [];
-  return catalogue[module === "institutional" ? "institutional" : "meeting"].documentTypes.filter(t => t.category === category);
 }
 const blank = { declared_purpose: "", reporting_period: "", document_date_raw: "" };
 const READ_FAILED = ["processing_failed", "ocr_required", "upload_failed", "validation_failed"];
@@ -50,8 +44,7 @@ export function DocumentUploads({ module, label }: { module: UploadModule; label
   const [meta, setMeta] = useState(blank); const [stage, setStage] = useState<string | null>(null); const [dragging, setDragging] = useState(false);
   const [requested, setRequested] = useState<string[]>([]); const [instruction, setInstruction] = useState("");
   const [results, setResults] = useState<FileResult[] | null>(null);
-  const categories = categoriesFor(module); const types = typesFor(module, category);
-  const guidance = module === "evidence" ? null : intakeGuidance[module].categories.find(c => c.code === category);
+  const categories = categoriesFor(module);
   const anyErrors = queue.some(q => validateSelection(q.file).length > 0);
   const first = queue[0]?.file ?? null;
 
@@ -63,8 +56,8 @@ export function DocumentUploads({ module, label }: { module: UploadModule; label
   const addFiles = (list: FileList | null) => { if (!list) return; const add = [...list].map(f => ({ file: f, status: "selected" as const, error: null, documentId: null })); setQueue(q => [...q, ...add].slice(0, 20)); };
   const patch = (i: number, v: Partial<Queued>) => setQueue(q => q.map((x, j) => j === i ? { ...x, ...v } : x));
 
-  async function outputsFor(id: string, name: string): Promise<FileResult> {
-    try { return { documentId: id, name, set: await generate({ data: { documentId: id, requested } }), error: null }; }
+  async function outputsFor(id: string, name: string, chosen: string[]): Promise<FileResult> {
+    try { return { documentId: id, name, set: await generate({ data: { documentId: id, requested: chosen } }), error: null }; }
     catch (e) { return { documentId: id, name, set: null, error: e instanceof Error ? e.message : "Outputs could not be generated." }; }
   }
   async function showOutputs(id: string, name: string) {
@@ -84,7 +77,8 @@ export function DocumentUploads({ module, label }: { module: UploadModule; label
   }
 
   /** Same governed path for one or many files; each file keeps its own identity, hash and job. */
-  async function upload() {
+  async function upload(withOutputs: boolean) {
+    const chosen = withOutputs ? requested : [];
     if (!queue.length || !category || anyErrors) return;
     setResults(null); const done: FileResult[] = []; const fileResults: { name: string; status: string; documentId: string | null; error: string | null }[] = [];
     setSavedSelection(null);
@@ -104,7 +98,7 @@ export function DocumentUploads({ module, label }: { module: UploadModule; label
         const r = await process({ data: { id: reg.id } }) as { status?: string; error?: string | null };
         if (r.status && READ_FAILED.includes(r.status)) throw new Error(r.error || "The document could not be read.");
         setStage(`Writing outputs for ${file.name}…`);
-        done.push(await outputsFor(reg.id, file.name)); patch(i, { status: "read" });
+        done.push(await outputsFor(reg.id, file.name, chosen)); patch(i, { status: "read" });
         fileResults.push({ name: file.name, status: "read", documentId: reg.id, error: null });
       } catch (e) {
         const msg = e instanceof Error ? e.message : "Upload failed";
@@ -112,11 +106,11 @@ export function DocumentUploads({ module, label }: { module: UploadModule; label
       }
     }
     await cache.invalidateQueries({ queryKey: key }); await cache.invalidateQueries({ queryKey: ["facts", workspace.id] });
-    try { await batch({ data: { organizationId: workspace.id, module, documentIds: fileResults.flatMap(f => f.documentId && f.status === "read" ? [f.documentId] : []), requestedOutputs: requested, instruction: instruction.trim() || null, fileResults } }); }
+    try { await batch({ data: { organizationId: workspace.id, module, documentIds: fileResults.flatMap(f => f.documentId && f.status === "read" ? [f.documentId] : []), requestedOutputs: chosen, instruction: instruction.trim() || null, fileResults } }); }
     catch { toast.error("Files were processed, but the batch record could not be saved."); }
     const failed = fileResults.filter(f => f.status === "failed").length;
     if (failed) toast.error(`${failed} of ${fileResults.length} file(s) failed; the others were kept.`); else toast.success(`${fileResults.length} file(s) uploaded and read.`);
-    setStage(null); setResults(done); setQueue(q => q.filter(x => x.status === "failed")); setMeta(blank);
+    setStage(null); setSavedSelection({ requested: chosen, instruction: instruction.trim() }); setResults(done); setQueue(q => q.filter(x => x.status === "failed")); setMeta(blank);
   }
   async function open(id: string) {
     try { const { url } = await link({ data: { id } }); const a = document.createElement("a"); a.href = url; a.target = "_blank"; a.rel = "noopener"; a.click(); }
@@ -130,20 +124,14 @@ export function DocumentUploads({ module, label }: { module: UploadModule; label
     {data?.canUpload ? <div className="space-y-5 border bg-card p-5">
       <StepIndicator current={results ? 4 : 0} />
       <div className="flex flex-wrap items-baseline justify-between gap-2"><h2 className="text-lg font-semibold">Upload one or several files</h2><p className="text-xs text-muted-foreground">Up to 20 files · 20 MB each · {ALLOWED_EXTENSIONS.join(", ")}</p></div>
-      <fieldset><legend className="mb-2 text-sm font-medium">What kind of document is it? (required)</legend>
-        <div className="flex flex-wrap gap-2">{categories.map(c => <button type="button" key={c.code} aria-pressed={category === c.code} className={chip(category === c.code)} onClick={() => { setCategory(c.code); setDocType("UNKNOWN"); }}>{c.name}</button>)}</div></fieldset>
-      {guidance && <div className="border-l-2 border-primary pl-3 text-sm"><p className="font-medium">{guidance.name}</p><p className="mt-1 text-muted-foreground">{guidance.description}</p>{guidance.examples && <p className="mt-1 text-muted-foreground">Examples: {guidance.examples}</p>}</div>}
-      {module === "evidence" && <p className="border-l-2 border-border pl-3 text-sm text-muted-foreground">Declared framework only. Exact methodology edition, requirement and evidence approval are not established by this upload.</p>}
-      <details className="text-sm"><summary className="cursor-pointer font-medium">Optional details (title, period, date{types.length > 0 ? ", document type" : ""})</summary>
-        <div className="mt-3 grid gap-4 md:grid-cols-2">
-          {types.length > 0 && <div className="space-y-1"><Label htmlFor={`${module}-type`}>Document type</Label>
-            <select id={`${module}-type`} className="h-9 w-full border bg-background px-2 text-sm" value={docType} onChange={e => setDocType(e.target.value)}>
-              <option value="UNKNOWN">Not sure</option>{types.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
-            </select></div>}
-          {field("declared_purpose", "Title or description", "e.g. Startup workshop poster")}
-          {field("reporting_period", "Reporting period", "Only if known")}
-          {field("document_date_raw", module === "meeting" ? "Meeting date" : "Event / document date", "As stated in the source")}
-        </div></details>
+      <fieldset className="grid gap-3 md:grid-cols-3"><legend className="mb-2 text-sm font-medium">Basic information</legend>
+        <div className="space-y-1"><Label htmlFor={`${module}-category`}>Document type (required)</Label>
+          <select id={`${module}-category`} className="h-9 w-full border bg-background px-2 text-sm" value={category} onChange={e => { setCategory(e.target.value); setDocType("UNKNOWN"); }}>
+            <option value="">Choose…</option>{categories.map(c => <option key={c.code} value={c.code}>{c.name}</option>)}</select></div>
+        {field("declared_purpose", "Title (optional)", "e.g. Startup workshop poster")}
+        <div className="space-y-1"><Label htmlFor={`${module}-description`}>Description (optional)</Label><Input id={`${module}-description`} maxLength={1000} placeholder="Context or notes" value={instruction} onChange={e => setInstruction(e.target.value)} /></div>
+      </fieldset>
+      {module === "evidence" && <p className="border-l-2 border-border pl-3 text-xs text-muted-foreground">Declared framework only. Exact methodology edition, requirement and evidence approval are not established by this upload.</p>}
       <label htmlFor={`${module}-file`} onDragOver={e => { e.preventDefault(); setDragging(true); }} onDragLeave={() => setDragging(false)} onDrop={e => { e.preventDefault(); setDragging(false); addFiles(e.dataTransfer.files); }}
         className={`flex cursor-pointer flex-wrap items-center gap-4 border-2 border-dashed p-5 text-sm ${dragging ? "border-primary bg-primary/5" : "border-border"}`}>
         {preview ? <img src={preview} alt="Selected file preview" className="h-24 w-24 border object-cover" /> : <FileText className="size-8 text-muted-foreground" />}
@@ -156,16 +144,11 @@ export function DocumentUploads({ module, label }: { module: UploadModule; label
         <span className="flex items-center gap-2"><Status tone={q.status === "failed" || errs.length ? "danger" : q.status === "read" ? "success" : q.status === "selected" ? "neutral" : "warning"}>{errs.length ? "Not accepted" : { selected: "Ready", uploading: "Uploading", reading: "Reading", read: "Read", failed: "Failed" }[q.status]}</Status>
           <Button size="sm" variant="ghost" disabled={busy} aria-label={`Remove ${q.file.name}`} onClick={() => setQueue(x => x.filter((_, j) => j !== i))}><X /></Button></span>
       </li>; })}</ul>}
-      <fieldset className="space-y-2"><legend className="text-sm font-medium">Desired output (optional)</legend>
-        <p className="text-xs text-muted-foreground">Leave empty and the system checks every output automatically. Picks are added to that check, not a replacement. Cards marked "not available" cannot be produced yet and will say why.</p>
-        <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">{RECONCILED_OUTPUT_CATALOGUE.map(o => { const on = requested.includes(o.Output_ID); return <button type="button" key={o.Output_ID} aria-pressed={on} onClick={() => setRequested(r => on ? r.filter(x => x !== o.Output_ID) : [...r, o.Output_ID])} className={`border p-3 text-left text-sm ${on ? "border-primary bg-primary/5 ring-1 ring-primary" : "bg-background hover:border-primary"}`}>
-          <span className="flex items-start justify-between gap-2"><span className="font-medium">{o.Output_Name}</span><span className="text-xs text-muted-foreground">{o.Output_ID}</span></span>
-          <span className="mt-1 block text-xs text-muted-foreground">{["OUT-005", "OUT-006", "OUT-007"].includes(o.Output_ID) ? "Requires explicit meeting fields" : "Generation unavailable under current safety gate"} · Catalogue formats: {o.Output_Formats}</span></button>; })}</div>
-        <Label htmlFor={`${module}-instruction`}>Additional instruction (optional)</Label>
-        <Textarea id={`${module}-instruction`} maxLength={1000} placeholder="e.g. Combine these files into one event report" value={instruction} onChange={e => setInstruction(e.target.value)} />
-      </fieldset>
-      <div className="flex flex-wrap items-center gap-3"><Button size="lg" disabled={busy || !category || !queue.length || anyErrors} onClick={() => void upload()}><Upload /> {queue.length > 1 ? `Upload and process ${queue.length} files` : "Upload and process"}</Button>
-        {stage ? <span role="status" className="text-sm text-muted-foreground">{stage}</span> : !category && queue.length > 0 && <span className="text-sm text-muted-foreground">Choose a document kind first.</span>}</div>
+      <OutputPicker requested={requested} setRequested={setRequested} />
+      <div className="flex flex-wrap items-center gap-3">
+        <Button size="lg" variant="outline" disabled={busy || !category || !queue.length || anyErrors} onClick={() => void upload(false)}><Upload /> Convert / analyse only</Button>
+        <Button size="lg" disabled={busy || !category || !queue.length || anyErrors} onClick={() => void upload(true)}><Upload /> Process &amp; generate{queue.length > 1 ? ` (${queue.length} files)` : ""}</Button>
+        {stage ? <span role="status" className="text-sm text-muted-foreground">{stage}</span> : !category && queue.length > 0 && <span className="text-sm text-muted-foreground">Choose a document type first.</span>}</div>
     </div> : data && <p className="border-l-4 border-border bg-muted p-3 text-sm">Your role in this workspace can view documents but cannot upload.</p>}
 
     {!data?.canUpload && stage && <p role="status" className="text-sm text-muted-foreground">{stage}</p>}
