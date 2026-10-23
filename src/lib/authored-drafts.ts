@@ -2,7 +2,7 @@ import type { SourceLine } from "./output-contract";
 
 export type DraftSource = { documentId: string; jobId: string; filename: string; originalHash: string; parserVersion: string; classification: "DEMO" | "unverified"; lines: SourceLine[] };
 export type AuthoredDraft = { type: "press_release" | "website_event" | "linkedin" | "facebook" | "instagram" | "x_post"; catalogueId: "OUT-008" | "OUT-009"; title: string; body: string; citations: { documentId: string; jobId: string; filename: string; locatorKey: string; raw: string }[]; missing: string[]; review: "human_review_required"; release: "not_authorized"; persisted: false };
-const labels: Record<string, string> = { "event title": "title", "workshop title": "title", "event date": "date", "event time": "time", "venue": "venue", "participating institutions": "institutions", "workshop subject": "subject", "event subject": "subject" };
+const labels: Record<string, string> = { "event title": "title", "workshop title": "title", "event": "title", "event date": "date", "date": "date", "event time": "time", "venue": "venue", "participating institutions": "institutions", "workshop subject": "subject", "event subject": "subject" };
 const limits: Partial<Record<AuthoredDraft["type"], number>> = { linkedin: 1200, facebook: 800, x_post: 270 };
 
 /** Staged no-provider authoring engine. NOT wired to persistence until the exact gate extension is approved.
