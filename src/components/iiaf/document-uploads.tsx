@@ -151,7 +151,7 @@ export function DocumentUploads({ module, label }: { module: UploadModule; label
         <p className="text-xs text-muted-foreground">Leave empty and the system checks every output automatically. Picks are added to that check, not a replacement. Cards marked "not available" cannot be produced yet and will say why.</p>
         <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">{RECONCILED_OUTPUT_CATALOGUE.map(o => { const on = requested.includes(o.Output_ID); return <button type="button" key={o.Output_ID} aria-pressed={on} onClick={() => setRequested(r => on ? r.filter(x => x !== o.Output_ID) : [...r, o.Output_ID])} className={`border p-3 text-left text-sm ${on ? "border-primary bg-primary/5 ring-1 ring-primary" : "bg-background hover:border-primary"}`}>
           <span className="flex items-start justify-between gap-2"><span className="font-medium">{o.Output_Name}</span><span className="text-xs text-muted-foreground">{o.Output_ID}</span></span>
-          <span className="mt-1 block text-xs text-muted-foreground">{o.support === "blocked" ? "Not available yet" : "Draft available"} · {o.Output_Formats}</span></button>; })}</div>
+          <span className="mt-1 block text-xs text-muted-foreground">{["OUT-005", "OUT-006", "OUT-007"].includes(o.Output_ID) ? "Requires explicit meeting fields" : "Generation unavailable under current safety gate"} · Catalogue formats: {o.Output_Formats}</span></button>; })}</div>
         <Label htmlFor={`${module}-instruction`}>Additional instruction (optional)</Label>
         <Textarea id={`${module}-instruction`} maxLength={1000} placeholder="e.g. Combine these files into one event report" value={instruction} onChange={e => setInstruction(e.target.value)} />
       </fieldset>

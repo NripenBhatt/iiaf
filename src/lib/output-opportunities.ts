@@ -60,7 +60,7 @@ export function discoverOutputOpportunities(lines: SourceLine[], outputs: Genera
     }
   }
   // Review artifacts never acquire an unrelated OUT catalogue entry.
-  for (const [type, contractId, ruleId] of [["extraction_review", "O13", "Q01"], ["structured_tables", "O10", "Q10"]]) {
+  for (const [type, contractId, ruleId] of [["extraction_review", "O13", "Q01"], ["structured_tables", "O10", "Q10"]] as const) {
     const actual = outputs.find(o => o.type === type);
     const relevant = type === "extraction_review" ? lines : lines.filter(l => applications.get(l.locator_key)?.some(r => r.ruleId === "Q10"));
     if (!relevant.length && !actual) continue;
