@@ -65,7 +65,7 @@ export async function renderDraftImage(draft: LocalDraft, text = draft.body): Pr
 
 export async function localVisualZip(draft: LocalDraft, carousel: boolean) {
   const zip = new JSZip();
-  const panels = carousel ? draft.body.split(/\n\n+/).filter(Boolean) : [draft.body];
+  const panels = carousel ? [draft.title, ...draft.body.split(/\n\n+/).filter(Boolean)] : [draft.body];
   for (const [index, text] of panels.entries()) zip.file(`panel-${index + 1}.png`, await renderDraftImage(draft, text));
   zip.file("source-manifest.json", JSON.stringify({ ...draft, artifact: carousel ? "local_carousel" : "local_image", panelCount: panels.length, persisted: false }, null, 2));
   zip.file("review-and-source.txt", localDraftText(draft));
