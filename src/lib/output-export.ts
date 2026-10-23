@@ -5,13 +5,13 @@ import type { GeneratedOutput } from "./outputs.functions";
 
 const slug = (s: string) => s.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 60) || "output";
 export const outputFileBase = (o: Pick<GeneratedOutput, "type">, source: string) => `${slug(source.replace(/\.[^.]+$/, ""))}-${o.type}`;
-const footer = (o: GeneratedOutput, source: string) => `DRAFT — NOT APPROVED — ${o.manifest?.classification ?? "Classification unknown / unverified"}. Not verified coverage.\nSource document: ${source}. Check against the original before publishing.${o.manifest ? `\nDocument ${o.manifest.documentId}; job ${o.manifest.jobId}; original SHA-256 ${o.manifest.originalHash}; parser ${o.manifest.parserVersion}; contract ${o.manifest.contractVersion}.\nSource locators: ${o.manifest.locators.join(", ")}` : "\nHistorical output: exact source manifest not recorded."}`;
+const footer = (o: GeneratedOutput, source: string) => `DRAFT — NOT APPROVED — ${o.manifest?.classification ?? "Classification unknown / unverified"}. Not verified coverage.\nSource document: ${source}. Check against the original before publishing.${o.manifest ? `\nDocument ${o.manifest.documentId}; job ${o.manifest.jobId}; original SHA-256 ${o.manifest.originalHash}; parser ${o.manifest.parserVersion}; contract ${o.manifest.contractVersion}.\nSource locators: ${o.manifest.locators.join(", ")}` : "\nHistorical output: exact source manifest not recorded."}${o.qualification?.some(q => q.rules.some(r => r.ruleId === "Q13")) || o.manifest?.locators.some(l => /^ocr[:!]/i.test(l)) ? "\nOCR_CAUTION: image-derived transcription is unverified; compare against the unchanged original. No confidence or approval is inferred." : ""}`;
 const tableText = (o: GeneratedOutput) => (o.tables ?? []).map(t => `\n${t.name}\n${t.rows.map(r => `[${r.locator}] ${r.cells.map(c => `[${c.ref}] ${c.value}${c.formula ? ` (stored formula: ${c.formula}; raw: ${c.raw})` : ""}`).join(" | ")}`).join("\n")}`).join("\n");
 
 /** Guard spreadsheet formula injection in CSV; originals remain unchanged in the manifest/Word table. */
 const csvCell = (v: string) => `"${(/^[\s]*[=+@-]/.test(v) ? `'${v}` : v).replace(/"/g, '""')}"`;
 export function outputCsv(o: GeneratedOutput) {
-  const rows = [["Classification", o.manifest?.classification ?? "unverified", "DRAFT — NOT APPROVED"], ["Table", "Row", "Column", "Cell reference", "Value", "Raw", "Stored formula (not executed)", "Source locator"]];
+  const rows = [["Classification", o.manifest?.classification ?? "unverified", "DRAFT — NOT APPROVED"], ["Source lineage and review cautions", footer(o, o.manifest?.documentId ?? "Not recorded")], ["Table", "Row", "Column", "Cell reference", "Value", "Raw", "Stored formula (not executed)", "Source locator"]];
   for (const t of o.tables ?? []) for (const r of t.rows) for (const c of r.cells) rows.push([t.name, String(r.row), String(c.column), c.ref, c.value, c.raw, c.formula ?? "", r.locator]);
   return rows.map(r => r.map(csvCell).join(",")).join("\r\n");
 }

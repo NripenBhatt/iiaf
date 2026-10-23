@@ -16,5 +16,5 @@ export const getOutputOpportunities = createServerFn({ method: "POST" }).middlew
     const { data: row, error: readError } = await context.supabase.from("document_outputs").select("id,outputs").eq("document_id", doc.id).order("created_at", { ascending: false }).limit(1).maybeSingle();
     if (readError) throw new Error("Saved output status could not be verified.");
     return { documentId: doc.id, filename: doc.original_filename, jobId: source.job.id, outputRecordId: row?.id ?? null,
-      catalogueDefinitionsEvaluated: 30, opportunities: discoverOutputOpportunities(source.lines, row ? storedOutputSetSchema.parse(row.outputs).outputs : [], data.requested) };
+      catalogueDefinitionsEvaluated: 30, opportunities: discoverOutputOpportunities(source.lines, row ? storedOutputSetSchema.parse(row.outputs).outputs : [], data.requested, doc.original_filename) };
   });

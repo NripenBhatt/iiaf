@@ -33,8 +33,8 @@ const visualDependency: Record<string, string> = {
  * Requested IDs add entries, never filter automatic discovery. Q13 is a caution, not a blocker.
  * Saved outputs, not qualification cards or rendered previews, establish generation/persistence.
  */
-export function discoverOutputOpportunities(lines: SourceLine[], outputs: GeneratedOutput[] = [], requested: string[] = []): OutputOpportunity[] {
-  const applications = classifyLines(lines);
+export function discoverOutputOpportunities(lines: SourceLine[], outputs: GeneratedOutput[] = [], requested: string[] = [], sourceName = ""): OutputOpportunity[] {
+  const applications = classifyLines(lines, sourceName);
   const meetings = structuredMeetings(lines);
   const found: OutputOpportunity[] = [];
   for (const entry of OUTPUT_REFERENCE.outputs) {
@@ -60,7 +60,7 @@ export function discoverOutputOpportunities(lines: SourceLine[], outputs: Genera
     }
   }
   // Review artifacts never acquire an unrelated OUT catalogue entry.
-  for (const [type, contractId, ruleId] of [["extraction_review", "O13", "Q01"], ["structured_tables", "O10", "Q10"]]) {
+  for (const [type, contractId, ruleId] of [["extraction_review", "O13", "Q01"], ["structured_tables", "O10", "Q10"]] as const) {
     const actual = outputs.find(o => o.type === type);
     const relevant = type === "extraction_review" ? lines : lines.filter(l => applications.get(l.locator_key)?.some(r => r.ruleId === "Q10"));
     if (!relevant.length && !actual) continue;

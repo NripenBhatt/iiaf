@@ -86,7 +86,7 @@ const YEAR = /\b20\d{2}\b/;
  * stay unresolved (no official mappings / no sensitivity assessment) and are therefore
  * never applied to a unit here.
  */
-export function classifyLines(lines: Line[]): Map<string, RuleApplication[]> {
+export function classifyLines(lines: Line[], sourceName = ""): Map<string, RuleApplication[]> {
   const groups = new Map<string, Line[]>();
   for (const line of [...lines].sort((a, b) => a.seq - b.seq)) {
     const p = cellsSchema.safeParse(line.locator);
@@ -107,7 +107,7 @@ export function classifyLines(lines: Line[]): Map<string, RuleApplication[]> {
   const multiUnit = groups.size > 1;
   // OCR often splits title/date across different lines. Evaluate source context, but
   // retain both signal-bearing locators; never attach unrelated poster/footer lines.
-  const eventContext = lines.some(l => DATED_EVENT.test(l.content)) && lines.some(l => YEAR.test(l.content));
+  const eventContext = (DATED_EVENT.test(sourceName) || lines.some(l => DATED_EVENT.test(l.content))) && lines.some(l => YEAR.test(l.content));
 
   const result = new Map<string, RuleApplication[]>();
   for (const line of lines) {
