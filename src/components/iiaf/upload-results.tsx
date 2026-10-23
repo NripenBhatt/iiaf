@@ -4,6 +4,8 @@ import { Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { getLineage } from "@/lib/lineage.functions";
+import { getOutputOpportunities } from "@/lib/output-opportunities.functions";
+import { generateOutputs } from "@/lib/outputs.functions";
 import { consolidatedReview, mappingCards, type MapStatus } from "@/lib/destination-map";
 import { outputCsv, outputDocx, outputFileBase, outputText, outputsZip } from "@/lib/output-export";
 import { saveBlob } from "@/lib/package-export";
@@ -24,11 +26,13 @@ const methodLabel = (m: string) => METHOD_LABEL[m] ?? (/ocr|vision|image/i.test(
 
 function OneFile({ r, requested, detailed }: { r: FileResult; requested: string[]; detailed: boolean }) {
   const read = useServerFn(getLineage);
+  const discover = useServerFn(getOutputOpportunities);
+  const generate = useServerFn(generateOutputs);
+  const discovery = useQuery({ queryKey: ["output-opportunities", r.documentId, requested, r.set?.createdAt], queryFn: () => discover({ data: { documentId: r.documentId, requested } }) });
   const { data: lineage, error } = useQuery({ queryKey: ["lineage", r.documentId, r.set?.createdAt], queryFn: () => read({ data: { documentId: r.documentId } }) });
   const cards = mappingCards(r.set, lineage ?? null, requested);
   const review = r.set?.outputs.find(o => o.type === "extraction_review");
   const isImage = lineage && ["png", "jpg", "jpeg"].includes(lineage.document.file_extension);
-  if (r.error) return <p role="alert" className="text-sm text-destructive">{r.error}</p>;
   return <Tabs defaultValue="outputs">
     <TabsList className="flex h-auto flex-wrap">
       <TabsTrigger value="extraction">2 · Extraction</TabsTrigger>
@@ -36,6 +40,25 @@ function OneFile({ r, requested, detailed }: { r: FileResult; requested: string[
       <TabsTrigger value="brain">University Brain</TabsTrigger>
       <TabsTrigger value="outputs">5 · Outputs ({r.set?.outputs.length ?? 0})</TabsTrigger>
     </TabsList>
+    {r.error && <p role="alert" className="mt-3 text-sm text-destructive">{r.error}</p>}
+    <section className="mt-4 space-y-3" aria-label="Automatic output opportunities">
+      <h3 className="font-semibold">Automatic output opportunities</h3>
+      {discovery.isPending && <p className="text-sm text-muted-foreground">Reading saved source qualifications…</p>}
+      {discovery.error && <p role="alert" className="text-sm text-destructive">{discovery.error.message}</p>}
+      {discovery.data && <>
+        <p className="text-xs text-muted-foreground">{discovery.data.catalogueDefinitionsEvaluated} catalogue definitions evaluated · source run {discovery.data.jobId} · saved output record {discovery.data.outputRecordId ?? "none"}</p>
+        <div className="grid gap-3 md:grid-cols-2">{discovery.data.opportunities.filter(o => !o.artifact).map(o => <article key={o.key} className="border bg-background p-3 text-sm">
+          <div className="flex items-start justify-between gap-2"><h4 className="font-medium">{o.name} · {o.type.replace(/_/g, " ")}</h4><Status tone={o.generated ? "success" : "warning"}>{o.generated ? "Saved draft" : o.ruleIds.length ? "Candidate opportunity" : "Requested · unqualified"}</Status></div>
+          <p className="mt-1 text-xs">{o.catalogueId}{o.contractId ? ` · ${o.contractId}` : ""} · {o.ruleIds.join(", ") || "No rule applied"}{o.requested ? " · Desired Output" : ""}</p>
+          <p className="mt-2 text-xs">{o.reason}</p>
+          <details className="mt-2 text-xs"><summary className="cursor-pointer">Source citations ({o.locators.length}) and missing attributes</summary><p className="mt-1 break-all">{r.name} · {o.locators.join(", ") || "No qualified source locator"}</p><p className="mt-1">Missing / needs review: {o.missing.join(", ") || "Not established by discovery"}</p></details>
+          <p className="mt-2 text-xs">Supported: {o.supported ? "Yes, governed draft path" : "No"} · Generated: {o.generated ? "Yes" : "No"} · Persisted: {o.persisted ? "Yes" : "No"}</p>
+          {o.dependency && <p className="mt-2 text-xs text-muted-foreground">{o.dependency}</p>}
+          {o.supported && !o.generated && <Button className="mt-2" size="sm" variant="outline" onClick={() => void generate({ data: { documentId: r.documentId } }).then(() => discovery.refetch()).catch(() => discovery.refetch())}>Generate governed draft</Button>}
+        </article>)}</div>
+        {!discovery.data.opportunities.some(o => !o.artifact) && <p className="text-sm text-muted-foreground">No catalogue opportunity established from the saved source. Extraction artifacts remain separate.</p>}
+      </>}
+    </section>
     <TabsContent value="extraction" className="space-y-3 pt-3 text-sm">
       {error && <p role="alert" className="text-destructive">Stored records could not be read.</p>}
       {lineage && <dl className="grid gap-2 sm:grid-cols-2">
@@ -75,7 +98,7 @@ function OneFile({ r, requested, detailed }: { r: FileResult; requested: string[
       <p className="mt-2 text-xs text-muted-foreground">Everything here is read back from the database under your own access. Proposed facts are not approved evidence.</p>
     </TabsContent>
     <TabsContent value="outputs" className="pt-3">
-      {r.set && r.set.outputs.length > 0 && <Button size="sm" variant="outline" className="mb-3" onClick={() => void outputsZip(r.set!.outputs, r.name).then(b => saveBlob(b, `${outputFileBase({ type: "outputs" }, r.name)}.zip`))}><Download /> Download all (ZIP)</Button>}
+      {r.set && r.set.outputs.length > 0 && <Button size="sm" variant="outline" className="mb-3" onClick={() => { const set = r.set; if (set) void outputsZip(set.outputs, r.name).then(b => saveBlob(b, `${outputFileBase({ type: "outputs" }, r.name)}.zip`)); }}><Download /> Download all (ZIP)</Button>}
       <div className="grid gap-4 lg:grid-cols-2">{(r.set?.outputs ?? []).map(o => <article key={o.type} className="flex flex-col border bg-background p-4">
         <div className="flex items-start justify-between gap-2"><p className="text-xs uppercase tracking-wide text-muted-foreground">{o.name}</p><Status tone="warning">Draft · review required</Status></div>
         <h3 className="mt-1 font-semibold">{o.title}</h3>
