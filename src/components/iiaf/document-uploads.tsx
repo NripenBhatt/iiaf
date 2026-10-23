@@ -5,7 +5,7 @@ import { toast } from "sonner";
 import { FileText, Upload, X } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
 import { RECONCILED_OUTPUT_CATALOGUE } from "@/lib/output-reference";
-import { recordBatch } from "@/lib/lineage.functions";
+import { getDocumentBatch, recordBatch } from "@/lib/lineage.functions";
 import { StepIndicator, UploadResults, type FileResult } from "./upload-results";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -40,6 +40,8 @@ export function DocumentUploads({ module, label }: { module: UploadModule; label
   const list = useServerFn(listDocuments); const register = useServerFn(registerDocument); const finalize = useServerFn(finalizeDocument);
   const process = useServerFn(processDocument); const fail = useServerFn(markDocumentFailed); const link = useServerFn(getDocumentLink);
   const generate = useServerFn(generateOutputs); const load = useServerFn(getOutputs); const batch = useServerFn(recordBatch);
+  const readBatch = useServerFn(getDocumentBatch);
+  const [savedSelection, setSavedSelection] = useState<{ requested: string[]; instruction: string } | null>(null);
   const key = ["documents", workspace.id, module];
   const { data, isLoading, isFetching, error } = useQuery({ queryKey: [...key, filters], queryFn: () => list({ data: { organizationId: workspace.id, module, filters } }), placeholderData: (previous, query) => query?.queryKey[1] === workspace.id && query.queryKey[2] === module ? previous : undefined });
   type Queued = { file: File; status: "selected" | "uploading" | "reading" | "read" | "failed"; error: string | null; documentId: string | null };
@@ -62,15 +64,20 @@ export function DocumentUploads({ module, label }: { module: UploadModule; label
   const patch = (i: number, v: Partial<Queued>) => setQueue(q => q.map((x, j) => j === i ? { ...x, ...v } : x));
 
   async function outputsFor(id: string, name: string): Promise<FileResult> {
-    try { return { documentId: id, name, set: await generate({ data: { documentId: id } }), error: null }; }
+    try { return { documentId: id, name, set: await generate({ data: { documentId: id, requested } }), error: null }; }
     catch (e) { return { documentId: id, name, set: null, error: e instanceof Error ? e.message : "Outputs could not be generated." }; }
   }
   async function showOutputs(id: string, name: string) {
     setResults(null); setStage("Reading saved outputs…");
     try {
+      const savedBatch = await readBatch({ data: { documentId: id } });
+      setSavedSelection({ requested: savedBatch?.requested_outputs ?? [], instruction: savedBatch?.instruction ?? "" });
       const existing = await load({ data: { documentId: id } });
       if (existing) setResults([{ documentId: id, name, set: existing, error: null }]);
-      else if (data?.canUpload) setResults([await outputsFor(id, name)]);
+      else if (data?.canUpload) {
+        const set = await generate({ data: { documentId: id, requested: savedBatch?.requested_outputs ?? [] } });
+        setResults([{ documentId: id, name, set, error: null }]);
+      }
       else setResults([{ documentId: id, name, set: null, error: "No saved outputs are available. An authorized uploader must create them." }]);
     } catch (e) { setResults([{ documentId: id, name, set: null, error: e instanceof Error ? e.message : "Saved outputs could not be read." }]); }
     finally { setStage(null); }
@@ -80,8 +87,10 @@ export function DocumentUploads({ module, label }: { module: UploadModule; label
   async function upload() {
     if (!queue.length || !category || anyErrors) return;
     setResults(null); const done: FileResult[] = []; const fileResults: { name: string; status: string; documentId: string | null; error: string | null }[] = [];
+    setSavedSelection(null);
     for (let i = 0; i < queue.length; i++) {
-      const file = queue[i]!.file; let docId: string | null = null;
+      const queued = queue[i]; if (!queued) continue;
+      const file = queued.file; let docId: string | null = null;
       try {
         patch(i, { status: "uploading", error: null }); setStage(`Uploading ${i + 1} of ${queue.length}: ${file.name}`);
         const sha256 = await sha256Hex(await file.arrayBuffer());
@@ -160,7 +169,7 @@ export function DocumentUploads({ module, label }: { module: UploadModule; label
     </div> : data && <p className="border-l-4 border-border bg-muted p-3 text-sm">Your role in this workspace can view documents but cannot upload.</p>}
 
     {!data?.canUpload && stage && <p role="status" className="text-sm text-muted-foreground">{stage}</p>}
-    {results && <UploadResults results={results} requested={requested} instruction={instruction.trim()} />}
+    {results && <UploadResults results={results} requested={savedSelection?.requested ?? requested} instruction={savedSelection?.instruction ?? instruction.trim()} />}
     {error ? <p role="alert" className="text-sm text-destructive">Documents could not be loaded.</p> : isLoading ? <p className="text-sm text-muted-foreground">Loading documents…</p> :
       <div className="border bg-card"><h2 className="border-b px-5 py-3 font-semibold">Your {label.toLowerCase()}</h2>
         <ListFilterControls filters={filters} update={update} total={isFetching ? undefined : data?.total} categories={categories.map(c => ({ value: c.code, label: c.name }))} types={module === "evidence" ? [] : catalogue[module].documentTypes.map(t => ({ value: t.id, label: t.name }))} />

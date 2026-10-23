@@ -11,12 +11,12 @@ const aliases: Record<string, string[]> = {
   number: ["number", "item number", "क्रमांक"], objective: ["objective", "उद्देश्य"], presenter: ["presenter", "प्रस्तुतकर्ता"], duration: ["duration", "अवधि"], preReads: ["pre reads", "pre-reads", "पूर्व पठन"], outcomes: ["expected outcomes", "अपेक्षित परिणाम"],
   meeting: ["meeting", "meeting id", "बैठक"], date: ["meeting date", "बैठक तिथि"], attendance: ["attendance", "उपस्थिति"], proceedings: ["proceedings", "कार्यवृत्त"],
   id: ["decision id", "निर्णय आईडी"], agendaItem: ["agenda item", "कार्यसूची मद"], wording: ["decision wording", "resolution wording", "निर्णय"], status: ["status", "स्थिति"], authority: ["authority", "प्राधिकारी"], owner: ["owner", "उत्तरदायी"], decisionDate: ["decision date", "निर्णय तिथि"],
-  action: ["action", "action item", "कार्य"], decision: ["decision reference", "निर्णय संदर्भ"], dueDate: ["due date", "समय सीमा"], completionProof: ["completion proof", "पूर्णता प्रमाण"],
+  action: ["action", "action item", "action / deliverable", "कार्य"], decision: ["decision reference", "निर्णय संदर्भ"], dueDate: ["due date", "target date", "समय सीमा"], completionProof: ["completion proof", "पूर्णता प्रमाण"],
 };
 const required: Record<Kind, string[]> = { agenda_summary: ["number", "agendaItem", "objective", "presenter", "duration", "preReads", "outcomes"], meeting_report: ["meeting", "date", "attendance", "proceedings"], decisions: ["id", "agendaItem", "wording", "status"], action_items: ["action", "meeting", "decision", "owner", "dueDate", "status", "completionProof"] };
 const ids = { agenda_summary: "O06", meeting_report: "O07", decisions: "O08", action_items: "O09" } as const;
 const normal = (s: string) => s.normalize("NFKC").trim().toLowerCase().replace(/[_\s]+/g, " ");
-const keyFor = (s: string) => Object.keys(aliases).find(k => aliases[k]?.includes(normal(s)));
+const keyFor = (s: string) => normal(s) === "responsible person / office" ? "owner" : Object.keys(aliases).find(k => aliases[k]?.includes(normal(s)));
 
 /** Explicit source headers only; shared by structured drafts and qualification classification. */
 export function meetingHeaderKind(headerValues: string[]): Kind | null {

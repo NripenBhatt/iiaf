@@ -16,6 +16,7 @@ import { structuredCsvZip, structuredExcel } from "@/lib/structured-export";
 import { LocalAuthoring } from "./local-authoring";
 import { StructuredRecordBrowser } from "./structured-record-browser";
 import { useState } from "react";
+import { selectionOutcomes } from "@/lib/output-selection";
 
 export type FileResult = { documentId: string; name: string; set: OutputSet | null; error: string | null };
 
@@ -42,7 +43,7 @@ function OneFile({ r, requested, detailed }: { r: FileResult; requested: string[
   const review = set?.outputs.find(o => o.type === "extraction_review");
   async function generateDraft() {
     setGenerating(true); setGenerationError("");
-    try { setGeneratedSet(await generate({ data: { documentId: r.documentId } })); }
+      try { setGeneratedSet(await generate({ data: { documentId: r.documentId, requested } })); }
     catch (e) { setGenerationError(e instanceof Error ? e.message : "The draft could not be saved."); }
     finally { setGenerating(false); }
   }
@@ -56,6 +57,10 @@ function OneFile({ r, requested, detailed }: { r: FileResult; requested: string[
     </TabsList>
     {r.error && <p role="alert" className="mt-3 text-sm text-destructive">{r.error}</p>}
     {generationError && <p role="alert" className="mt-3 text-sm text-destructive">{generationError}</p>}
+    {requested.length > 0 && <section className="mt-4 space-y-2" aria-label="Selected output results">
+      <div className="flex flex-wrap items-center gap-3"><h3 className="font-semibold">Saved selections · {requested.join(", ")}</h3><Button size="sm" disabled={generating} onClick={() => void generateDraft()}>{generating ? "Generating and saving…" : "Generate selected outputs"}</Button></div>
+      {selectionOutcomes(requested, set?.outputs ?? []).map(o => <p key={o.catalogueId} className="text-sm"><strong>{o.catalogueId} · {generationError ? "Failed" : o.status === "generated_saved" ? "Generated and saved" : o.status === "needs_source_information" ? "Needs source information" : "Not supported"}</strong> — {generationError || o.reason}</p>)}
+    </section>}
     <section className="mt-4 space-y-3" aria-label="Automatic output opportunities">
       <h3 className="font-semibold">Automatic output opportunities</h3>
       {discovery.isPending && <p className="text-sm text-muted-foreground">Reading saved source qualifications…</p>}
@@ -125,11 +130,13 @@ function OneFile({ r, requested, detailed }: { r: FileResult; requested: string[
       {lineage && <StructuredRecordBrowser lineage={lineage} />}
     </TabsContent>
     <TabsContent value="outputs" className="pt-3">
+      {set?.setId && <p className="mb-3 break-all text-xs text-muted-foreground">Saved set {set.setId} · {set.createdAt} · source version {set.sourceVersion}</p>}
       {lineage && <LocalAuthoring lineage={lineage} />}
       {set && set.outputs.length > 0 && <Button size="sm" variant="outline" className="mb-3" onClick={() => { if (set) void outputsZip(set.outputs, r.name).then(b => saveBlob(b, `${outputFileBase({ type: "outputs" }, r.name)}.zip`)); }}><Download /> Download saved outputs (ZIP)</Button>}
       <div className="grid gap-4 lg:grid-cols-2">{(set?.outputs ?? []).map(o => <article key={o.type} className="flex flex-col border bg-background p-4">
         <div className="flex items-start justify-between gap-2"><p className="text-xs uppercase tracking-wide text-muted-foreground">{o.name}</p><Status tone="warning">Draft · review required</Status></div>
         <h3 className="mt-1 font-semibold">{o.title}</h3>
+        {set?.setId && <p className="mt-1 break-all text-xs text-muted-foreground">Output ID {set.setId}:{o.type} · {o.type}</p>}
         <div className="mt-2 max-h-64 min-w-0 flex-1 overflow-auto"><OutputPreview output={o} /></div>
         <p className="mt-3 text-xs text-muted-foreground">Source: {r.name}{o.catalogue?.catalogueId ? ` · ${o.catalogue.catalogueId}` : ""}{o.catalogue?.contractId ? ` · ${o.catalogue.contractId}` : ""}</p>
         <div className="mt-3 flex flex-wrap gap-2"><Button size="sm" variant="outline" onClick={() => void outputDocx(o, r.name).then(b => saveBlob(b, `${outputFileBase(o, r.name)}.docx`))}><Download /> Word</Button>

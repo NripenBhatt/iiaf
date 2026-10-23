@@ -2,3 +2,4 @@
 - Assistant threads/messages use per-user/organization RLS; /conversation/$threadId shares /conversation access. Browser WAV dictation uses /api/transcribe; audio is never stored.
 - Structured readback uses paginated caller-RLS lineage, with derived cells/contact candidates and separate CSV/Excel sheets preserving IDs; derived contacts never imply persisted directory records or consent.
 - No-provider authored drafts use only unambiguous explicit fields with per-field citations and channel limits; local-artifacts renders browser-only unsaved Word/PNG/carousel downloads with lineage, separate from GeneratedOutput and persistence until the guarded extension is authorized.
+- Saved batch selections are restored on document readback and passed to generation; selection-specific opaque keys prevent unrelated set reuse, while supported meeting drafts remain within the existing protected contracts.

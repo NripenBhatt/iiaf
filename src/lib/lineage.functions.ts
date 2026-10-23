@@ -52,6 +52,16 @@ export const getLineage = createServerFn({ method: "POST" }).middleware([require
   .inputValidator(z.object({ documentId: z.string().uuid() }))
   .handler(({ context, data }) => readLineage(context.supabase, data.documentId));
 
+export const getDocumentBatch = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
+  .inputValidator(z.object({ documentId: z.string().uuid() }))
+  .handler(async ({ context, data }) => {
+    const { data: row, error } = await context.supabase.from("upload_batches")
+      .select("id,document_ids,requested_outputs,instruction,created_at")
+      .contains("document_ids", [data.documentId]).order("created_at", { ascending: false }).limit(1).maybeSingle();
+    if (error) throw new Error("Saved output selections could not be read.");
+    return row;
+  });
+
 export const recordBatch = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
   .inputValidator(z.object({ organizationId: z.string().uuid(), module: z.enum(["institutional", "meeting", "evidence"]), documentIds: z.string().uuid().array().max(20), requestedOutputs: z.string().max(40).array().max(40), instruction: z.string().max(1000).nullable(), fileResults: z.object({ name: z.string().max(255), status: z.string().max(40), documentId: z.string().uuid().nullable(), error: z.string().max(500).nullable() }).array().max(20) }))
   .handler(async ({ context, data }) => {
