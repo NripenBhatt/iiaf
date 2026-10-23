@@ -1,8 +1,9 @@
 import type { SourceLine } from "./output-contract";
 import { sourceTables } from "./output-contract";
+import type { Json } from "@/integrations/supabase/types";
 
-export type ArchivedSegment = SourceLine & { id: string; job_id: string };
-export type ContactCandidate = { candidateKey: string; kind: "email" | "phone"; raw: string; normalized: string; documentId: string; jobId: string; segmentId: string; filename: string; locatorKey: string; locator: unknown; review: "human_review_required"; persisted: false; consent: "not_established"; affiliation: null };
+export type ArchivedSegment = SourceLine & { id: string; job_id: string; locator: Json; method: string };
+export type ContactCandidate = { candidateKey: string; kind: "email" | "phone"; raw: string; normalized: string; documentId: string; jobId: string; segmentId: string; filename: string; locatorKey: string; locator: Json; review: "human_review_required"; persisted: false; consent: "not_established"; affiliation: null };
 
 /** Read-only proposals from saved text, never contact ownership, consent or a new truth store. */
 export function contactCandidates(documentId: string, filename: string, segments: ArchivedSegment[]): ContactCandidate[] {

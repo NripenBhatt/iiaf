@@ -1,4 +1,3 @@
-// @vitest-environment node
 import { describe, expect, it } from "vitest";
 import * as XLSX from "xlsx";
 import JSZip from "jszip";
@@ -7,12 +6,13 @@ import { structuredExcel, structuredCsvZip } from "@/lib/structured-export";
 import type { Lineage } from "@/lib/lineage.functions";
 
 const segment: ArchivedSegment = { id: "segment1", job_id: "job1", seq: 1, locator_key: "line:1", locator: { line: 1 }, method: "native", method_version: "v1", content: "SYNTHETIC: Test.User@EXAMPLE.ORG; +91 98765 43210. Date 2026-10-23; count 1234567890" };
+const bytes = (blob: Blob) => new Promise<ArrayBuffer>((resolve, reject) => { const reader = new FileReader(); reader.onerror = reject; reader.onload = () => reader.result instanceof ArrayBuffer ? resolve(reader.result) : reject(new Error("Not bytes")); reader.readAsArrayBuffer(blob); });
 describe("structured archive readback", () => {
   it("retains exact raw contact/source IDs without inventing affiliation, persistence or consent", () => {
     const contacts = contactCandidates("doc1", "SYNTHETIC.txt", [segment]);
     expect(contacts).toHaveLength(2);
     expect(contacts[0]).toMatchObject({ raw: "Test.User@EXAMPLE.ORG", normalized: "Test.User@example.org", documentId: "doc1", jobId: "job1", segmentId: "segment1", locatorKey: "line:1", persisted: false, consent: "not_established", affiliation: null });
-    expect(contacts[1].normalized).toBe("+919876543210");
+    expect(contacts[1]?.normalized).toBe("+919876543210");
     expect(contactCandidates("doc1", "SYNTHETIC.txt", [segment])).toEqual(contacts);
   });
   it("never turns dates, metrics or local unlabelled digits into a contact", () => {
@@ -30,11 +30,13 @@ describe("structured archive readback", () => {
     const contacts = contactCandidates("doc1", "SYNTHETIC.txt", [segment]);
     const lineage = { document: { id: "doc1", organization_id: "org", original_filename: "SYNTHETIC.txt", file_extension: "txt", sha256_hash: "hash", reporting_period: "2026", document_date_raw: null, processing_status: "needs_review", module: "institutional" }, job: null, methodCounts: { native: 1 }, segments: [segment], tables: [], contacts, reconciliation: archiveReconciliation([segment], 1, [], contacts), facts: [], relationships: [], reviews: [], reviewCount: 0, outputRecords: [], outputRecord: null, generatedOutputCount: 0, outputReadbackStatus: "none" } satisfies Lineage;
     const blob = structuredExcel(lineage);
-    const book = XLSX.read(await blob.arrayBuffer(), { type: "array" });
-    const rows = XLSX.utils.sheet_to_json<Record<string, string>>(book.Sheets.segments);
-    expect(rows[0]).toMatchObject({ document_id: "doc1", id: "segment1", job_id: "job1", locator_key: "line:1", recorded_period: "2026" });
+    const book = XLSX.read(await bytes(blob), { type: "array" });
+    const sheet = book.Sheets["segments"];
+    if (!sheet) throw new Error("Missing segments sheet");
+    const rows = XLSX.utils.sheet_to_json<Record<string, string>>(sheet);
+    expect(rows[0]).toMatchObject({ document_id: "doc1", id: "segment1", job_id: "job1", locator_key: "line:1", recorded_period: "2026", classification: "DEMO", review: "human_review_required", release: "not_authorized" });
     expect(book.SheetNames).toContain("relationships");
-    const zip = await JSZip.loadAsync(await (await structuredCsvZip(lineage)).arrayBuffer());
+    const zip = await JSZip.loadAsync(await bytes(await structuredCsvZip(lineage)));
     expect(await zip.file("segments.csv")?.async("string")).toContain('"segment1"');
     expect(JSON.parse(await zip.file("readback.json")?.async("string") ?? "{}").contacts[0].persisted).toBe(false);
   });
