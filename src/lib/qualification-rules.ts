@@ -105,6 +105,9 @@ export function classifyLines(lines: Line[]): Map<string, RuleApplication[]> {
   const lineGroup = new Map<string, string>();
   for (const [id, group] of groups) for (const line of group) lineGroup.set(line.locator_key, id);
   const multiUnit = groups.size > 1;
+  // OCR often splits title/date across different lines. Evaluate source context, but
+  // retain both signal-bearing locators; never attach unrelated poster/footer lines.
+  const eventContext = lines.some(l => DATED_EVENT.test(l.content)) && lines.some(l => YEAR.test(l.content));
 
   const result = new Map<string, RuleApplication[]>();
   for (const line of lines) {
@@ -135,13 +138,13 @@ export function classifyLines(lines: Line[]): Map<string, RuleApplication[]> {
     if (isOcr || line.method?.startsWith("ocr")) {
       apps.push(application("Q13", ["Extracted text", "page/segment locator", `method: ${line.method ?? "stored OCR locator"}`], ["Measured confidence", "review status"], ["OCR_CAUTION: reviewer must compare against the original"]));
     }
-    if (DATED_EVENT.test(line.content) && YEAR.test(line.content)) {
-      apps.push(application("Q02", ["When (year stated in source)", "source"], ["What", "who", "where", "why", "publication authority"], ["Event status unverified; neutral wording required"]));
+    if (eventContext && (DATED_EVENT.test(line.content) || YEAR.test(line.content))) {
+      apps.push(application("Q02", ["Event signal and year in source context", "source"], ["What", "who", "where", "why", "publication authority"], ["Event/date association requires review; event status unverified; neutral wording required"]));
     }
     if (multiUnit) {
       apps.push(application("Q16", [`Stable unit ID: ${line.locator_key}`, "page/table/row locator"], []));
     }
-    if (!apps.length) {
+    if (!apps.some(a => a.ruleId !== "Q13" && a.ruleId !== "Q16")) {
       apps.push(application("Q01", ["Source", "facts (source text)"], ["Entity", "topic", "date", "audience", "language", "demo/sensitivity status"]));
     }
     result.set(line.locator_key, apps);
