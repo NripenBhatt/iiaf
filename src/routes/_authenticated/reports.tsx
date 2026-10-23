@@ -15,6 +15,7 @@ import { OutputPreview } from "@/components/iiaf/output-preview";
 import { saveBlob } from "@/lib/package-export";
 import { getDocumentLink } from "@/lib/documents.functions";
 import { pageHead } from "@/lib/seo";
+import { savedPng } from "@/lib/artifact-download";
 
 export const Route = createFileRoute("/_authenticated/reports")({
   validateSearch: validateListSearch,
@@ -44,6 +45,7 @@ function Page() {
         <p className="text-xs text-muted-foreground">Data classification: {row.output.manifest?.classification ?? "not recorded per source"}. Not verified coverage.{workspace.name.includes("SYNTHETIC") ? " SYNTHETIC DEMO workspace." : ""}</p>
         <details><summary className="cursor-pointer text-sm font-medium">Preview</summary><div className="mt-3 max-h-80 overflow-auto"><OutputPreview output={row.output} /></div></details>
         {row.output.tables?.length ? <Button size="sm" variant="outline" onClick={() => saveBlob(new Blob([outputCsv(row.output)], { type: "text/csv" }), `${outputFileBase(row.output, row.sourceName)}.csv`)}><Download /> CSV</Button> : null}
+        {row.output.artifact && <Button size="sm" variant="outline" onClick={()=>void savedPng(row.output).then(b=>saveBlob(b,`${outputFileBase(row.output,row.sourceName)}.png`)).catch(()=>toast.error("The saved PNG could not be downloaded."))}><Download/>PNG</Button>}
         <div className="flex flex-wrap gap-2"><Button size="sm" variant="outline" onClick={() => void outputDocx(row.output, row.sourceName).then(b => saveBlob(b, `${outputFileBase(row.output, row.sourceName)}.docx`))}><Download /> Word</Button><Button size="sm" variant="outline" onClick={() => saveBlob(new Blob([outputText(row.output, row.sourceName)], { type: "text/plain" }), `${outputFileBase(row.output, row.sourceName)}.txt`)}><Download /> Text</Button><Button size="sm" variant="ghost" onClick={() => void outputsZip([row.output], row.sourceName).then(b => saveBlob(b, `${outputFileBase(row.output, row.sourceName)}.zip`))}><Download /> ZIP</Button><Button size="sm" variant="ghost" onClick={() => void openOriginal(row.documentId)}>Original</Button><Button size="sm" variant="ghost" onClick={() => update({ source: row.documentId })}>Same source</Button></div>
       </article>)}</div>
     </section>

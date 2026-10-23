@@ -87,7 +87,7 @@ function OneFile({ r, requested, detailed }: { r: FileResult; requested: string[
         <div><dt className="text-muted-foreground">How text was read</dt><dd>{Object.keys(lineage.methodCounts).length ? Object.entries(lineage.methodCounts).map(([m, n]) => `${methodLabel(m)}: ${n} segments`).join("; ") : "No stored text"}</dd></div>
         <div><dt className="text-muted-foreground">Recorded reporting period</dt><dd>{lineage.document.reporting_period || "Not stated (document/upload dates are not substituted)"}</dd></div>
         <div><dt className="text-muted-foreground">Recorded document date</dt><dd>{lineage.document.document_date_raw || "Not stated"}</dd></div>
-        {isImage && <div className="sm:col-span-2"><dt className="text-muted-foreground">Image asset</dt><dd>Original image is stored and downloadable from the document list. No image or video creative is generated; only text read from the image is used.</dd></div>}
+        {isImage && <div className="sm:col-span-2"><dt className="text-muted-foreground">Image asset</dt><dd>Original image is stored and downloadable from the document list. Saved news creatives, when available, are separate draft artifacts under Outputs.</dd></div>}
       </dl>}
       <p className="text-xs text-muted-foreground">Text shown below is the saved reading with its locators. It was not re-read for this view.</p>
       <pre className="max-h-80 overflow-auto whitespace-pre-wrap border bg-muted/40 p-3 text-xs">{review?.body || "No stored extraction review."}</pre>
