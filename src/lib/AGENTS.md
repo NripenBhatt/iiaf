@@ -1,3 +1,4 @@
 - Company-only assistant shares agency retrieval/package helpers and knowledge.functions.ts search with institutional UI; caller RLS and membership/roles apply. No approval/import/certification tools; recorded periods are not valid-time and conflicts retain sources.
 - Assistant threads/messages use per-user/organization RLS; /conversation/$threadId shares /conversation access. Browser WAV dictation uses /api/transcribe; audio is never stored.
 - Structured readback uses paginated caller-RLS lineage, with derived cells/contact candidates and separate CSV/Excel sheets preserving IDs; derived contacts never imply persisted directory records or consent.
+- No-provider authored drafts use only unambiguous explicit event fields with per-field citations and channel limits; keep the staged engine separate from GeneratedOutput and persistence until the guarded contract extension is authorized.
