@@ -1517,6 +1517,10 @@ export type Database = {
         Args: { _doc: string; _org: string; _payload: Json; _version: string }
         Returns: boolean
       }
+      output_source_legacy: {
+        Args: { _doc: string; _org: string; _payload: Json; _version: string }
+        Returns: boolean
+      }
       process_master_import: {
         Args: { _rows: Json; _run: string }
         Returns: number
@@ -1595,6 +1599,7 @@ export type Database = {
         }
         Returns: undefined
       }
+      source_event_body: { Args: { _fields: Json }; Returns: string }
     }
     Enums: {
       app_role:

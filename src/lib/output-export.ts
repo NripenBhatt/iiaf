@@ -2,6 +2,7 @@
 import { Document, HeadingLevel, Packer, Paragraph, Table, TableRow, TableCell } from "docx";
 import JSZip from "jszip";
 import type { GeneratedOutput } from "./outputs.functions";
+import { savedPng } from "./artifact-download";
 
 const slug = (s: string) => s.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 60) || "output";
 export const outputFileBase = (o: Pick<GeneratedOutput, "type">, source: string) => `${slug(source.replace(/\.[^.]+$/, ""))}-${o.type}`;
@@ -17,7 +18,7 @@ export function outputCsv(o: GeneratedOutput) {
 }
 
 export function outputText(o: GeneratedOutput, source: string) {
-  return `${footer(o, source)}${catalogueText(o)}\n\n${o.title}\n\n${o.body}${tableText(o)}\n`;
+  return `${footer(o, source)}${catalogueText(o)}\n\n${o.title}\n\n${o.body}${tableText(o)}\n${o.authored ? `\n${o.authored.cautions.join("\n")}\n${o.authored.fields.map(f => `${f.role}: ${f.value}\n${f.citations.map(c => `${c.segmentId} · ${c.locatorKey} · ${c.raw}`).join("\n")}`).join("\n")}` : ""}`;
 }
 const catalogueText = (o: GeneratedOutput) => o.catalogue ? `\nCatalogue reference: ${o.catalogue.catalogueId ?? "local review"}; blueprint ${o.catalogue.contractId ?? "no exact contract"}; ${o.catalogue.support}. ${o.catalogue.reason}` : "";
 export async function outputDocx(o: GeneratedOutput, source: string) {
@@ -25,6 +26,7 @@ export async function outputDocx(o: GeneratedOutput, source: string) {
     new Paragraph({ text: o.title, heading: HeadingLevel.HEADING_1 }),
     new Paragraph({ text: `${footer(o, source)}${catalogueText(o)}`, style: "Caption" }),
     ...o.body.split(/\n/).map(l => new Paragraph(l)),
+    ...(o.authored ? [new Paragraph({text:"Field-level source citations",heading:HeadingLevel.HEADING_2}), ...o.authored.cautions.map(text=>new Paragraph(text)), ...o.authored.fields.map(f=>new Paragraph(`${f.role}: ${f.value}\n${f.citations.map(c=>`${c.segmentId} · ${c.locatorKey} · ${c.raw}`).join("\n")}`))] : []),
     ...(o.tables ?? []).flatMap(t => [new Paragraph({ text: t.name, heading: HeadingLevel.HEADING_2 }), new Table({ rows: [new TableRow({ children: ["Row / source", "Column / cell", "Value", "Raw / stored formula"].map(v => new TableCell({ children: [new Paragraph(v)] })) }), ...t.rows.flatMap(r => r.cells.map(c => new TableRow({ children: [`${r.row} · ${r.locator}`, `${c.column} · ${c.ref}`, c.value, `${c.raw}${c.formula ? ` · ${c.formula} (not executed)` : ""}`].map(v => new TableCell({ children: [new Paragraph(v)] })) }))) ] })]),
   ] }] });
   return Packer.toBlob(doc);
@@ -35,8 +37,9 @@ export async function outputsZip(list: GeneratedOutput[], source: string) {
     const base = outputFileBase(o, source);
     zip.file(`${base}.txt`, outputText(o, source));
     zip.file(`${base}.docx`, await outputDocx(o, source));
+    if (o.artifact) zip.file(`${base}.png`, await savedPng(o));
     if (o.tables?.length) zip.file(`${base}.csv`, outputCsv(o));
-    if (o.manifest) zip.file(`${base}.manifest.json`, JSON.stringify({ ...o.manifest, catalogue: o.catalogue ?? null, qualification: o.qualification ?? [], tables: o.tables ?? [], meeting: o.meeting ?? null }, null, 2));
+    if (o.manifest) zip.file(`${base}.manifest.json`, JSON.stringify({ ...o.manifest, catalogue: o.catalogue ?? null, qualification: o.qualification ?? [], tables: o.tables ?? [], meeting: o.meeting ?? null, authored:o.authored??null,artifact:o.artifact??null }, null, 2));
   }
   return zip.generateAsync({ type: "blob" });
 }

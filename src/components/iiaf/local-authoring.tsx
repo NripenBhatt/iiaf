@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { localDrafts, localDraftText, localDraftWord, localVisualZip, renderDraftImage } from "@/lib/local-artifacts";
 import { saveBlob } from "@/lib/package-export";
 import type { Lineage } from "@/lib/lineage.functions";
+import { SavedEventAuthoring } from "./saved-event-authoring";
 
 export function LocalAuthoring({ lineage }: { lineage: Lineage }) {
   const [error, setError] = useState(""); const [busy, setBusy] = useState<string | null>(null);
@@ -11,7 +12,7 @@ export function LocalAuthoring({ lineage }: { lineage: Lineage }) {
   async function download(key: string, task: () => Promise<Blob>, filename: string) {
     setBusy(key); setError(""); try { saveBlob(await task(), filename); } catch (e) { setError(e instanceof Error ? e.message : "The download could not be created."); } finally { setBusy(null); }
   }
-  return <section className="my-5 space-y-3" aria-label="Local authored drafts">
+  return <><SavedEventAuthoring lineage={lineage}/><section className="my-5 space-y-3" aria-label="Local authored drafts">
     <h3 className="font-semibold">Authored drafts · not saved</h3>
     <p className="text-xs text-muted-foreground">Human review required. These drafts are not saved outputs, approved mappings or released content. Saving requires separate approval of the output safeguards.</p>
     {error && <p role="alert" className="text-sm text-destructive">{error}</p>}
@@ -29,5 +30,5 @@ export function LocalAuthoring({ lineage }: { lineage: Lineage }) {
       </div>
     </article>)}</div>
     {busy && <p role="status" className="text-sm">Creating {busy.replace(/_/g, " ")} download…</p>}
-  </section>;
+  </section></>;
 }

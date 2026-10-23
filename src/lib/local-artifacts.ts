@@ -31,7 +31,7 @@ export async function localDraftWord(draft: LocalDraft) {
 }
 
 /** Canvas runs only on user action, with theme tokens and bounded source text. */
-export async function renderDraftImage(draft: LocalDraft, text = draft.body): Promise<Blob> {
+export async function renderDraftImage(draft: LocalDraft, text = draft.body, forPersistence = false): Promise<Blob> {
   await document.fonts.ready;
   const canvas = document.createElement("canvas"); canvas.width = 1080; canvas.height = 1080;
   const ctx = canvas.getContext("2d");
@@ -40,7 +40,7 @@ export async function renderDraftImage(draft: LocalDraft, text = draft.body): Pr
   const color = (token: string) => theme.getPropertyValue(token).trim();
   ctx.fillStyle = color("--card"); ctx.fillRect(0, 0, 1080, 1080);
   ctx.fillStyle = color("--primary"); ctx.fillRect(0, 0, 1080, 16);
-  ctx.font = "bold 24px sans-serif"; ctx.fillText(`IIAF · ${draft.classification} · UNSAVED DRAFT`, 60, 75);
+  ctx.font = "bold 24px sans-serif"; ctx.fillText(`IIAF · ${draft.classification} · ${forPersistence ? "REVIEW DRAFT" : "UNSAVED DRAFT"}`, 60, 75);
   const wrap = (value: string, size: number, top: number, maxLines: number) => {
     ctx.font = `${size}px sans-serif`; let y = top; let count = 0;
     for (const paragraph of value.split(/\n+/)) {
@@ -58,7 +58,7 @@ export async function renderDraftImage(draft: LocalDraft, text = draft.body): Pr
   const end = wrap(text, 30, titleEnd + 30, 12);
   if (end > 850) throw new Error("Content does not fit; no truncated image was created.");
   ctx.fillStyle = color("--muted-foreground");
-  wrap("Human review required · Not approved for release", 22, 930, 1);
+  wrap(forPersistence ? "Announced event · OCR review required · Date/weekday conflict" : "Human review required · Not approved for release", 22, 930, 1);
   wrap(`${draft.catalogueId} · Source citations in companion manifest`, 22, 975, 1);
   return new Promise((resolve, reject) => canvas.toBlob(blob => blob ? resolve(blob) : reject(new Error("Image encoding failed.")), "image/png"));
 }
