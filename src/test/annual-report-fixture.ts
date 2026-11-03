@@ -20,6 +20,7 @@ export const annualDemoText=[
  'Strategic Priorities: DEMO council proposed a laboratory scheduling review for the next reporting period; not an approved action',
  'Comparison Period: 2025', 'Comparison Definition: institution-wide unique enrolled students; unchanged headcount scope',
  'Current Value: 200', 'Previous Value: 180',
+ 'Current Period: 2026', 'Comparison Scope: DEMO institution-wide unique enrolled students; both periods use same register definition',
  'Indicator: Placement rate', 'Reporting Period: 2026', 'Numerator: 20', 'Denominator: 40',
  'Indicator Scope: DEMO Computing unique eligible student cohort; offers excluded',
  'Methodology: count distinct placed student IDs divided by distinct eligible student IDs',
