@@ -6,3 +6,4 @@
 
 - Selected article/social catalogue IDs dispatch through the cited event generator before saving in the existing output store; dispatcher-version keys prevent extraction-only cache reuse after handler changes.
 - Versioned catalogue drafts preserve source-event-1 compatibility and use append-only, caller-authorized save attestations; separate channel prose and manual revisions remain unverified drafts, never approved facts, mappings or release.
+- Catalogue retrieval is category-aware: each handler declares a source category (event/meeting/placement/contacts/institution/research/evidence/analytics/general) and detectCategories must find record-like evidence, not keyword echoes; outputs whose category is absent are blocked with named missing inputs, never padded with generic text.

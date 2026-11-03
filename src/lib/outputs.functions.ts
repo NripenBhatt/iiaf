@@ -104,7 +104,7 @@ export const improveOutputWriting=createServerFn({method:"POST"}).middleware([re
    if(!doc)throw new Error("Source not accessible.");
    const {data:may}=await context.supabase.rpc("may_upload",{_org:doc.organization_id});if(!may)throw new Error("Your role cannot author outputs.");
    const set=stored.parse(row.outputs),output=set.outputs.find(o=>o.type===data.type);
-   if(!output?.draft||!["news_article","newsletter","linkedin_article","annual_report","department_brochure"].includes(output.type))throw new Error("This output does not use long-form AI writing.");
+   if(!output?.draft||!["news_article","newsletter","linkedin_article","annual_report","department_brochure","event_publicity","social_calendar"].includes(output.type))throw new Error("This output does not use long-form AI writing.");
    const source=await latestSource(context.supabase,row.document_id);if(!source||source.job.id!==output.manifest?.jobId)throw new Error("Source changed; generate a current draft before writing.");
    const key=process.env["LOVABLE_API_KEY"];if(!key)throw new Error("Lovable AI server configuration is missing; no call was made.");
    const written=await writeCatalogueDraft(output,key);
