@@ -33,7 +33,7 @@ export type AnnualRate = {label:string;value:string;numerator:number;denominator
 export function annualRates(lines:SourceLine[],period:string|null):AnnualRate[]{
  if(!period)return [];
  const records:Map<string,AnnualField[]>[]=[];let block:SourceLine[]=[];
- for(const l of lines){if(/^Indicator:\s*/i.test(l.content)&&block.some(v=>/^Indicator:\s*/i.test(v.content))){records.push(annualFields(block));block=[];}block.push(l);}
+ for(const l of lines){if(/^Indicator:\s*/i.test(l.content)){if(block.length)records.push(annualFields(block));block=[l];}else if(block.length)block.push(l);}
  if(block.some(v=>/^Indicator:\s*/i.test(v.content)))records.push(annualFields(block));
  // Structured indicator rows carry their own reporting scope and exact headers.
  const tables=new Map<string,SourceLine[]>();for(const l of lines){const p=l.locator as {cells?:unknown[];sheet?:string;table?:number};if(p?.cells){const key=JSON.stringify([p.sheet??'',p.table??0]);tables.set(key,[...(tables.get(key)??[]),l]);}}
@@ -63,7 +63,8 @@ const clean=(s:string)=>s.trim().replace(/[.]+$/,'');
 export function annualReport(lines:SourceLine[],period:string|null){
  const a=annualEvidence(lines,period);const institution=a.usable('Institution Name')[0]?.value??'Institution not identified';
  const title=a.status==='READY'?'Annual Report — Evidence-supported Review Draft':'Annual Report — Partial Draft';
- const para=(k:string)=>a.usable(k).map(v=>`${k}: ${clean(v.value)}. [${v.locator}]`).join('\n\n');
+ const leads:Record<string,string>={'Institution Name':'The reporting institution is','History':'The institutional history records','Mission':'The stated mission is','Governance':'The governance record describes','Leadership':'Institutional administration is recorded as','Academic Activities':'During the reporting period, the academic record describes','Programmes':'The institution reports the following academic provision:','Student Enrolment':'The source records an enrolment of','Student Progression':'The progression record states','Faculty':'The source records a faculty headcount of','Research':'Research activity is documented as','Outreach':'The community engagement record describes','Placements':'The placement record states','Quality Assurance':'The internal quality record describes','Infrastructure':'The inventory records','Financial Resources':'The resource utilisation record states','Indicators':'The recorded quantitative indicators are','Achievements':'The milestone register records','Challenges':'The documented improvement issue is','Strategic Priorities':'For the next reporting period, the source proposes'};
+ const para=(k:string)=>a.usable(k).map(v=>`${leads[k]??`${k} recorded in the source:`} ${clean(v.value)}. [${v.locator}]`).join('\n\n');
  const summary=[`This annual report concerns ${institution} for ${period??'a reporting period not yet confirmed'}.`,...['Academic Activities','Student Enrolment','Faculty','Research','Achievements'].flatMap(k=>a.usable(k).length?[para(k)]:[])].join('\n\n');
  const comparison=a.usable('Comparison Period').length===1&&a.usable('Comparison Definition').length===1&&a.usable('Current Value').length===1&&a.usable('Previous Value').length===1?a.usable('Comparison Period')[0]:undefined;
  const current=Number(a.usable('Current Value')[0]?.value),previous=Number(a.usable('Previous Value')[0]?.value);

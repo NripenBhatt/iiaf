@@ -1,3 +1,4 @@
+// @vitest-environment node
 import {describe,it,expect} from 'vitest';
 import {annualEvidence,annualRates,annualReport} from '@/lib/annual-report';
 import {generateCatalogue} from '@/lib/catalogue-handlers';
