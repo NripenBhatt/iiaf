@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { getLineage } from "@/lib/lineage.functions";
 import { getOutputOpportunities } from "@/lib/output-opportunities.functions";
-import { generateOutputs } from "@/lib/outputs.functions";
+import { getOutputReadiness, generateOutputs } from "@/lib/outputs.functions";
 import { consolidatedReview, mappingCards, type MapStatus } from "@/lib/destination-map";
 import { outputCsv, outputDocx, outputFileBase, outputText, outputsZip } from "@/lib/output-export";
 import { saveBlob } from "@/lib/package-export";
@@ -38,6 +38,8 @@ function OneFile({ r, requested, detailed }: { r: FileResult; requested: string[
   const read = useServerFn(getLineage);
   const discover = useServerFn(getOutputOpportunities);
   const generate = useServerFn(generateOutputs);
+  const readReadiness = useServerFn(getOutputReadiness);
+  const readiness = useQuery({queryKey:["output-readiness",r.documentId,requested],queryFn:()=>readReadiness({data:{documentId:r.documentId,requested}})});
   const discovery = useQuery({ queryKey: ["output-opportunities", r.documentId, requested, set?.createdAt], queryFn: () => discover({ data: { documentId: r.documentId, requested } }) });
   const { data: lineage, error } = useQuery({ queryKey: ["lineage", r.documentId, set?.createdAt], queryFn: () => read({ data: { documentId: r.documentId } }) });
   const cards = mappingCards(set, lineage ?? null, requested);
@@ -63,6 +65,15 @@ function OneFile({ r, requested, detailed }: { r: FileResult; requested: string[
       <div className="flex flex-wrap items-center gap-3"><h3 className="font-semibold">Saved selections · {requested.join(", ")}</h3><Button size="sm" disabled={generating} onClick={() => void generateDraft()}>{generating ? "Generating and saving…" : "Generate selected outputs"}</Button></div>
       {selectionOutcomes(requested, set?.outputs ?? []).map(o => <p key={o.catalogueId} className="text-sm"><strong>{o.catalogueId} · {generationError ? "Failed" : o.status === "generated_saved" ? "Generated and saved" : o.status === "needs_source_information" ? "Needs source information" : "Not supported"}</strong> — {generationError || o.reason}</p>)}
     </section>}
+    <section className="mt-4 space-y-3" aria-label="Output readiness and alternatives">
+      <h3 className="font-semibold">Source readiness · requested deliverables</h3>
+      {readiness.error&&<p role="alert" className="text-sm text-destructive">{readiness.error.message}</p>}
+      {Object.values(readiness.data??{}).filter(a=>requested.includes(a.catalogueId)||["OUT-014","OUT-015","OUT-029"].includes(a.catalogueId)).map(a=><div key={a.catalogueId} className="border-b py-3 text-sm">
+        <strong>{a.catalogueId} · {a.status}</strong><p className="mt-1">{a.reasons.join(" ")}</p>
+        <details className="mt-2"><summary>Available information, gaps and verification</summary><p>Available: {a.available.join(", ")||"None suitable"}</p><p>Missing: {a.missing.join("; ")||"None identified by bounded source-field checks"}</p><p>{a.verification.join(" ")}</p><p>Release: not authorized</p><p>Next action: {a.nextAction}</p></details>
+        {(a.canLimit||a.alternative)&&<Button className="mt-2" variant="outline" size="sm" disabled={generating} onClick={()=>{setGenerating(true);setGenerationError("");void generate({data:{documentId:r.documentId,requested:[a.catalogueId],choices:{[a.catalogueId]:a.alternative?"alternative":"limited"}}}).then(setGeneratedSet).catch(e=>setGenerationError(e instanceof Error?e.message:"Draft could not be saved.")).finally(()=>setGenerating(false));}}>{a.alternative?`Generate alternative · ${a.alternative}`:"Generate explicitly limited draft"}</Button>}
+      </div>)}
+    </section>
     <section className="mt-4 space-y-3" aria-label="Automatic output opportunities">
       <h3 className="font-semibold">Automatic output opportunities</h3>
       {discovery.isPending && <p className="text-sm text-muted-foreground">Reading saved source qualifications…</p>}
