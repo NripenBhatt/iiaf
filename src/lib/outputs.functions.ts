@@ -7,6 +7,7 @@ export type { GeneratedOutput } from "./output-contract";
 import type { GeneratedOutput } from "./output-contract";
 import { confirmedCacheWinner, storedOutputSetSchema } from "./output-cache";
 import { selectedDrafts, selectionKeySuffix, selectionOutcomes } from "./output-selection";
+import { eventContent, selectedEventOutputs } from "./source-authored";
 
 export type OutputSet = { outputs: GeneratedOutput[]; skipped: { name: string; reason: string }[]; limitations: string[]; sourceVersion: string; segmentCount: number; createdAt: string; cached: boolean; setId?: string; outcomes?: ReturnType<typeof selectionOutcomes> };
 
@@ -46,7 +47,9 @@ export const generateOutputs = createServerFn({ method: "POST" }).middleware([re
     const source = lines.map(l => `[${l.locator_key}] ${l.content}`).join("\n");
     const { data: organization } = await context.supabase.from("organizations").select("name").eq("id", doc.organization_id).single();
     const classification = /synthetic|demo|fictional|dummy|काल्पनिक|नमूना/i.test(`${organization?.name ?? ""} ${doc.original_filename} ${doc.declared_purpose} ${source}`) ? "DEMO" as const : "unverified" as const;
-    const hash = await sha256(`${CONTRACT_VERSION}\n${job.id}\n${classification}\n${source}\n${JSON.stringify(lines.map(l => l.locator))}${selectionKeySuffix(data.requested)}`);
+    const authored = eventContent(lines, sourceResult.segmentIds);
+    const authoredSelection = authored && data.requested.some(id => ["OUT-008", "OUT-009"].includes(id));
+    const hash = await sha256(`${CONTRACT_VERSION}\n${job.id}\n${classification}\n${source}\n${JSON.stringify(lines.map(l => l.locator))}${selectionKeySuffix(data.requested)}${authoredSelection ? "\nsource-event-dispatch-1" : ""}`);
     const { data: cached, error: cacheError } = await context.supabase.from("document_outputs").select("id,outputs,source_version,created_at").eq("document_id", doc.id).eq("source_hash", hash).maybeSingle();
     if (cacheError) throw new Error("Saved output cache could not be read.");
     if (cached) { const set = stored.parse(cached.outputs); return { ...set, setId: cached.id, outcomes: selectionOutcomes(data.requested, set.outputs), sourceVersion: cached.source_version, createdAt: cached.created_at, cached: true }; }
@@ -55,7 +58,9 @@ export const generateOutputs = createServerFn({ method: "POST" }).middleware([re
     const { data: previous, error: previousError } = await context.supabase.from("document_outputs").select("outputs").eq("document_id", doc.id).eq("source_hash", originalTextHash).order("created_at", { ascending: false }).limit(1).maybeSingle();
     if (previousError) throw new Error("Existing outputs could not be read.");
     const repaired = repairOutputSet(previous ? stored.parse(previous.outputs).outputs : [], lines, { documentId: doc.id, jobId: job.id, originalHash: doc.sha256_hash, parserVersion: version, contractVersion: CONTRACT_VERSION, classification, approval: "draft", locators: lines.map(l => l.locator_key), verifiedCoverage: false });
-    const set = { ...repaired, outputs: selectedDrafts(repaired.outputs, data.requested) };
+    const generated = authored ? selectedEventOutputs(authored, repaired.manifest, data.requested) : [];
+    trace("eventContent -> selectedEventOutputs", { status: generated.length ? "PASS" : "NOT REACHED", fields: authored?.fields.map(f => ({ role: f.role, citationCount: f.citations.length })), outputs: generated.map(o => ({ type: o.type, catalogueId: o.catalogue.catalogueId, bodyCharacters: o.body.length })) });
+    const set = { ...repaired, outputs: [...selectedDrafts(repaired.outputs, data.requested), ...generated] };
     trace("repairOutputSet -> selectedDrafts", { status: "PASS", outputs: set.outputs.map(o => ({ type: o.type, catalogueId: o.catalogue?.catalogueId, bodyCharacters: o.body.length })), outcomes: selectionOutcomes(data.requested, set.outputs) });
     const { data: saved, error } = await context.supabase.from("document_outputs").upsert({ organization_id: doc.organization_id, document_id: doc.id, source_version: version, source_hash: hash, model: "none:stored-source-contract", outputs: JSON.parse(JSON.stringify(set)) }, { onConflict: "document_id,source_hash", ignoreDuplicates: true }).select("id,created_at").maybeSingle();
     trace("document_outputs.upsert", { status: error ? "FAILED" : "PASS", response: saved, error: error ? { message: error.message, code: error.code } : null });

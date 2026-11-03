@@ -55,3 +55,17 @@ export function authoredOutputs(content: AuthoredContent, manifest: SourceManife
   const common = { title, body: authoredBody(content), manifest, authored: content, catalogue: { catalogueId: "OUT-008", contractId: null, support: "stored-draft-only" as const, reason: "Source-cited authored event draft; not an approved framework mapping." } };
   return { ...common, type: "news_article", name: "News article", contract: { template: "source-event-1", mimeType: "text/markdown" as const, dimensions: null, approver: null, release: "not_authorized" as const } };
 }
+
+/** Existing catalogue channels, using the same source-cited body validated by storage. */
+export function selectedEventOutputs(content: AuthoredContent, manifest: SourceManifest, requested: string[]) {
+  const outputs = [];
+  if (requested.includes("OUT-008")) outputs.push(authoredOutputs(content, manifest));
+  if (requested.includes("OUT-009")) {
+    const concise = { ...content, fields: content.fields.filter(f => ["title", "subject", "date"].includes(f.role)) };
+    if (concise.fields.length >= 2) {
+      const article = authoredOutputs(concise, manifest);
+      if (Array.from(article.body).length <= 800) outputs.push({ ...article, type: "facebook", name: "Facebook post", catalogue: { ...article.catalogue, catalogueId: "OUT-009" } });
+    }
+  }
+  return outputs;
+}
