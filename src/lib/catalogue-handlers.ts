@@ -1,11 +1,9 @@
-import { z } from "zod";
 import reference from "@/data/output-reference-catalogue.json";
 import { eventContent } from "./source-authored";
 import { publicationCopy } from "./publication-copy";
 import { sourceTables, type GeneratedOutput, type SourceLine, type SourceManifest } from "./output-contract";
 import { structuredMeetings } from "./meeting-contract";
 
-export const catalogueDraftSchema = z.object({ version: z.literal("catalogue-draft-1"), handler: z.string(), revision: z.number().int().positive(), parentSetId: z.string().uuid().nullable(), edited: z.boolean(), missing: z.string().array(), cautions: z.string().array().min(1), citations: z.object({ segmentId: z.string().uuid(), locatorKey: z.string(), raw: z.string() }).array().min(1) });
 export type HandlerContext = { lines: SourceLine[]; segmentIds: string[]; manifest: SourceManifest; company: boolean; period: string | null };
 type Definition = { type: string; signal: RegExp; sections: string[]; missing: string[] };
 /** Each catalogue handler has its own source category, structure and unmet input gates. */

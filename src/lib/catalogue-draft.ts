@@ -1,0 +1,2 @@
+import { z } from "zod";
+export const catalogueDraftSchema = z.object({ version: z.literal("catalogue-draft-1"), handler: z.string(), revision: z.number().int().positive(), parentSetId: z.string().uuid().nullable(), edited: z.boolean(), missing: z.string().array(), cautions: z.string().array().min(1), citations: z.object({ segmentId: z.string().uuid(), locatorKey: z.string(), raw: z.string() }).array().min(1) });
