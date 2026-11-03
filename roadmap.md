@@ -1,5 +1,7 @@
 # Phase 1 security and persistence
 ## Existing 30-output completion — 3 November 2026
+- [ ] Final directive: implement thirty output-specific source-grounded handlers, versioned backward-compatible persistence and rollback, per-output revision/reopen, saved visual previews and exports. Minimum additive migration and economical required AI integration now authorized; no permissions widening or Phase 4.
+- [ ] Final directive acceptance: exercise available owner-session saved sources, verify saved/reopened/downloaded outputs and image bytes; explicitly retain missing-source and company-access cases, quality/format limitations and W1 pending results.
 - [x] Batch 1: improved local article/website/LinkedIn/Facebook/Instagram/X writing using cited values and contextual saved poster passages; preserved saved source-event-1 bodies and existing OUT-008/009 dispatch. 16 focused tests passed; automatic build OK 05:58:55 UTC. No hosted writes or paid calls.
 - [ ] Changed draft/download live acceptance — blocked: injected signed-in session could open Institutional Information but had no accessible matching saved poster. Do not choose another identity or reupload; assigned poster-owning account needed. Thirty-entry matrix delivered; local quality changes are not claimed saved/reopened.
 - [ ] Next batches: remaining catalogue-specific handlers and formats; exact protected contract approval and source/governance inputs required before persistence extensions. No catalogue expansion, UI redesign, provider calls or Phase 4.
