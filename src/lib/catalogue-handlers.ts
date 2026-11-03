@@ -43,7 +43,8 @@ export const CATALOGUE_HANDLERS: Record<string, Definition> = {
 export function catalogueEligible(id: string, c: HandlerContext) {
   const entry=reference.outputs.find(e=>e.Output_ID===id); const handler=CATALOGUE_HANDLERS[id];
   if(!entry||!handler) return false;
-  return (!/Company|internal/i.test(entry.Default_Access_Class)||c.company)&&c.lines.some(l=>handler.signal.test(l.content));
+  const eventIds=["OUT-008","OUT-009","OUT-010","OUT-011","OUT-012","OUT-013","OUT-014","OUT-026","OUT-029"];
+  return (!/Company|internal/i.test(entry.Default_Access_Class)||c.company)&&(c.lines.some(l=>handler.signal.test(l.content))||(eventIds.includes(id)&&!!eventContent(c.lines,c.segmentIds)));
 }
 
 export function generateCatalogue(c: HandlerContext, requested: string[]) {
