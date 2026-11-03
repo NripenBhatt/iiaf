@@ -21,7 +21,7 @@ describe("saved selections and existing meeting generation", () => {
     const outputs = selectedDrafts(repairOutputSet([], lines, manifest).outputs, ["OUT-007"]);
     expect(outputs.map(o => o.type)).toEqual(["extraction_review", "structured_tables", "action_items"]);
     expect(selectedDrafts(outputs, ["OUT-008"]).some(o => o.type === "action_items")).toBe(false);
-    expect(selectionOutcomes(["OUT-007", "OUT-008"], outputs).map(o => o.status)).toEqual(["generated_saved", "not_supported"]);
+    expect(selectionOutcomes(["OUT-007", "OUT-008"], outputs).map(o => o.status)).toEqual(["generated_saved", "needs_source_information"]);
   });
   it("different selections cannot reuse an unrelated saved output set", () => {
     expect(selectionKeySuffix(["OUT-007", "OUT-005", "OUT-007"])).toBe(selectionKeySuffix(["OUT-005", "OUT-007"]));
