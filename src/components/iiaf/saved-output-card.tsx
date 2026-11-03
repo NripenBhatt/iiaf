@@ -12,7 +12,7 @@ import { OutputPreview } from "./output-preview";
 import { Status } from "./ui";
 import type { QualityResult } from "@/lib/output-quality";
 
-export function SavedOutputCard({output:o,setId,source,onSaved,quality}:{output:GeneratedOutput;setId:string|undefined;source:string;onSaved:(set:OutputSet)=>void;quality?:QualityResult}){
+export function SavedOutputCard({output:o,setId,source,onSaved,quality}:{output:GeneratedOutput;setId:string|undefined;source:string;onSaved:(set:OutputSet)=>void;quality?:QualityResult|undefined}){
   const revise=useServerFn(reviseOutput);const [editing,setEditing]=useState(false);const [body,setBody]=useState(o.body);const [error,setError]=useState("");const [busy,setBusy]=useState(false);const [url,setUrl]=useState("");
   const improve=useServerFn(improveOutputWriting);
   useEffect(()=>{let active=true;let objectUrl="";if(o.artifact)void savedPng(o).then(blob=>{objectUrl=URL.createObjectURL(blob);if(active)setUrl(objectUrl);}).catch(e=>setError(String(e)));return()=>{active=false;if(objectUrl)URL.revokeObjectURL(objectUrl);};},[o.artifact?.key]);
