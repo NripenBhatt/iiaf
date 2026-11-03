@@ -3,3 +3,5 @@
 - Structured readback uses paginated caller-RLS lineage, with derived cells/contact candidates and separate CSV/Excel sheets preserving IDs; derived contacts never imply persisted directory records or consent.
 - Authored event outputs share document_outputs with the preserved legacy branch; source-event citations and deterministic bodies are checked against the newest job, and immutable PNGs use tenant-private source/job/hash paths. Browser rendering has no provider fees; draft release and coverage remain blocked.
 - Saved batch selections are restored on document readback and passed to generation; selection-specific opaque keys prevent unrelated set reuse, while supported meeting drafts remain within the existing protected contracts.
+
+- Selected article/social catalogue IDs dispatch through the cited event generator before saving in the existing output store; dispatcher-version keys prevent extraction-only cache reuse after handler changes.

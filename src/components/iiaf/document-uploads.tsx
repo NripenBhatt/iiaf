@@ -152,7 +152,7 @@ export function DocumentUploads({ module, label }: { module: UploadModule; label
     </div> : data && <p className="border-l-4 border-border bg-muted p-3 text-sm">Your role in this workspace can view documents but cannot upload.</p>}
 
     {!data?.canUpload && stage && <p role="status" className="text-sm text-muted-foreground">{stage}</p>}
-    {results && <UploadResults results={results} requested={savedSelection?.requested ?? requested} instruction={savedSelection?.instruction ?? instruction.trim()} />}
+    {results && <UploadResults results={results} requested={requested.length ? requested : savedSelection?.requested ?? []} instruction={savedSelection?.instruction ?? instruction.trim()} />}
     {error ? <p role="alert" className="text-sm text-destructive">Documents could not be loaded.</p> : isLoading ? <p className="text-sm text-muted-foreground">Loading documents…</p> :
       <div className="border bg-card"><h2 className="border-b px-5 py-3 font-semibold">Your {label.toLowerCase()}</h2>
         <ListFilterControls filters={filters} update={update} total={isFetching ? undefined : data?.total} categories={categories.map(c => ({ value: c.code, label: c.name }))} types={module === "evidence" ? [] : catalogue[module].documentTypes.map(t => ({ value: t.id, label: t.name }))} />
