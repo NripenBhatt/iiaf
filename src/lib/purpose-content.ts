@@ -1,5 +1,6 @@
 import type { SourceLine } from './output-contract';
 import { sourceFields } from './output-readiness';
+import { annualReport } from './annual-report';
 
 /** Rendering never promotes source assertions to verified institutional facts. */
 const values = (lines: SourceLine[], key: string) => [...new Set(sourceFields(lines).get(key.toLowerCase()) ?? [])];
@@ -116,22 +117,7 @@ export function purposeBody(id: string, lines: SourceLine[], period: string | nu
     section('Duplicates and verification', 'Aggregates do not demonstrate unique-student verification. Reconcile student IDs, offer/placement status and same-period eligibility before institutional use. No completion or placement outcome is inferred from a recruiter list.'),
     section('Recommended follow-up', 'Ask the placement unit to validate the cohort and reconcile duplicates; obtain internship duration/status and attributable offer records. This is a review action, not an approved institutional decision.'),
   ]);
-  if (id === 'OUT-015') return join([
-    '# Annual institutional report — source-supported review draft',
-    section('Executive overview', `${scope}\n${statement(lines, 'Institution Name', 'The reporting institution is')} ${statement(lines, 'Academic Activities', 'Recorded academic work includes')} This report organizes supplied records; it does not certify annual coverage.`),
-    section('Reporting scope', scope),
-    section('Institutional overview', list(lines, ['Institution Name', 'History', 'Mission'])),
-    section('Governance and administration', list(lines, ['Governance', 'Leadership'])),
-    section('Academic activities', statement(lines, 'Academic Activities', 'During the selected source period, the academic record describes')),
-    section('Students and human resources', list(lines, ['Student Enrolment', 'Faculty'])),
-    section('Research and outreach', list(lines, ['Research', 'Outreach'])),
-    section('Placement and outcomes', statement(lines, 'Placements', 'The recorded placement information is')),
-    section('Quality assurance', statement(lines, 'Quality Assurance', 'The source describes the following quality work:')),
-    section('Infrastructure and financial resources', list(lines, ['Infrastructure', 'Financial Resources'])),
-    section('Indicators and comparisons', list(lines, ['Indicators', 'Comparisons']) + '\nNo year-on-year percentage or chart is created without aligned definitions, periods and numeric records.'),
-    section('Challenges and improvement priorities', list(lines, ['Challenges', 'Strategic Priorities']) + '\nProposed follow-up: ask responsible units to confirm scope, attribution and supporting records; these recommendations are not approved actions.'),
-    section('Evidence gaps and conclusion', 'The supplied institutional record is not proof of a complete annual evidence base. Confirm every chapter’s period and source coverage, financial authority, student progression and quantitative definitions before approving the report.'),
-  ]);
+  if (id === 'OUT-015') return annualReport(lines,period).body;
   if (id === 'OUT-017') return join([
     '# Requirement-to-evidence gap matrix — not compliance certification',
     section('Methodology version', list(lines, ['Agency', 'Framework Version']) + '\nSource-recorded framework labels are not independently authenticated official definitions.'),
