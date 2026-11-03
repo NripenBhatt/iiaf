@@ -60,7 +60,8 @@ export type PlatformSize = keyof typeof PLATFORM_SIZES;
 export async function renderDraftImage(draft: LocalDraft, text = draft.body, forPersistence = false, size: PlatformSize = "square"): Promise<Blob> {
   await document.fonts.ready;
   const { width, height } = PLATFORM_SIZES[size];
-  const scale = width / 1080;
+  // Typography scales with the smaller dimension so wide formats keep their body budget.
+  const scale = Math.min(width, height) / 1080;
   const canvas = document.createElement("canvas"); canvas.width = width; canvas.height = height;
   const ctx = canvas.getContext("2d");
   if (!ctx) throw new Error("Image rendering is unavailable in this browser.");
