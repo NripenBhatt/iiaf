@@ -48,36 +48,85 @@ export async function localDraftWord(draft: LocalDraft) {
   return Packer.toBlob(new Document({ sections: [{ children: [new Paragraph({ text: draft.title, heading: HeadingLevel.HEADING_1 }), ...localDraftText(draft).split("\n").map(text => new Paragraph(text))] }] }));
 }
 
-/** Canvas runs only on user action, with theme tokens and bounded source text. */
-export async function renderDraftImage(draft: LocalDraft, text = draft.body, forPersistence = false): Promise<Blob> {
+/** Platform canvas sizes for local (unsaved) downloads. The persisted artifact
+ * contract remains locked to 1080 × 1080 by the server-side validator. */
+export const PLATFORM_SIZES = { square: { width: 1080, height: 1080 }, portrait: { width: 1080, height: 1350 }, landscape: { width: 1920, height: 1080 }, story: { width: 1080, height: 1920 } } as const;
+export type PlatformSize = keyof typeof PLATFORM_SIZES;
+
+/** Canvas runs only on user action, with theme tokens and bounded source text.
+ * Professional layout: branding band, kicker, title hierarchy, accent rule,
+ * body block and a review footer. No logos or photographs are invented; the
+ * wordmark is typographic text only. */
+export async function renderDraftImage(draft: LocalDraft, text = draft.body, forPersistence = false, size: PlatformSize = "square"): Promise<Blob> {
   await document.fonts.ready;
-  const canvas = document.createElement("canvas"); canvas.width = 1080; canvas.height = 1080;
+  const { width, height } = PLATFORM_SIZES[size];
+  const scale = width / 1080;
+  const canvas = document.createElement("canvas"); canvas.width = width; canvas.height = height;
   const ctx = canvas.getContext("2d");
   if (!ctx) throw new Error("Image rendering is unavailable in this browser.");
   const theme = getComputedStyle(document.documentElement);
-  const color = (token: string) => theme.getPropertyValue(token).trim();
-  ctx.fillStyle = color("--card"); ctx.fillRect(0, 0, 1080, 1080);
-  ctx.fillStyle = color("--primary"); ctx.fillRect(0, 0, 1080, 16);
-  ctx.font = "bold 24px sans-serif"; ctx.fillText(`IIAF · ${draft.classification} · ${forPersistence ? "REVIEW DRAFT" : "UNSAVED DRAFT"}`, 60, 75);
-  const wrap = (value: string, size: number, top: number, maxLines: number) => {
-    ctx.font = `${size}px sans-serif`; let y = top; let count = 0;
+  const color = (token: string) => theme.getPropertyValue(token).trim() || undefined;
+  const fontFamily = color("--font-sans") ?? "sans-serif";
+  const margin = 72 * scale;
+  const contentWidth = width - margin * 2;
+  const background = color("--card") ?? "#ffffff";
+  const primary = color("--primary") ?? "#1f3a5f";
+  const foreground = color("--foreground") ?? "#1a1a1a";
+  const muted = color("--muted-foreground") ?? "#5a5a5a";
+
+  ctx.fillStyle = background; ctx.fillRect(0, 0, width, height);
+  // Branding band: typographic wordmark only — no invented logo.
+  const bandHeight = 132 * scale;
+  ctx.fillStyle = primary; ctx.fillRect(0, 0, width, bandHeight);
+  ctx.fillStyle = background;
+  ctx.font = `bold ${30 * scale}px ${fontFamily}`;
+  ctx.fillText("IIAF", margin, 54 * scale);
+  ctx.font = `${22 * scale}px ${fontFamily}`;
+  ctx.fillText(`${draft.classification} · ${forPersistence ? "REVIEW DRAFT" : "UNSAVED DRAFT"} · ${draft.catalogueId}`, margin, 96 * scale);
+
+  const wrap = (value: string, sizePx: number, top: number, maxLines: number, weight = "") => {
+    ctx.font = `${weight ? `${weight} ` : ""}${sizePx}px ${fontFamily}`; let y = top; let count = 0;
     for (const paragraph of value.split(/\n+/)) {
       let line = "";
       for (const word of paragraph.split(/\s+/)) {
-        if (ctx.measureText(word).width > 950) throw new Error("A source value is too wide for this image; use the text download.");
+        if (ctx.measureText(word).width > contentWidth) throw new Error("A source value is too wide for this image; use the text download.");
         const next = line ? `${line} ${word}` : word;
-        if (ctx.measureText(next).width > 950) { if (++count > maxLines) throw new Error("Content does not fit; no truncated image was created."); ctx.fillText(line, 60, y); y += size * 1.45; line = word; } else line = next;
+        if (ctx.measureText(next).width > contentWidth) { if (++count > maxLines) throw new Error("Content does not fit; no truncated image was created."); ctx.fillText(line, margin, y); y += sizePx * 1.45; line = word; } else line = next;
       }
-      if (line) { if (++count > maxLines) throw new Error("Content does not fit; no truncated image was created."); ctx.fillText(line, 60, y); y += size * 1.45; }
+      if (line) { if (++count > maxLines) throw new Error("Content does not fit; no truncated image was created."); ctx.fillText(line, margin, y); y += sizePx * 1.45; }
     }
     return y;
   };
-  ctx.fillStyle = color("--foreground"); const titleEnd = wrap(draft.title, 42, 155, 3);
-  const end = wrap(text, 30, titleEnd + 30, 12);
-  if (end > 850) throw new Error("Content does not fit; no truncated image was created.");
-  ctx.fillStyle = color("--muted-foreground");
-  wrap(forPersistence ? "Announced event · OCR review required · Date/weekday conflict" : "Human review required · Not approved for release", 22, 930, 1);
-  wrap(`${draft.catalogueId} · Source citations in companion manifest`, 22, 975, 1);
+
+  // Kicker + title hierarchy with automatic size step-down.
+  ctx.fillStyle = primary;
+  ctx.font = `600 ${22 * scale}px ${fontFamily}`;
+  ctx.fillText("SOURCE-BACKED ANNOUNCEMENT", margin, bandHeight + 64 * scale);
+  ctx.fillStyle = foreground;
+  let titleSize = 58 * scale;
+  let titleEnd = 0;
+  for (const candidate of [58, 50, 42]) {
+    titleSize = candidate * scale;
+    ctx.font = `bold ${titleSize}px ${fontFamily}`;
+    const lines = draft.title.split(/\s+/).reduce<string[]>((acc, word) => { const last = acc[acc.length - 1] ?? ""; const next = last ? `${last} ${word}` : word; if (ctx.measureText(next).width > contentWidth && last) acc.push(word); else acc[acc.length - 1] = next; return acc; }, [""]);
+    if (lines.length <= 3 || candidate === 42) { titleEnd = wrap(draft.title, titleSize, bandHeight + 140 * scale, 3, "bold"); break; }
+  }
+  // Accent rule separating title from body.
+  ctx.fillStyle = primary; ctx.fillRect(margin, titleEnd + 8 * scale, 120 * scale, 6 * scale);
+  ctx.fillStyle = foreground;
+  const bodyTop = titleEnd + 56 * scale;
+  const footerReserve = 170 * scale;
+  const maxBodyLines = Math.max(4, Math.floor((height - bodyTop - footerReserve) / (30 * scale * 1.45)));
+  const end = wrap(text, 30 * scale, bodyTop, maxBodyLines);
+  if (end > height - footerReserve) throw new Error("Content does not fit; no truncated image was created.");
+
+  // Footer band with review ribbon and lineage reference.
+  ctx.fillStyle = primary; ctx.fillRect(0, height - 96 * scale, width, 96 * scale);
+  ctx.fillStyle = background;
+  ctx.font = `${22 * scale}px ${fontFamily}`;
+  ctx.fillText(forPersistence ? "Announced event · OCR review required · Date/weekday conflict" : "Human review required · Not approved for release", margin, height - 52 * scale);
+  ctx.fillStyle = muted;
+  wrap(`${draft.catalogueId} · Source citations in companion manifest`, 20 * scale, height - 112 * scale, 1);
   return new Promise((resolve, reject) => canvas.toBlob(blob => blob ? resolve(blob) : reject(new Error("Image encoding failed.")), "image/png"));
 }
 
@@ -85,7 +134,12 @@ export async function localVisualZip(draft: LocalDraft, carousel: boolean) {
   const zip = new JSZip();
   const panels = carousel ? [draft.title, ...draft.body.split(/\n\n+/).filter(Boolean)] : [draft.body];
   for (const [index, text] of panels.entries()) zip.file(`panel-${index + 1}.png`, await renderDraftImage(draft, text));
-  zip.file("source-manifest.json", JSON.stringify({ ...draft, artifact: carousel ? "local_carousel" : "local_image", panelCount: panels.length, persisted: false }, null, 2));
+  // Platform-size variants of the lead panel for local channel use; persisted artifacts stay 1080 × 1080.
+  for (const size of Object.keys(PLATFORM_SIZES) as PlatformSize[]) {
+    if (size === "square") continue;
+    zip.file(`platform-${size}.png`, await renderDraftImage(draft, panels[0] ?? draft.body, false, size));
+  }
+  zip.file("source-manifest.json", JSON.stringify({ ...draft, artifact: carousel ? "local_carousel" : "local_image", panelCount: panels.length, platformSizes: Object.keys(PLATFORM_SIZES), persisted: false }, null, 2));
   zip.file("review-and-source.txt", localDraftText(draft));
   return zip.generateAsync({ type: "blob" });
 }
