@@ -76,3 +76,24 @@ Changes remain in the connected repository working tree; Lovable manages synchro
 
 ## 2026-11-03 quality engine cycle
 Shared quality layer `src/lib/output-quality.ts` assesses every catalogue output against its own rule (required sections, developed length, citation traceability/coverage, filler, format, release restrictions) with categorical COMPLETE/PARTIAL/BLOCKED/NOT_IMPLEMENTED — computed at generation/readback, never persisted, so the 0015 attestation is untouched. OUT-029 is a full 13-section campaign calendar embedding actual OUT-009 copy with retrospective/demo classification for past dates and proposed-slot labelling. Generic builder distributes lines across sections by keyword affinity. Dispatcher key bumped to catalogue-dispatch-2. 16 focused + 225 full tests pass; tsgo clean; build OK. Examples and matrix: /mnt/documents/IIAF_Output_Quality_Engine_Acceptance_2026_11_03.md and IIAF_Quality_Engine_Examples_2026_11_03/. No AI calls this cycle; hosted save/readback not rerun (contract unchanged).
+
+
+## Final master cycle (3 November 2026)
+# IIAF Final Master Implementation — 3 November 2026
+
+## Verdict: PARTIAL — not whole-product completion
+Readiness gates and explicit limited/alternative selection are implemented for OUT-001–OUT-030. Six quality dimensions are independently displayed; headings, length, citations, a saved row and exports never establish COMPLETE. Authentication, tenant policies, source review, release restrictions and the existing catalogue are preserved.
+
+## Verification
+- Full suite passed 270/270 before the final refinements; final focused readiness/catalogue/contract/cache suite passed 84/84, including the additional occurrence-denial test.
+- Automatic preview build OK at 11:13:05 UTC.
+- Thirty category-purpose DEMO cases exercised. Twenty-nine categories produced actual draft files (32 variants); OUT-022 correctly produced no bundle because original bytes are absent.
+- Actual DOCX and XLSX files opened structurally; DOCX converted by LibreOffice to 62 PDF pages. Every rendered page was visually inspected. Small dense tables remain a usability limitation; these are review examples, not professionally accepted deliverables. PDF examples are offline conversions; the app does not have a direct PDF download implementation.
+- Authorized University A UI explicitly chose Single-item Bulletin. New saved set bef0e025-6f3d-43ea-a8a2-8584c44c28d0, newsletter revision 1, from saved poster job 3f22ae50-e164-431c-9685-048c0e8dbbb6. It reopened after full refresh; the correct newsletter Word download completed. No console errors or alert errors observed.
+- Newly changed article, annual framework and calendar hosted-save checks were attempted but their expected buttons were not found in the test state; they are UNVERIFIED, not passed. Reopened historical versions are not evidence that the new bodies were saved.
+
+## What changed and what remains
+OUT-008 has announcement context, verified-source cautions, closing and SEO. OUT-014 refuses silent full-newsletter creation from one announcement and requires an explicit bulletin choice. OUT-015 offers a clearly labelled data-collection framework, never a fake full report. OUT-029 has proposed phased slots, retrospective treatment for past events, distinct channel copy and separate publishing/review states. Generic non-event handlers still emit source-field review drafts rather than complete professional reports; they require further purpose-specific development and acceptance. Approved assets, original evidence files, official agency bindings, actual analytics and appropriate institutional records remain dependencies. Every quality result remains PARTIAL or BLOCKED; no full catalogue or product acceptance is claimed.
+
+No model/OCR requests, migrations, permissions widening, protected fact/mapping changes, full imports, deployment or Phase 4 work occurred. The only new hosted write was the authorized append-only bulletin draft. W1 remains pending; Phase 3 remains NO-GO; Phase 4 is unstarted.
+

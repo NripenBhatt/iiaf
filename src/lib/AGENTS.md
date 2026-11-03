@@ -8,3 +8,5 @@
 - Versioned catalogue drafts preserve source-event-1 compatibility and use append-only, caller-authorized save attestations; separate channel prose and manual revisions remain unverified drafts, never approved facts, mappings or release.
 - Catalogue retrieval is category-aware: each handler declares a source category (event/meeting/placement/contacts/institution/research/evidence/analytics/general) and detectCategories must find record-like evidence, not keyword echoes; outputs whose category is absent are blocked with named missing inputs, never padded with generic text.
 - Output quality is assessed by src/lib/output-quality.ts with per-catalogue-ID rules and categorical COMPLETE/PARTIAL/BLOCKED/NOT_IMPLEMENTED statuses; it is computed at generation/readback and never persisted, so the save_catalogue_draft payload attestation stays unchanged. Handler changes must bump the catalogue-dispatch cache key in outputs.functions.ts.
+
+- Category-purpose DEMO fixtures exercise every catalogue ID without extraction/provider calls; absent original evidence bytes must block bundle generation, and generated examples never establish professional or release acceptance.
