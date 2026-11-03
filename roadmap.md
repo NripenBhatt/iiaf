@@ -1,4 +1,9 @@
 # Phase 1 security and persistence
+## OUT-015 targeted Annual Report correction — 3 November 2026
+- [ ] Isolate annual narrative, section-specific gaps, period/conflict validation and provenance-backed metrics; leave unrelated outputs unchanged.
+- [ ] Test sufficient, partial, conflicting-period and missing-denominator records; inspect actual Annual Report Word and spreadsheet files.
+- [ ] Verify new saved version, full refresh, reopen and Word download with available authorized institutional sources; report missing source/authorization blockers honestly.
+- [ ] Deliver root cause, changed files, before/after samples and dimension-specific acceptance verdict; no AI/OCR/schema/access/deployment changes.
 ## Targeted correction and quality acceptance — 3 November 2026
 - [x] Batch 1: purpose-specific priority source narratives, composed multi-item editorial records and provenance-checked placement/analytics arithmetic; per-READY-output generation button, seven-slot individual campaign copy/proposed dates.
 - [x] Complete automated regression suite: 279/279 passed. Generated all thirty DEMO cases (29 drafts, evidence bundle blocked); opened 32 DOCX/32 XLSX structurally; visually inspected 50 pages from nine priority DEMO documents and three actual UI downloads. Dense lineage appendix remains a usability defect, not accepted.
