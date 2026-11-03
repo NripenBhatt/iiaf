@@ -65,7 +65,7 @@ export const generateOutputs = createServerFn({ method: "POST" }).middleware([re
     const repaired = repairOutputSet(previous ? stored.parse(previous.outputs).outputs : [], lines, { documentId: doc.id, jobId: job.id, originalHash: doc.sha256_hash, parserVersion: version, contractVersion: CONTRACT_VERSION, classification, approval: "draft", locators: lines.map(l => l.locator_key), verifiedCoverage: false });
     const {data: company} = await context.supabase.rpc("is_operator",{_roles:["super_admin","authorized_operator","internal_reviewer"]});
     const generated = generateCatalogue({lines,segmentIds:sourceResult.segmentIds,manifest:repaired.manifest,company:!!company,period:doc.reporting_period,choices:data.choices},data.requested);
-    const set = stored.parse({ ...repaired, skipped:generated.skipped, outputs: [...selectedDrafts(repaired.outputs, data.requested).filter(o=>!generated.outputs.some(n=>n.type===o.type)), ...generated.outputs] });
+    const set = stored.parse({ ...repaired, skipped:generated.skipped, outputs: [...selectedDrafts(repaired.outputs, data.requested).filter(o=>!o.catalogue?.catalogueId && !generated.outputs.some(n=>n.type===o.type)), ...generated.outputs] });
     const {data:savedId,error}=await context.supabase.rpc("save_catalogue_draft",{_doc:doc.id,_version:version,_hash:hash,_payload:JSON.parse(JSON.stringify(set))});
     if (error) throw new Error(`Outputs were not saved: ${error.message}`);
     const {data:saved,error:savedError}=await context.supabase.from("document_outputs").select("id,created_at").eq("id",savedId??"").maybeSingle();
