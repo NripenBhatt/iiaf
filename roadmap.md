@@ -1,4 +1,6 @@
 # Phase 1 security and persistence
+## Read-only AI and extraction handover — 3 November 2026
+- [x] Inspected current extraction, conversion, AI/API inventory and local setup; created docs/IIAF_AI_AND_EXTRACTION_TECHNICAL_HANDOVER.md with 29 complete current source excerpts and a fingerprinted clean source archive. Documentation only: no application/database/provider changes, live AI calls, tests, builds or deployment. Independent clean-machine install, managed local credential injection and backend restore remain explicitly unverified, not claimed acceptance.
 ## Existing 30-output completion — 3 November 2026
 - [x] Final directive foundation: thirty catalogue-specific handler definitions; additive 0015 versioned citation/attestation save branch preserving legacy validator; append-only per-output revisions; combined saved readback; saved PNG preview and TXT/DOCX/HTML/CSV/XLSX/ZIP exports. Existing 43 payload digest unchanged; 26 focused tests passed.
 - [x] University A saved poster live acceptance: article/4 social variants/newsletter and other explicitly partial drafts saved; one economical AI article request saved; manual article revision 3 reopened; actual PNG reopened and downloaded; 121-entry saved ZIP inspected. No OCR rerun, permissions widening or Phase 4. IDs and evidence in docs/output-generation.md and Files.
