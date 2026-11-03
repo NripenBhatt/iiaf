@@ -173,3 +173,7 @@ Source U = uploaded **IIAF — Phase 3 Unified Completion Programme**, numbered 
 | Errors/recovery/formats/OCR U1,U6,U7 | focused native fixtures and saved poster export tested; PPTX visual/table omissions explicit; live OCR unresolved | No rereads/provider calls; mandatory OCR needs authorized resources, not an exclusion. Original comparison and deployed transcription remain required | 93 final regression tests pass; offline 183-line review export passes; live image/scanned-PDF transcription still blocked | blocked |
 | Integrated Phase 3 acceptance U6,U8 | 22 focused + 43 changed-dependency tests pass; local parity only, not real-user acceptance | One further integrated live cycle when required accounts/policies/resources exist; do not rerun unchanged G1/G4/full suite | All mandatory end-to-end results, protected state, current build, signed acceptance | blocked |
 | Phase 4 U8 | Not started | Successful Phase 3 acceptance and separate authorization | Owner authorization after acceptance | blocked |
+
+## 2026-11-03 W2 bounded conversion diagnosis
+- [ ] Trace existing source and selected article/Facebook outputs in execution order; retain privacy-safe stage requests/responses, save/retrieval/UI evidence. No source reread or unrelated changes.
+- [ ] Fix only reproduced dispatch/save/display failure; verify reopen/download. Preserve W1 and Phase 3 NO-GO; Phase 4 unstarted.
