@@ -113,9 +113,9 @@ export function assessOutput(id: string, output: GeneratedOutput, ctx: QualityCo
   const dimensions:QualityDimension[]=[
    dimension("Structural completeness",absentSections.length===0,[checks[0]?.detail??"Structure unassessed"]),
    dimension("Factual integrity",false,[traced?"Citations match exact authorized segment/locator/value triples.":"Citation traceability failed.","Human factual verification is not established; source citations alone cannot prove every generated claim.",...unsupportedNumbers.map(n=>`Unsupported percentage: ${n}`)]),
-   dimension("Functional completeness",functional,[fields?.acceptance??"No purpose rule",...readiness.reasons,alternative?"Alternative purpose only; requested deliverable remains incomplete.":"Purpose-specific readiness required."]),
+   dimension("Functional completeness",false,[fields?.acceptance??"No purpose rule",...readiness.reasons,alternative?"Alternative purpose only; requested deliverable remains incomplete.":"Input readiness is not workflow or deliverable acceptance; purpose-specific user acceptance is not recorded."]),
    dimension("Professional quality",false,[filler??"No recognized repetitive filler detected.","Professional editorial acceptance has not been recorded; length and headings are supporting checks only."]),
-   dimension("Practical usability",functional&&!filler,[functional?"Relevant required source fields available; intended-team acceptance remains separate.":readiness.nextAction]),
+   dimension("Practical usability",false,[functional?"Relevant required source fields available; intended-team use and downloaded-file acceptance have not been recorded.":readiness.nextAction]),
    dimension("Release readiness",false,[restrictionsPreserved?"Restrictions preserved: approval, consent and publication remain unauthorized.":"Release safeguards failed; reject this output."]),
   ];
   const hardFailed=!traced||!restrictionsPreserved||unsupportedNumbers.length>0||substantiveClaims;

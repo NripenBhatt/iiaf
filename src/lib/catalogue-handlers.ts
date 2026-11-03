@@ -205,8 +205,17 @@ function socialCalendarBody(f: Fields, eventCautions: string[], missing: string[
     ["Post-event","T+1","Facebook","Verification-gated follow-up","Supply attendance/outcome records first"],
     ["Follow-up","T+7","LinkedIn","Evidence-led reflection","Supply verified impact records first"],
   ];
-  const scheduleRows = phases.map(([phase,slot,platform,format,cta]) => `| ${phase} | ${retrospective ? "Retrospective DEMO " : "Proposed "}${slot} | ${platform} | ${format} | ${h.audience ?? "Proposed: learners interested in the programme"} | ${phase === "Awareness" ? "Awareness" : "Useful information / engagement"} | ${slot === "T+1" || slot === "T+7" || slot === "T0" ? "Withheld: verification required" : `Actual ${platform} draft below; adapt for this slot after review`} | Typography; approved assets only | ${cta} | Draft / owner unassigned | Not scheduled |`);
-  const schedule = ["| Phase | Relative slot | Platform | Format/theme | Audience | Objective | Copy | Creative | CTA | Approval/owner | Publishing |", "| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |", ...scheduleRows].join("\n");
+  const offsets = [-7,-5,-3,-1,0,1,7];
+  const scheduleRows = phases.map(([phase,slot,platform],i) => {
+    const d = dateValid && parsedDate ? new Date(parsedDate.getTime() + (offsets[i] ?? 0)*86400000) : null;
+    const proposedDate = d ? `${d.toISOString().slice(0,10)} (${d.toLocaleDateString('en-GB',{weekday:'long',timeZone:'UTC'})})` : 'Date unavailable';
+    return `| ${phase} | ${retrospective ? "Retrospective DEMO " : "Proposed "}${slot} | ${proposedDate} — not approved | ${platform} | ${i>=4?'Withheld pending source verification':'Draft; review required'} |`;
+  });
+  const schedule = ["| Phase | Relative slot | Proposed date / weekday | Platform | State |", "| --- | --- | --- | --- | --- |", ...scheduleRows].join("\n");
+  const slotCopy = phases.map(([phase,slot,platform,format,cta],i) => {
+    const copy = i>=4 ? 'Copy withheld: occurrence, attendance and outcomes are not confirmed. Obtain authorized follow-up evidence before writing this phase.' : i===0 ? `Workshop announcement: ${h.title}. ${h.subject ? `Explore the announced focus: ${h.subject}.` : ''} See the source notice for details.` : i===1 ? publicationCopy('linkedin',f) : i===2 ? `What would you like to understand about ${h.subject ?? h.title}? The notice announces ${h.title}${f['date']?` for ${f['date']}`:''}. Suggested discussion prompt only; no replies or participation recorded.` : `Source-notice check: ${h.title}${f['date']?` — announced for ${f['date']}`:''}. Verify current arrangements with the issuing unit before acting.`;
+    return `### ${phase} · ${slot} · ${platform}\n${copy}\n\nFormat / creative direction: ${format}; source-backed typography and approved assets only.\nProposed CTA: ${cta}.\nResponsible roles (proposed, unassigned): editorial writer; source reviewer; authorized communications publisher.\nApproval: pending. Publishing: not scheduled. Measurement requirement (suggested, not measured): ${i<2?'reach and source-link clicks':i<4?'saves and attributable link clicks':'verified follow-up engagement'}.`;
+  }).join('\n\n');
   const postCopy = channels.map(c => `### ${c.label}\n${publicationCopy(c.key, f)}`).join("\n\n");
   const creative = channels.map(c => `- ${c.label}: source-backed typographic creative (no photographs or logos are invented); ${c.key === "instagram" ? "square 1080×1080 or portrait 1080×1350" : c.key === "x_post" ? "landscape 1920×1080" : "square 1080×1080"}; alt text required; DEMO/review ribbon retained until release approval.`).join("\n");
   return [
@@ -223,11 +232,13 @@ function socialCalendarBody(f: Fields, eventCautions: string[], missing: string[
     h.subject ? `Single source-supported pillar: ${h.subject}. Proposed supporting pillars: practical learning questions, source-notice details, and verification-led follow-up. These are editorial recommendations, not recorded institutional strategy.` : "The source supports one announcement pillar only; the title does not establish a broader theme.",
     "## Publication schedule",
     schedule,
-    "Only source-recorded dates appear in this calendar; no publication date is invented. Approved publishing dates are not recorded.",
+    "Proposed dates are deterministic offsets from the printed event date, not approved publishing dates. No publication date is invented as an authorized decision. Resolve source date/weekday conflicts before using any slot.",
     "## Platform-specific strategy",
     channels.map(c => `- ${c.label}: ${c.strategy}`).join("\n"),
     "## Post copy (actual OUT-009 generated content)",
     postCopy,
+    "## Individual seven-slot copy and responsibilities",
+    slotCopy,
     "## Creative and image requirements",
     creative,
     "## Hashtag and CTA strategy",
