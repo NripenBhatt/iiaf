@@ -16,3 +16,16 @@ Baseline: current source and Final Master acceptance report; historical saved ve
 | Final product/agency/A-B/owner acceptance missing | BLOCKED | Product acceptance | Preserve unresolved official mappings, institutional records and B activation; no invented acceptance | Owner inputs and authorized separate sessions |
 
 No authentication, permissions, source evidence, held reviews or historical output changes are authorized by this register. No provider calls or deployment. Final dispositions will be recorded after each controlled batch.
+
+## Batch 1 dispositions
+- Purpose content: PARTIAL. Dedicated priority narrative/review structures now replace shared field tables; remaining operational sections and multi-source professional depth still need acceptance.
+- Multi-item editorial path: PARTIAL. Labelled item composition and explicit bulletin remain separate; local association tests pass. No suitable current verified multi-item source available for a real newsletter live check.
+- Annual report: PARTIAL. Source-supported chapter path added; insufficient evidence still produces only an explicitly chosen framework. Full annual-report institutional coverage unverified.
+- Metrics: PARTIAL. Same-record/same-period rate calculations and zero/ambiguous-denominator refusals tested; actual authenticated channel exports absent and university user correctly denied company-only analytics.
+- Campaign: PARTIAL. Seven individual phase drafts, deterministic proposed weekdays/dates and withheld occurrence/outcome phases; source date conflict remains visible.
+- Per-output generation: corrected missing READY-row action; article/framework/calendar generated, refreshed, reopened and Word downloaded. IDs in application report. This bounded workflow is verified; all-category acceptance is not.
+- Quality: PARTIAL. Functional/usability checks no longer claim COMPLETE from READY input; percentages require reproduced formula and basis. Editorial/human review still required.
+- Evidence bundle: BLOCKED / implementation INCOMPLETE. No authorized company session with reviewed manifest/original package was supplied; no extracted-text substitute or schema workaround added.
+- Exports: PARTIAL. Fifty pages visually inspected; dense source appendices and oversized framework download remain unsuitable for professional acceptance. Remaining format/category layout verification not passed.
+- Regression: COMPLETE for the executed existing suite (279/279), not whole-product acceptance.
+- Overall: NOT ACCEPTED — CRITICAL ITEMS REMAIN. Phase 3 NO-GO, W1 pending, Phase 4 unstarted.

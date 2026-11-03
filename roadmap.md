@@ -1,9 +1,10 @@
 # Phase 1 security and persistence
 ## Targeted correction and quality acceptance — 3 November 2026
-- [ ] Correct purpose-specific priority content, real multi-item newsletter composition and calculated analytics with source provenance.
-- [ ] Verify classification, blocked/conflicting inputs, exports and complete automated regression suite.
-- [ ] Verify newly generated versions through authorized application save/refresh/reopen/download; report unavailable institutional records and sessions as blockers.
-- [ ] Deliver correction register, thirty-row acceptance matrix, application/test report, generated examples and technical handover inventory; preserve Phase 3 NO-GO and separate W1 acceptance.
+- [x] Batch 1: purpose-specific priority source narratives, composed multi-item editorial records and provenance-checked placement/analytics arithmetic; per-READY-output generation button, seven-slot individual campaign copy/proposed dates.
+- [x] Complete automated regression suite: 279/279 passed. Generated all thirty DEMO cases (29 drafts, evidence bundle blocked); opened 32 DOCX/32 XLSX structurally; visually inspected 50 pages from nine priority DEMO documents and three actual UI downloads. Dense lineage appendix remains a usability defect, not accepted.
+- [x] University A new article d7a84a8e-ed84-40b1-ba9d-02241e2987c5, annual framework 9fbed41e-c473-42e7-a126-ec740019c3f3, calendar 10081918-b718-4b7a-aa8a-7367c62410b4: same IDs after refresh, Word downloaded. No OCR/model/schema/permission/deployment/Phase 4.
+- [x] Deliver controlled-batch register/matrix/report/examples and handover inventory, without whole-product acceptance.
+- [ ] Final acceptance blocked: appropriate approved institutional/news/analytics records and company-role session, authorized original bytes/reviewed bundle manifest, B activation, authoritative mappings and owner review. Full professional acceptance, remaining-category live acceptance and export-layout acceptance are not established; evidence-bundle runtime, multi-source composition, full formats/media and long-history pagination remain INCOMPLETE. Phase 3 NO-GO and W1 pending.
 ## Final master output implementation — 3 November 2026
 - [x] Add output-specific suitability/readiness gates and explicit limited/alternative choices; preserve source, tenant and release safeguards.
 - [x] Correct priority article, newsletter, annual-report classification and actionable campaign sequence; expose six independent quality dimensions.
