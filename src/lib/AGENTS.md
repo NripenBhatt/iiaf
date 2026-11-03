@@ -5,4 +5,4 @@
 - Saved batch selections are restored on document readback and passed to generation; selection-specific opaque keys prevent unrelated set reuse, while supported meeting drafts remain within the existing protected contracts.
 
 - Selected article/social catalogue IDs dispatch through the cited event generator before saving in the existing output store; dispatcher-version keys prevent extraction-only cache reuse after handler changes.
-- Publication-copy templates operate on cited local draft values only; changing saved authored prose requires paired reviewed database validation, so source-event-1 bodies and dispatch stay compatible with existing records.
+- Versioned catalogue drafts preserve source-event-1 compatibility and use append-only, caller-authorized save attestations; separate channel prose and manual revisions remain unverified drafts, never approved facts, mappings or release.

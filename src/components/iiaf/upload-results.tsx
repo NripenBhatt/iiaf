@@ -17,6 +17,7 @@ import { LocalAuthoring } from "./local-authoring";
 import { StructuredRecordBrowser } from "./structured-record-browser";
 import { useState } from "react";
 import { selectionOutcomes } from "@/lib/output-selection";
+import { SavedOutputCard } from "./saved-output-card";
 
 export type FileResult = { documentId: string; name: string; set: OutputSet | null; error: string | null };
 
@@ -57,6 +58,7 @@ function OneFile({ r, requested, detailed }: { r: FileResult; requested: string[
     </TabsList>
     {r.error && <p role="alert" className="mt-3 text-sm text-destructive">{r.error}</p>}
     {generationError && <p role="alert" className="mt-3 text-sm text-destructive">{generationError}</p>}
+    {!requested.length&&<div className="mt-4"><Button size="sm" disabled={generating} onClick={()=>void generateDraft()}>{generating?"Generating and saving…":"Generate eligible outputs from saved source"}</Button></div>}
     {requested.length > 0 && <section className="mt-4 space-y-2" aria-label="Selected output results">
       <div className="flex flex-wrap items-center gap-3"><h3 className="font-semibold">Saved selections · {requested.join(", ")}</h3><Button size="sm" disabled={generating} onClick={() => void generateDraft()}>{generating ? "Generating and saving…" : "Generate selected outputs"}</Button></div>
       {selectionOutcomes(requested, set?.outputs ?? []).map(o => <p key={o.catalogueId} className="text-sm"><strong>{o.catalogueId} · {generationError ? "Failed" : o.status === "generated_saved" ? "Generated and saved" : o.status === "needs_source_information" ? "Needs source information" : "Not supported"}</strong> — {generationError || o.reason}</p>)}
@@ -74,7 +76,7 @@ function OneFile({ r, requested, detailed }: { r: FileResult; requested: string[
           <details className="mt-2 text-xs"><summary className="cursor-pointer">Source citations ({o.locators.length}) and missing attributes</summary><p className="mt-1 break-all">{r.name} · {o.locators.join(", ") || "No qualified source locator"}</p><p className="mt-1">Missing / needs review: {o.missing.join(", ") || "Not established by discovery"}</p></details>
           <p className="mt-2 text-xs">Supported: {o.supported ? "Yes, governed draft path" : "No"} · Generated: {o.generated ? "Yes" : "No"} · Persisted: {o.persisted ? "Yes" : "No"}</p>
           {o.dependency && <p className="mt-2 text-xs text-muted-foreground">{o.dependency}</p>}
-          {o.supported && !o.generated && <Button className="mt-2" size="sm" variant="outline" disabled={generating} onClick={() => void generateDraft()}>{generating ? "Saving draft…" : "Generate governed draft"}</Button>}
+          {o.supported && !o.generated && <Button className="mt-2" size="sm" variant="outline" disabled={generating} onClick={() => {setGenerating(true);setGenerationError("");void generate({data:{documentId:r.documentId,requested:o.catalogueId?[o.catalogueId]:[]}}).then(setGeneratedSet).catch(e=>setGenerationError(String(e))).finally(()=>setGenerating(false));}}>{generating ? "Saving draft…" : "Generate governed draft"}</Button>}
         </article>)}</div>
         {!discovery.data.opportunities.some(o => !o.artifact) && <p className="text-sm text-muted-foreground">No catalogue opportunity established from the saved source. Extraction artifacts remain separate.</p>}
       </>}
@@ -133,16 +135,7 @@ function OneFile({ r, requested, detailed }: { r: FileResult; requested: string[
       {set?.setId && <p className="mb-3 break-all text-xs text-muted-foreground">Saved set {set.setId} · {set.createdAt} · source version {set.sourceVersion}</p>}
       {lineage && <LocalAuthoring lineage={lineage} />}
       {set && set.outputs.length > 0 && <Button size="sm" variant="outline" className="mb-3" onClick={() => { if (set) void outputsZip(set.outputs, r.name).then(b => saveBlob(b, `${outputFileBase({ type: "outputs" }, r.name)}.zip`)); }}><Download /> Download saved outputs (ZIP)</Button>}
-      <div className="grid gap-4 lg:grid-cols-2">{(set?.outputs ?? []).map(o => <article key={o.type} className="flex flex-col border bg-background p-4">
-        <div className="flex items-start justify-between gap-2"><p className="text-xs uppercase tracking-wide text-muted-foreground">{o.name}</p><Status tone="warning">Draft · review required</Status></div>
-        <h3 className="mt-1 font-semibold">{o.title}</h3>
-        {set?.setId && <p className="mt-1 break-all text-xs text-muted-foreground">Output ID {set.setId}:{o.type} · {o.type}</p>}
-        <div className="mt-2 max-h-64 min-w-0 flex-1 overflow-auto"><OutputPreview output={o} /></div>
-        <p className="mt-3 text-xs text-muted-foreground">Source: {r.name}{o.catalogue?.catalogueId ? ` · ${o.catalogue.catalogueId}` : ""}{o.catalogue?.contractId ? ` · ${o.catalogue.contractId}` : ""}</p>
-        <div className="mt-3 flex flex-wrap gap-2"><Button size="sm" variant="outline" onClick={() => void outputDocx(o, r.name).then(b => saveBlob(b, `${outputFileBase(o, r.name)}.docx`))}><Download /> Word</Button>
-          <Button size="sm" variant="ghost" onClick={() => saveBlob(new Blob([outputText(o, r.name)], { type: "text/plain" }), `${outputFileBase(o, r.name)}.txt`)}><Download /> Text</Button>
-          {o.tables?.length ? <Button size="sm" variant="ghost" onClick={() => saveBlob(new Blob([outputCsv(o)], { type: "text/csv" }), `${outputFileBase(o, r.name)}.csv`)}><Download /> CSV</Button> : null}</div>
-      </article>)}</div>
+      <div className="grid gap-4 lg:grid-cols-2">{(set?.outputs ?? []).map(o => <SavedOutputCard key={o.type} output={o} setId={o.persistedSetId??set?.setId} source={r.name} onSaved={setGeneratedSet}/>)}</div>
       {set && set.skipped.length > 0 && <details className="mt-3 text-xs text-muted-foreground"><summary className="cursor-pointer font-medium">Not produced ({set.skipped.length}) and why</summary><ul className="mt-2 list-disc pl-5">{set.skipped.map(s => <li key={s.name}>{s.name}: {s.reason}</li>)}</ul></details>}
     </TabsContent>
   </Tabs>;

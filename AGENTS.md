@@ -31,7 +31,7 @@
 - Native parsers read stored originals; typed word-extractor/Buffer DOC has conversion fallback. Synthetic offline fixtures are distinct from missing originals.
 - Outputs/search/packages reuse paginated newest-started-job segments; failed/pending jobs never fall back to old success. No model calls; draft manifests retain lineage/cells in downloads.
 - Shared filters subscribe to committed router location and retain pending edits until navigation finishes, preventing intermediate route matches from erasing typed input.
-- Output writes/reads validate source references and draft contracts; authored drafts/artifacts share document_outputs and private source/job/hash storage. Legacy guards remain intact; equal stored winners only. Extraction and pixels require review.
+- Output writes/reads preserve legacy validation; versioned catalogue drafts use exact citation attestations and append-only revisions in document_outputs. Company output access stays server-enforced; source/job/hash media remains private. Extraction, edits and pixels require review, never approval.
 - Table cells persist in locator JSON; flattened historical/OCR tables stay partial. Default processing reuses saved extraction; rereading requires an explicit retry reason.
 - Catalogue/crosswalk matches are source references, not executed behavior or approved bindings; retain unresolved fields and fail closed for unsupported contracts.
 - Automatic output opportunities are recomputed from current RLS-scoped saved segments via output-opportunities; Desired Output only adds entries. A saved output record, never a rule match or local rendering, establishes generated/persisted status; protected output-contract gates must not be bypassed by relabelling deliverables as review artifacts.

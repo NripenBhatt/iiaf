@@ -3,6 +3,7 @@ import { outputBinding } from "./output-reference";
 import { meetingSchema, structuredMeetings } from "./meeting-contract";
 import { classifyLines, ruleApplicationSchema } from "./qualification-rules";
 import { artifactSchema, authoredSchema } from "./source-authored";
+import { catalogueDraftSchema } from "./catalogue-draft";
 
 // Kept at 2.2: the database output-integrity guard allowlists 2.0–2.2; bumping the version
 // requires the separately authorized migration that extends that allowlist.
@@ -21,7 +22,7 @@ export const qualificationSchema = z.object({ unitId: z.string(), locator: z.str
  */
 export const outputContractStateSchema = z.object({ template: z.string().nullable(), mimeType: z.enum(["text/markdown", "image/png"]), dimensions: z.object({ width: z.literal(1080), height: z.literal(1080) }).nullable(), approver: z.null(), release: z.literal("not_authorized") });
 export const DRAFT_CONTRACT_STATE: z.infer<typeof outputContractStateSchema> = { template: null, mimeType: "text/markdown", dimensions: null, approver: null, release: "not_authorized" };
-export const generatedOutputSchema = z.object({ type: z.string(), name: z.string(), title: z.string(), body: z.string(), authored: authoredSchema.optional(), artifact: artifactSchema.optional(), meeting: meetingSchema.optional(), tables: tableSchema.array().optional(), manifest: manifestSchema.optional(), qualification: qualificationSchema.array().optional(), catalogue: z.object({ catalogueId: z.string().nullable(), contractId: z.string().nullable(), support: z.enum(["source-review", "stored-draft-only", "blocked"]), reason: z.string() }).optional(), contract: outputContractStateSchema.default(DRAFT_CONTRACT_STATE) });
+export const generatedOutputSchema = z.object({ type: z.string(), name: z.string(), title: z.string(), body: z.string(), persistedSetId:z.string().uuid().optional(), draft: catalogueDraftSchema.optional(), authored: authoredSchema.optional(), artifact: artifactSchema.optional(), meeting: meetingSchema.optional(), tables: tableSchema.array().optional(), manifest: manifestSchema.optional(), qualification: qualificationSchema.array().optional(), catalogue: z.object({ catalogueId: z.string().nullable(), contractId: z.string().nullable(), support: z.enum(["source-review", "stored-draft-only", "blocked"]), reason: z.string() }).optional(), contract: outputContractStateSchema.default(DRAFT_CONTRACT_STATE) });
 export type GeneratedOutput = z.infer<typeof generatedOutputSchema>;
 export type SourceLine = { seq: number; locator_key: string; content: string; locator: unknown; method_version: string; method?: string | null };
 export type SourceManifest = z.infer<typeof manifestSchema>;

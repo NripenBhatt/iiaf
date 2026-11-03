@@ -23,7 +23,7 @@ export function SavedEventAuthoring({ lineage }: { lineage: Lineage }) {
     setBusy(true);setError("");
     try {
       const field=(role:string)=>content.fields.find(f=>f.role===role)?.value;
-      const draft:LocalDraft={type:"press_release",catalogueId:"OUT-008",title:field("title")??"Event announcement",body:"",citations:[],missing:[],review:"human_review_required",release:"not_authorized",persisted:false,classification:"unverified",originalHash:lineage.document.sha256_hash,parserVersion:lineage.job.processor_version??"",cautions:content.cautions};
+      const draft:LocalDraft={type:"press_release",catalogueId:"OUT-009",title:field("title")??"Event announcement",body:"",citations:[],missing:[],review:"human_review_required",release:"not_authorized",persisted:false,classification:lineage.outputRecord?(/"classification":"DEMO"/.test(JSON.stringify(lineage.outputRecord.outputs))?"DEMO":"unverified"):"unverified",originalHash:lineage.document.sha256_hash,parserVersion:lineage.job.processor_version??"",cautions:content.cautions};
       const text=[field("subject"),field("date")?`Printed date: ${field("date")}`:null,field("venue"),field("organizer")].filter(Boolean).join("\n\n");
       const blob=await renderDraftImage(draft,text,true);
       const bytes=new Uint8Array(await blob.arrayBuffer());let binary="";for(const byte of bytes)binary+=String.fromCharCode(byte);

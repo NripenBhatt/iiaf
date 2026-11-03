@@ -888,6 +888,68 @@ export type Database = {
         }
         Relationships: []
       }
+      output_draft_attestations: {
+        Row: {
+          created_at: string
+          created_by: string
+          document_id: string
+          id: string
+          job_id: string
+          organization_id: string
+          payload: Json
+          source_version: string
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          document_id: string
+          id?: string
+          job_id: string
+          organization_id: string
+          payload: Json
+          source_version: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          document_id?: string
+          id?: string
+          job_id?: string
+          organization_id?: string
+          payload?: Json
+          source_version?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "output_draft_attestations_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "output_draft_attestations_document_id_fkey"
+            columns: ["document_id"]
+            isOneToOne: false
+            referencedRelation: "uploaded_documents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "output_draft_attestations_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "document_processing_jobs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "output_draft_attestations_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       package_reviews: {
         Row: {
           content_sha256: string
@@ -1517,6 +1579,10 @@ export type Database = {
         Args: { _doc: string; _org: string; _payload: Json; _version: string }
         Returns: boolean
       }
+      output_source_event_v1: {
+        Args: { _doc: string; _org: string; _payload: Json; _version: string }
+        Returns: boolean
+      }
       output_source_legacy: {
         Args: { _doc: string; _org: string; _payload: Json; _version: string }
         Returns: boolean
@@ -1579,6 +1645,10 @@ export type Database = {
       review_relationship: {
         Args: { _decision: string; _note: string; _rel: string }
         Returns: undefined
+      }
+      save_catalogue_draft: {
+        Args: { _doc: string; _hash: string; _payload: Json; _version: string }
+        Returns: string
       }
       save_evidence_package: {
         Args: {

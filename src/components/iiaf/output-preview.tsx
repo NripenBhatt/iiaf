@@ -2,6 +2,7 @@ import type { GeneratedOutput } from "@/lib/output-contract";
 
 export function OutputPreview({ output }: { output: GeneratedOutput }) {
   return <div className="space-y-3 text-sm">
+    {output.draft&&<><p className="text-muted-foreground">{output.draft.cautions.join(" ")}</p><details><summary>Source citations and missing information</summary><p>{output.draft.missing.join("; ")}</p>{output.draft.citations.map(c=><p key={c.segmentId} className="mt-2 break-all text-xs">{c.segmentId} · {c.locatorKey}: {c.raw}</p>)}</details></>}
     {output.authored&&<p className="text-muted-foreground">{output.authored.cautions.join(" ")}</p>}
     {output.qualification?.some(q => q.rules.some(r => r.ruleId === "Q13")) && <p className="text-muted-foreground">Recognised text requires comparison with the original. Images, logos and graphics are not reproduced in this text draft.</p>}
     <p className="whitespace-pre-wrap break-words">{output.body}</p>

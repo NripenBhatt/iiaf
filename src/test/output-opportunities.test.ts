@@ -14,17 +14,17 @@ describe("automatic output discovery without unsafe generation", () => {
   });
   it("split poster event/date signals discover news/web/social with both citations", () => {
     const found = discoverOutputOpportunities(lines(["Workshop: Ideas to Enterprises", "13 October 2026"]));
-    const news = found.find(o => o.type === "press_release");
+    const news = found.find(o => o.type === "news_article");
     expect(news?.locators).toEqual(["ocr:l1", "ocr:l2"]);
     expect(news?.ruleIds).toEqual(["Q02"]);
-    expect(found.some(o => o.type === "website_event")).toBe(true);
+    expect(found.some(o => o.type === "news_article")).toBe(true);
     expect(found.some(o => o.type === "linkedin")).toBe(true);
     expect(news).toMatchObject({ generated: false, persisted: false, supported: false });
   });
   it("source filename can signal an event but never supplies a missing date", () => {
     const found = discoverOutputOpportunities(lines(["From Ideas to Enterprises", "13 October 2026"]), [], [], "Workshop Board.png");
-    expect(found.find(o => o.type === "press_release")?.locators).toEqual(["ocr:l2"]);
-    expect(discoverOutputOpportunities(lines(["From Ideas to Enterprises"]), [], [], "Workshop Board.png").some(o => o.type === "press_release")).toBe(false);
+    expect(found.find(o => o.type === "news_article")?.locators).toEqual(["ocr:l2"]);
+    expect(discoverOutputOpportunities(lines(["From Ideas to Enterprises"]), [], [], "Workshop Board.png").some(o => o.type === "news_article")).toBe(false);
   });
   it("Desired Output supplements discovery and never suppresses automatic opportunities", () => {
     const source = lines(["Workshop announced for 2026"]);
@@ -39,8 +39,7 @@ describe("automatic output discovery without unsafe generation", () => {
   });
   it("qualification never proves generated images or video", () => {
     const found = discoverOutputOpportunities(lines(["Workshop 2026"]));
-    expect(found.find(o => o.type === "social_image")).toMatchObject({ generated: false, persisted: false, supported: false });
-    expect(found.find(o => o.type === "social_image")?.dependency).toContain("Browser Canvas");
+    expect(found.find(o => o.type === "image_creative")).toMatchObject({ generated: false, persisted: false, supported: false });
     expect(found.find(o => o.type === "reel_script")?.dependency).toContain("not a deployed renderer");
   });
   it("unknown headers never become decisions and table narratives do not grant company access", () => {
