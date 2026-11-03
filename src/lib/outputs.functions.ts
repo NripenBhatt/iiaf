@@ -9,6 +9,7 @@ import { confirmedCacheWinner, storedOutputSetSchema } from "./output-cache";
 import { selectedDrafts, selectionKeySuffix, selectionOutcomes } from "./output-selection";
 import { eventContent, selectedEventOutputs } from "./source-authored";
 import { generateCatalogue } from "./catalogue-handlers";
+import { writeCatalogueDraft } from "./catalogue-writing.server";
 
 export type OutputSet = { outputs: GeneratedOutput[]; skipped: { name: string; reason: string }[]; limitations: string[]; sourceVersion: string; segmentCount: number; createdAt: string; cached: boolean; setId?: string; outcomes?: ReturnType<typeof selectionOutcomes> };
 
@@ -90,3 +91,24 @@ export const reviseOutput = createServerFn({method:"POST"}).middleware([requireS
     if(!saved)throw new Error("Revision readback failed.");
     return {...stored.parse(saved.outputs),setId:saved.id,createdAt:saved.created_at,sourceVersion:saved.source_version,cached:false};
   });
+
+export const improveOutputWriting=createServerFn({method:"POST"}).middleware([requireSupabaseAuth])
+ .inputValidator(z.object({setId:z.string().uuid(),type:z.string()}))
+ .handler(async({context,data})=>{
+   const {data:row}=await context.supabase.from("document_outputs").select("document_id,outputs,source_version").eq("id",data.setId).single();
+   if(!row)throw new Error("Saved draft not accessible.");
+   const {data:doc}=await context.supabase.from("uploaded_documents").select("organization_id").eq("id",row.document_id).single();
+   if(!doc)throw new Error("Source not accessible.");
+   const {data:may}=await context.supabase.rpc("may_upload",{_org:doc.organization_id});if(!may)throw new Error("Your role cannot author outputs.");
+   const set=stored.parse(row.outputs),output=set.outputs.find(o=>o.type===data.type);
+   if(!output?.draft||!["news_article","newsletter","linkedin_article","annual_report","department_brochure"].includes(output.type))throw new Error("This output does not use long-form AI writing.");
+   const source=await latestSource(context.supabase,row.document_id);if(!source||source.job.id!==output.manifest?.jobId)throw new Error("Source changed; generate a current draft before writing.");
+   const key=process.env["LOVABLE_API_KEY"];if(!key)throw new Error("Lovable AI server configuration is missing; no call was made.");
+   const written=await writeCatalogueDraft(output,key);
+   const draft=output.draft;
+   const next=stored.parse({...set,outputs:set.outputs.map(o=>o.type===data.type?{...o,body:written.body,draft:{...draft,revision:draft.revision+1,parentSetId:data.setId,edited:true,cautions:[...draft.cautions,"AI-authored editorial draft; source/factual review required before use."]}}:o)});
+   const hash=await sha256(JSON.stringify(next));const {data:id,error}=await context.supabase.rpc("save_catalogue_draft",{_doc:row.document_id,_version:row.source_version,_hash:hash,_payload:JSON.parse(JSON.stringify(next))});
+   if(error)throw new Error(`AI draft not saved: ${error.message}`);
+   const {data:saved}=await context.supabase.from("document_outputs").select("id,outputs,created_at").eq("id",id??"").single();if(!saved)throw new Error("AI draft save readback failed.");
+   return {...stored.parse(saved.outputs),setId:saved.id,createdAt:saved.created_at,sourceVersion:row.source_version,cached:false};
+ });
