@@ -43,7 +43,7 @@ function OneFile({ r, requested, detailed }: { r: FileResult; requested: string[
   const review = set?.outputs.find(o => o.type === "extraction_review");
   async function generateDraft() {
     setGenerating(true); setGenerationError("");
-      try { setGeneratedSet(await generate({ data: { documentId: r.documentId, requested, diagnostic: new URLSearchParams(window.location.search).get("diagnostic") === "conversion" } })); }
+      try { setGeneratedSet(await generate({ data: { documentId: r.documentId, requested } })); }
     catch (e) { setGenerationError(e instanceof Error ? e.message : "The draft could not be saved."); }
     finally { setGenerating(false); }
   }

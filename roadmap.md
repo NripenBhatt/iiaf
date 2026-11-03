@@ -175,5 +175,5 @@ Source U = uploaded **IIAF — Phase 3 Unified Completion Programme**, numbered 
 | Phase 4 U8 | Not started | Successful Phase 3 acceptance and separate authorization | Owner authorization after acceptance | blocked |
 
 ## 2026-11-03 W2 bounded conversion diagnosis
-- [ ] Trace existing source and selected article/Facebook outputs in execution order; retain privacy-safe stage requests/responses, save/retrieval/UI evidence. No source reread or unrelated changes.
-- [ ] Fix only reproduced dispatch/save/display failure; verify reopen/download. Preserve W1 and Phase 3 NO-GO; Phase 4 unstarted.
+- [x] Traced company source dac69ce4-bad9-47bb-b885-499ff48224b2 and OUT-008/OUT-009: pre-fix dispatcher returned extraction_review only; save succeeded. Temporary request-only diagnostic logs captured and removed.
+- [x] Connected existing cited generator to selected-output dispatch and retained current choices over restored batch selections. Saved f175f9ef-8090-4854-a958-1c3e108de799; article and Facebook reopened after refresh, text downloads verified. 9 focused tests pass, automatic preview build OK; no paid/OCR/schema/permission/protected-source changes. W1 and Phase 3 NO-GO preserved; Phase 4 unstarted.
