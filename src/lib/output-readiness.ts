@@ -70,6 +70,7 @@ export function assessReadiness(id: string, ctx: {lines:SourceLine[];period:stri
  const essential=r.critical.filter(f=>!available.includes(f));
  if(essential.length)status=r.alternative?'ALTERNATIVE':'BLOCKED';
  if(!ctx.lines.length)status='BLOCKED';
+ if(r.period&&ctx.period&&periods.some(p=>p!==ctx.period)){status='BLOCKED';verification.push('Reporting periods do not match; no cross-period figures may be populated.');}
  let alternative=r.alternative;
  if(id==='OUT-014'){
   const items=[...new Set(fields.get('news item')??[])];const categories=new Set(fields.get('editorial category')??[]);const value=fields.get('reader value')??[];
