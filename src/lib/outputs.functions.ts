@@ -7,12 +7,13 @@ export type { GeneratedOutput } from "./output-contract";
 import type { GeneratedOutput } from "./output-contract";
 import { confirmedCacheWinner, storedOutputSetSchema } from "./output-cache";
 import { selectedDrafts, selectionKeySuffix, selectionOutcomes } from "./output-selection";
-import { eventContent, selectedEventOutputs } from "./source-authored";
-import { generateCatalogue } from "./catalogue-handlers";
+import { eventContent } from "./source-authored";
+import { assessReadiness, type ReadinessResult } from "./output-readiness";
+import { CATALOGUE_HANDLERS, generateCatalogue } from "./catalogue-handlers";
 import { writeCatalogueDraft } from "./catalogue-writing.server";
 import { assessSet, type QualityResult } from "./output-quality";
 
-export type OutputSet = { outputs: GeneratedOutput[]; skipped: { name: string; reason: string }[]; limitations: string[]; sourceVersion: string; segmentCount: number; createdAt: string; cached: boolean; setId?: string; outcomes?: ReturnType<typeof selectionOutcomes>; quality?: Record<string, QualityResult> };
+export type OutputSet = { outputs: GeneratedOutput[]; skipped: { name: string; reason: string }[]; limitations: string[]; sourceVersion: string; segmentCount: number; createdAt: string; cached: boolean; setId?: string; outcomes?: ReturnType<typeof selectionOutcomes>; quality?: Record<string, QualityResult>; readiness?: Record<string, ReadinessResult> };
 
 async function sha256(text: string) {
   const d = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(text));
@@ -34,12 +35,13 @@ export const getOutputs = createServerFn({ method: "POST" }).middleware([require
     const combined=new Map(set.outputs.map(o=>[o.type,{...o,persistedSetId:row.id}]));
     for(const candidate of rows??[])for(const o of stored.parse(candidate.outputs).outputs){if(!combined.has(o.type))combined.set(o.type,{...o,persistedSetId:candidate.id});}
     const outputs=[...combined.values()];
-    return { ...set, outputs, setId: row.id, limitations: [...set.limitations, ...(source.job.error ? [source.job.error] : [])], sourceVersion: row.source_version, createdAt: row.created_at, cached: true, quality: assessSet(outputs, set.skipped, { lines: source.lines, segmentIds: source.segmentIds }) };
+    const {data:doc}=await context.supabase.from("uploaded_documents").select("reporting_period").eq("id",data.documentId).maybeSingle();
+    return { ...set, outputs, setId: row.id, limitations: [...set.limitations, ...(source.job.error ? [source.job.error] : [])], sourceVersion: row.source_version, createdAt: row.created_at, cached: true, quality: assessSet(outputs, set.skipped, { lines: source.lines, segmentIds: source.segmentIds,period:doc?.reporting_period??null }) };
   });
 
 /** No-credit repair: reuse historical drafts and stored text, persist qualification/lineage in the existing JSON cache. */
 export const generateOutputs = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
-  .inputValidator(z.object({ documentId: z.string().uuid(), requested: z.string().max(40).array().max(40).default([]) }))
+  .inputValidator(z.object({ documentId: z.string().uuid(), requested: z.string().max(40).array().max(40).default([]), choices:z.record(z.enum(["requested","limited","alternative"])).default({}) }))
   .handler(async ({ context, data }): Promise<OutputSet> => {
     const { data: doc } = await context.supabase.from("uploaded_documents").select("id,organization_id,sha256_hash,original_filename,declared_purpose,reporting_period").eq("id", data.documentId).maybeSingle();
     if (!doc) throw new Error("Document not found.");
@@ -51,20 +53,18 @@ export const generateOutputs = createServerFn({ method: "POST" }).middleware([re
     const source = lines.map(l => `[${l.locator_key}] ${l.content}`).join("\n");
     const { data: organization } = await context.supabase.from("organizations").select("name").eq("id", doc.organization_id).single();
     const classification = /synthetic|demo|fictional|dummy|काल्पनिक|नमूना/i.test(`${organization?.name ?? ""} ${doc.original_filename} ${doc.declared_purpose} ${source}`) ? "DEMO" as const : "unverified" as const;
-    const authored = eventContent(lines, sourceResult.segmentIds);
-    const authoredSelection = authored && data.requested.some(id => ["OUT-008", "OUT-009"].includes(id));
-    const hash = await sha256(`${CONTRACT_VERSION}\n${job.id}\n${classification}\n${source}\n${JSON.stringify(lines.map(l => l.locator))}${selectionKeySuffix(data.requested)}\ncatalogue-dispatch-2`);
+    const hash = await sha256(`${CONTRACT_VERSION}\n${job.id}\n${classification}\n${source}\n${JSON.stringify(lines.map(l => l.locator))}${selectionKeySuffix(data.requested)}\n${JSON.stringify(Object.entries(data.choices).sort())}\ncatalogue-dispatch-3`);
     const { data: cached, error: cacheError } = await context.supabase.from("document_outputs").select("id,outputs,source_version,created_at").eq("document_id", doc.id).eq("source_hash", hash).maybeSingle();
     if (cacheError) throw new Error("Saved output cache could not be read.");
-    if (cached) { const set = stored.parse(cached.outputs); return { ...set, setId: cached.id, outcomes: selectionOutcomes(data.requested, set.outputs), sourceVersion: cached.source_version, createdAt: cached.created_at, cached: true, quality: assessSet(set.outputs, set.skipped, { lines, segmentIds: sourceResult.segmentIds }) }; }
+    if (cached) { const set = stored.parse(cached.outputs); return { ...set, setId: cached.id, outcomes: selectionOutcomes(data.requested, set.outputs), sourceVersion: cached.source_version, createdAt: cached.created_at, cached: true, quality: assessSet(set.outputs, set.skipped, { lines, segmentIds: sourceResult.segmentIds, period:doc.reporting_period }) }; }
 
     const originalTextHash = await sha256(source);
     const { data: previous, error: previousError } = await context.supabase.from("document_outputs").select("outputs").eq("document_id", doc.id).eq("source_hash", originalTextHash).order("created_at", { ascending: false }).limit(1).maybeSingle();
     if (previousError) throw new Error("Existing outputs could not be read.");
     const repaired = repairOutputSet(previous ? stored.parse(previous.outputs).outputs : [], lines, { documentId: doc.id, jobId: job.id, originalHash: doc.sha256_hash, parserVersion: version, contractVersion: CONTRACT_VERSION, classification, approval: "draft", locators: lines.map(l => l.locator_key), verifiedCoverage: false });
     const {data: company} = await context.supabase.rpc("is_operator",{_roles:["super_admin","authorized_operator","internal_reviewer"]});
-    const generated = generateCatalogue({lines,segmentIds:sourceResult.segmentIds,manifest:repaired.manifest,company:!!company,period:doc.reporting_period},data.requested);
-    const set = stored.parse({ ...repaired, skipped:generated.skipped, outputs: [...selectedDrafts(repaired.outputs, data.requested).filter(o=>!generated.outputs.some(n=>n.type===o.type)), ...generated.outputs] });
+    const generated = generateCatalogue({lines,segmentIds:sourceResult.segmentIds,manifest:repaired.manifest,company:!!company,period:doc.reporting_period,choices:data.choices},data.requested);
+    const set = stored.parse({ ...repaired, skipped:generated.skipped, outputs: [...selectedDrafts(repaired.outputs, data.requested).filter(o=>!o.catalogue?.catalogueId && !generated.outputs.some(n=>n.type===o.type)), ...generated.outputs] });
     const {data:savedId,error}=await context.supabase.rpc("save_catalogue_draft",{_doc:doc.id,_version:version,_hash:hash,_payload:JSON.parse(JSON.stringify(set))});
     if (error) throw new Error(`Outputs were not saved: ${error.message}`);
     const {data:saved,error:savedError}=await context.supabase.from("document_outputs").select("id,created_at").eq("id",savedId??"").maybeSingle();
@@ -74,9 +74,9 @@ export const generateOutputs = createServerFn({ method: "POST" }).middleware([re
       if (readbackError) throw new Error("Saved output winner could not be read.");
       if (!existing) throw new Error("Saved output winner could not be read; no unsaved output was returned.");
       const winner = confirmedCacheWinner(set, existing, version);
-      return { ...winner, setId: existing.id, outcomes: selectionOutcomes(data.requested, winner.outputs) };
+      return { ...winner, setId: existing.id, outcomes: selectionOutcomes(data.requested, winner.outputs), readiness:generated.readiness, quality:assessSet(winner.outputs,winner.skipped,{lines,segmentIds:sourceResult.segmentIds,period:doc.reporting_period}) };
     }
-    return { ...set, setId: saved.id, outcomes: selectionOutcomes(data.requested, set.outputs), sourceVersion: version, createdAt: saved.created_at, cached: false, quality: assessSet(set.outputs, set.skipped, { lines, segmentIds: sourceResult.segmentIds }) };
+    return { ...set, setId: saved.id, outcomes: selectionOutcomes(data.requested, set.outputs), sourceVersion: version, createdAt: saved.created_at, cached: false, readiness:generated.readiness, quality: assessSet(set.outputs, set.skipped, { lines, segmentIds: sourceResult.segmentIds, period:doc.reporting_period }) };
   });
 
 /** Individual revisions append a new set; previous content and source records are never updated. */
@@ -116,4 +116,18 @@ export const improveOutputWriting=createServerFn({method:"POST"}).middleware([re
    if(error)throw new Error(`AI draft not saved: ${error.message}`);
    const {data:saved}=await context.supabase.from("document_outputs").select("id,outputs,created_at").eq("id",id??"").single();if(!saved)throw new Error("AI draft save readback failed.");
    return {...stored.parse(saved.outputs),setId:saved.id,createdAt:saved.created_at,sourceVersion:row.source_version,cached:false};
+ });
+
+/** Readiness is read-only and computed from the same current source under caller RLS. */
+export const getOutputReadiness = createServerFn({method:"POST"}).middleware([requireSupabaseAuth])
+ .inputValidator(z.object({documentId:z.string().uuid(),requested:z.string().array().max(40).default([])}))
+ .handler(async({context,data})=>{
+  const {data:doc}=await context.supabase.from("uploaded_documents").select("reporting_period").eq("id",data.documentId).maybeSingle();
+  if(!doc)throw new Error("Source document is unavailable.");
+  const source=await latestSource(context.supabase,data.documentId);if(!source)throw new Error("Current saved extraction is unavailable; no rereading was performed.");
+  const {data:company}=await context.supabase.rpc("is_operator",{_roles:["super_admin","authorized_operator","internal_reviewer"]});
+  const event=eventContent(source.lines,source.segmentIds);
+  const ids=data.requested.length?data.requested:Object.keys(CATALOGUE_HANDLERS);
+  const reference=await import("@/data/output-reference-catalogue.json");
+  return Object.fromEntries(ids.map(id=>[id,assessReadiness(id,{lines:source.lines,period:doc.reporting_period,event:!!event,companyAllowed:!(/Company|internal/i.test(reference.default.outputs.find(o=>o.Output_ID===id)?.Default_Access_Class??""))||!!company})]));
  });

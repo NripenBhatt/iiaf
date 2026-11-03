@@ -1,3 +1,4 @@
+import { assessReadiness, PURPOSE_RULES, type ReadinessResult } from "./output-readiness";
 import type { GeneratedOutput, SourceLine } from "./output-contract";
 
 /** Shared Output Quality Standard. Statuses are categorical, never a numeric score:
@@ -7,7 +8,8 @@ import type { GeneratedOutput, SourceLine } from "./output-contract";
  * NOT_IMPLEMENTED — no generation functionality exists for the catalogue ID. */
 export type QualityStatus = "COMPLETE" | "PARTIAL" | "BLOCKED" | "NOT_IMPLEMENTED";
 export type QualityCheck = { name: string; passed: boolean; detail: string };
-export type QualityResult = { catalogueId: string; status: QualityStatus; checks: QualityCheck[]; missing: string[] };
+export type QualityDimension = { name: string; status: QualityStatus; findings: string[] };
+export type QualityResult = { catalogueId: string; status: QualityStatus; checks: QualityCheck[]; missing: string[]; dimensions?: QualityDimension[]; readiness?: ReadinessResult; nextAction?: string; release?: "not_authorized" };
 
 /** Output-specific requirements: intended purpose, the exact section headings a complete
  * deliverable must contain, minimum developed length, minimum traced citations and the
@@ -61,7 +63,7 @@ function fillerFinding(body: string): string | null {
   return null;
 }
 
-export type QualityContext = { lines: SourceLine[]; segmentIds: string[] };
+export type QualityContext = { lines: SourceLine[]; segmentIds: string[]; period?: string | null };
 
 /** Assess one generated output against its catalogue-specific rule. Persisted payloads are
  * never modified; this is a computed assessment layered on generation and readback. */
@@ -81,7 +83,7 @@ export function assessOutput(id: string, output: GeneratedOutput, ctx: QualityCo
   checks.push({ name: "No repetitive or generic filler", passed: !filler, detail: filler ?? "No repeated-sentence or duplicate-line filler detected." });
 
   const citations = output.draft?.citations ?? [];
-  const validCitations = citations.filter(c => ctx.segmentIds.includes(c.segmentId) && ctx.lines.some(l => l.locator_key === c.locatorKey && l.content === c.raw));
+  const validCitations = citations.filter(c => ctx.segmentIds.includes(c.segmentId) && ctx.lines.some(l => l.locator_key === c.locatorKey && l.content === c.raw && ctx.segmentIds[ctx.lines.indexOf(l)] === c.segmentId));
   checks.push({ name: "Citation traceability", passed: citations.length > 0 && validCitations.length === citations.length, detail: citations.length ? `${validCitations.length}/${citations.length} citations trace exactly to authorized source segments.` : "No citations recorded." });
   checks.push({ name: "Citation coverage", passed: validCitations.length >= rule.minCitations, detail: `${validCitations.length} traced citations against a minimum of ${rule.minCitations} for this output.` });
 
@@ -94,10 +96,30 @@ export function assessOutput(id: string, output: GeneratedOutput, ctx: QualityCo
   const restrictionsPreserved = output.contract.release === "not_authorized" && output.contract.approver === null && output.manifest?.verifiedCoverage === false;
   checks.push({ name: "Approval and publication restrictions preserved", passed: restrictionsPreserved, detail: restrictionsPreserved ? "Release not authorized, no approver, zero verified coverage." : "Restriction state weakened — this output must not be treated as releasable." });
 
-  const hardFailed = checks.some(c => !c.passed && ["Citation traceability", "Approval and publication restrictions preserved", "Format and export availability"].includes(c.name));
-  const softFailed = checks.some(c => !c.passed);
-  const status: QualityStatus = hardFailed ? "PARTIAL" : !softFailed && missing.length === 0 ? "COMPLETE" : "PARTIAL";
-  return { catalogueId: id, status, checks, missing };
+  const fields = PURPOSE_RULES[id];
+  const readiness = assessReadiness(id, { lines:ctx.lines, period:ctx.period ?? null, event:/announc|programme|workshop/i.test(body) });
+  const alternative = /explicitly selected alternative|Single-item Bulletin|Data Collection Draft/i.test(`${output.name} ${output.title} ${body}`);
+  const factualNumbers = [...body.matchAll(/\b\d+(?:\.\d+)?%/g)].map(m=>m[0]);
+  const unsupportedNumbers = factualNumbers.filter(n=>!ctx.lines.some(l=>l.content.includes(n)));
+  const claimLines = body.split(/\n|(?<=[.!?])\s+/).filter(line=>!/^\s*(?:>|Source:)/.test(line)&&!/(?:not |no |unconfirmed|not confirmation|not established|requires? .*review|not authorized)/i.test(line));
+  const substantiveClaims = claimLines.some(line=>/(?:was held|took place|achieved|attended by|approved by|certified compliant|placement rate is)\s/i.test(line)&&!ctx.lines.some(source=>source.content.includes(line.trim())));
+  checks.push({ name:"Unsupported factual claims",passed:unsupportedNumbers.length===0&&!substantiveClaims,detail:unsupportedNumbers.length||substantiveClaims?"Unattested outcome/approval claim or percentage requires exact source support and calculation provenance.":"No recognized unsupported outcome/approval claim or percentage detected; this is a bounded check, not semantic fact verification." });
+  checks.push({name:"Correct document classification",passed:!((id==="OUT-014"||id==="OUT-015")&&readiness.status==="ALTERNATIVE"&&!alternative),detail:alternative?"Clearly identified alternative; never the completed requested deliverable.":readiness.status==="ALTERNATIVE"?"Source does not justify the requested document classification.":"Requested classification remains subject to source sufficiency."});
+  const traced = checks.find(c=>c.name==="Citation traceability")?.passed ?? false;
+  const functional = readiness.status==="READY"&&!alternative&&!!fields&&output.meeting?.validation!=="incomplete"&&output.meeting?.validation!=="ambiguous";
+  const dimension=(name:string,passed:boolean,findings:string[]):QualityDimension=>({name,status:passed?"COMPLETE":"PARTIAL",findings});
+  const dimensions:QualityDimension[]=[
+   dimension("Structural completeness",absentSections.length===0,[checks[0]?.detail??"Structure unassessed"]),
+   dimension("Factual integrity",false,[traced?"Citations match exact authorized segment/locator/value triples.":"Citation traceability failed.","Human factual verification is not established; source citations alone cannot prove every generated claim.",...unsupportedNumbers.map(n=>`Unsupported percentage: ${n}`)]),
+   dimension("Functional completeness",functional,[fields?.acceptance??"No purpose rule",...readiness.reasons,alternative?"Alternative purpose only; requested deliverable remains incomplete.":"Purpose-specific readiness required."]),
+   dimension("Professional quality",false,[filler??"No recognized repetitive filler detected.","Professional editorial acceptance has not been recorded; length and headings are supporting checks only."]),
+   dimension("Practical usability",functional&&!filler,[functional?"Relevant required source fields available; intended-team acceptance remains separate.":readiness.nextAction]),
+   dimension("Release readiness",false,[restrictionsPreserved?"Restrictions preserved: approval, consent and publication remain unauthorized.":"Release safeguards failed; reject this output."]),
+  ];
+  const hardFailed=!traced||!restrictionsPreserved||unsupportedNumbers.length>0||substantiveClaims;
+  const status:QualityStatus=hardFailed?"BLOCKED":readiness.status==="BLOCKED"&&!alternative?"BLOCKED":"PARTIAL";
+  return { catalogueId:id,status,checks,missing:[...new Set([...missing,...readiness.missing])],dimensions,readiness,nextAction:hardFailed?"Resolve citation/factual/release failures before use.":readiness.nextAction,release:"not_authorized" };
+
 }
 
 /** Assess every catalogue ID in a generation result: generated outputs are assessed against
@@ -109,8 +131,9 @@ export function assessSet(outputs: GeneratedOutput[], skipped: { name: string; r
     if (!id) continue;
     const result = assessOutput(id, output, ctx);
     const existing = results[id];
-    // Multi-variant outputs (e.g. OUT-009 channels) keep the strongest assessed variant.
-    if (!existing || (existing.status !== "COMPLETE" && result.status === "COMPLETE") || result.checks.filter(c => c.passed).length > existing.checks.filter(c => c.passed).length) results[id] = result;
+    // A successful channel cannot hide a sibling failure; aggregate conservatively.
+    if (!existing) results[id] = result;
+    else results[id] = {...existing,status:existing.status === "BLOCKED" || result.status === "BLOCKED" ? "BLOCKED" : "PARTIAL",checks:[...existing.checks,...result.checks],missing:[...new Set([...existing.missing,...result.missing])]};
   }
   for (const skip of skipped) {
     const id = skip.name.split(":")[0] ?? skip.name;

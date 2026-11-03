@@ -1,4 +1,10 @@
 # Phase 1 security and persistence
+## Final master output implementation — 3 November 2026
+- [x] Add output-specific suitability/readiness gates and explicit limited/alternative choices; preserve source, tenant and release safeguards.
+- [x] Correct priority article, newsletter, annual-report classification and actionable campaign sequence; expose six independent quality dimensions.
+- [x] Exercise all thirty handlers with category-suitable synthetic DEMO records, inspect real document/data exports and priority before/after examples.
+- [x] Deliver 30-row matrix and inspect 62 PDF pages; explicit bulletin saved/reopened/downloaded in University A. No OCR/model/migration/permission/deployment/Phase 4.
+- [ ] Final-master completion: new article/framework/calendar hosted writes and full professional purpose-specific acceptance remain unverified; appropriate approved records/assets/original evidence and reviewer acceptance are missing. Generic drafts remain partial.
 ## Output Quality Engine and catalogue completion — 3 November 2026
 - [x] Shared quality layer `src/lib/output-quality.ts`: per-output rules for all 30 IDs (purpose, required sections, min length/citations, exports), categorical COMPLETE/PARTIAL/BLOCKED/NOT_IMPLEMENTED, eight checks including citation traceability, filler detection and release-restriction preservation. Computed at generation/readback, never persisted; no migration.
 - [x] OUT-029 rebuilt as a 13-section professional campaign calendar embedding actual OUT-009 channel copy, retrospective/demo classification for past source dates, proposed-slot labelling, no invented dates/approvals/metrics. Four-row test replaced with behavioral tests.
