@@ -169,24 +169,62 @@ function publicityPackBody(f: Fields) {
   return artifacts.map(([label, copy]) => `## ${label}\n${copy}`).join("\n\n") + "\n\nEach artifact is a separate channel draft; speaker/image consent, event status and release approval are unconfirmed.";
 }
 
-/** OUT-029: social media calendar — schedule table from source-recorded dates only. */
-function socialCalendarBody(f: Fields, eventCautions: string[], missing: string[]) {
+/** OUT-029: professional social media campaign calendar. Embeds the actual OUT-009 channel
+ * copy (not reference labels), classifies past source dates as retrospective/demo, and uses
+ * clearly labelled proposed planning slots instead of invented approved dates. */
+function socialCalendarBody(f: Fields, eventCautions: string[], missing: string[], now = new Date()) {
   const h = fieldHelpers(f);
-  const when = f["date"] ? `On the printed date (${f["date"]})` : "Date not recorded in source";
-  const rows: [string, string, string][] = [
-    ["Facebook", "Event announcement post", "OUT-009 facebook variant"],
-    ["Instagram", "Caption with event creative", "OUT-009 instagram variant"],
-    ["LinkedIn", "Professional announcement", "OUT-009 linkedin variant"],
-    ["X", "Short announcement (≤270 characters)", "OUT-009 x_post variant"],
+  const parsedDate = f["date"] ? new Date(f["date"]) : null;
+  const dateValid = parsedDate !== null && !Number.isNaN(parsedDate.getTime());
+  const retrospective = dateValid && parsedDate.getTime() < now.getTime();
+  const timing = retrospective
+    ? `The only source-recorded date (${f["date"]}) is in the past relative to generation. This calendar is a retrospective/demo planning artifact, not a future campaign schedule.`
+    : dateValid
+      ? `The source records one date (${f["date"]}). All other slots below are proposed relative phases, not approved publication dates.`
+      : "No date is recorded in the source. All slots below are proposed relative phases, not approved publication dates.";
+  const channels = [
+    { key: "facebook" as const, label: "Facebook", strategy: "Community announcement with full event details and a comment prompt; suited to longer copy and the event creative." },
+    { key: "instagram" as const, label: "Instagram", strategy: "Visual-first caption led by the event creative; details move to the caption body with a link-in-bio CTA placeholder." },
+    { key: "linkedin" as const, label: "LinkedIn", strategy: "Professional announcement framing the programme's practical value for the intended audience; suited to the OUT-011 long-form article as a follow-up." },
+    { key: "x_post" as const, label: "X", strategy: "Short announcement within 270 characters; detail deferred to a linked page rather than compressed copy." },
   ];
-  const table = ["| When | Channel | Content | Source reference |", "| --- | --- | --- | --- |", ...rows.map(([channel, content, ref]) => `| ${when} | ${channel} | ${content} | ${ref} |`)].join("\n");
+  const scheduleRows = channels.map(c => {
+    const phase = retrospective ? "Retrospective slot (date passed)" : dateValid ? `Proposed slot relative to ${f["date"]}` : "Proposed slot (no source date)";
+    return `| ${phase} | ${c.label} | ${c.key === "x_post" ? "Short announcement" : "Event announcement"} | OUT-009 ${c.key} copy embedded below | Not approved |`;
+  });
+  const schedule = ["| When | Channel | Content | Copy source | Approval |", "| --- | --- | --- | --- | --- |", ...scheduleRows].join("\n");
+  const postCopy = channels.map(c => `### ${c.label}\n${publicationCopy(c.key, f)}`).join("\n\n");
+  const creative = channels.map(c => `- ${c.label}: source-backed typographic creative (no photographs or logos are invented); ${c.key === "instagram" ? "square 1080×1080 or portrait 1080×1350" : c.key === "x_post" ? "landscape 1920×1080" : "square 1080×1080"}; alt text required; DEMO/review ribbon retained until release approval.`).join("\n");
   return [
     `# Social media calendar — ${h.title}`,
-    "## Channel schedule",
-    table,
-    "## Schedule conflicts and gaps",
+    "## Campaign overview and objectives",
+    `${h.lead} The campaign objective supported by the source is awareness of this announced programme among its intended audience. Attendance, outcomes and occurrence are not established; no objective beyond the announcement is invented.`,
+    "## Communication goals",
+    `- Announce the programme accurately from the source notice.\n- Direct interested readers to the original notice for details.\n- Avoid any claim of occurrence, attendance, outcomes or endorsement until verified.`,
+    "## Target audiences and audience segments",
+    h.audience ? `The source describes the intended audience as “${h.audience}”. No further segmentation is recorded; additional segments must not be invented.` : "The source does not record an intended audience. Audience definition is a missing input listed below.",
+    "## Campaign phases",
+    `- Pre-event: announcement posts across all four channels.${dateValid ? `\n- Event day (${f["date"]}): day-of reminder, only if occurrence is confirmed by an authorized reviewer.` : "\n- Event day: no source date; slot retained as a relative phase."}\n- Post-event: follow-up only from verified outcomes; no outcome content exists in the source.\n- ${timing}`,
+    "## Content pillars and themes",
+    h.subject ? `Single source-supported pillar: ${h.subject}. Additional pillars require further authorized source material.` : "The source supports one announcement pillar only; the title does not establish a broader theme.",
+    "## Publication schedule",
+    schedule,
+    "Only source-recorded dates appear in this calendar; no publication date is invented. Approved publishing dates are not recorded.",
+    "## Platform-specific strategy",
+    channels.map(c => `- ${c.label}: ${c.strategy}`).join("\n"),
+    "## Post copy (actual OUT-009 generated content)",
+    postCopy,
+    "## Creative and image requirements",
+    creative,
+    "## Hashtag and CTA strategy",
+    "- No approved hashtags are recorded in the source; proposed placeholders: event-name hashtag derived from the approved title, plus one institutional hashtag once branding is approved.\n- CTA: “See the original event notice for details” until a registration link is authorized. No registration link exists in the source.",
+    "## Source references and factual qualifications",
     ...eventCautions.map(caution => `- ${caution}`),
-    "- Only source-recorded dates appear above; no publication date is invented. Approved publishing dates are not recorded.",
+    `- ${REVIEW_NOTE}`,
+    "## Approval, publishing and scheduling status",
+    "- No channel is approved for publication; no post is scheduled; no message has been sent. Human review and release authorization are required for every slot above.",
+    "## Performance indicators (suggested, not measured)",
+    "- Suggested indicators once published: reach, link clicks and saves per channel. No analytics data exists in the source; these are measurement requirements, not results.",
     "## Missing information and release gates",
     ...missing.map(m => `- ${m}`),
   ].join("\n\n");
@@ -231,8 +269,20 @@ export function generateCatalogue(c: HandlerContext, requested: string[]) {
     else if (event && id === "OUT-010") body = handler.sections.map((h, i) => `## ${h}\nOn-screen text / voiceover draft: ${event.fields[i]?.value ?? "Check the original notice before release."}\nVisual direction: source-backed typography; no invented people or photographs.`).join("\n\n") + `\n\n${caution}\nNot a rendered video.`;
     else if (id === "OUT-021") body = `# Data quality and conflict report\n\n## Extraction reconciliation\n${c.lines.length} current-run source segments; ${sourceTables(c.lines).length} structured tables.\n\n## Review cautions\n${event?.cautions.join("\n") ?? "Contradiction decisions are not available; absence of a detected conflict is not validation."}\n\n## Source findings\n${sourceParagraphs}\n\n${caution}`;
     else {
-      const absent = handler.sections.slice(1);
-      body = `# ${entry.Output_Name}\n\n## ${handler.sections[0]}\n\n${sourceParagraphs}\n\n## Unavailable in the authorized source\n${absent.length ? absent.map(s => `- ${s}: no corresponding records in this document; omitted rather than filled with generic text.`).join("\n") : "- None; all declared sections have cited source material."}\n\n## Missing information and release gates\n${missing.map(m => `- ${m}`).join("\n")}\n\n${caution}`;
+      // Distribute matched source lines across declared sections by keyword affinity;
+      // sections with no matching records stay explicitly unavailable, never padded.
+      const assigned = new Set<number>();
+      const sectionBlocks: string[] = [];
+      for (const section of handler.sections.slice(1)) {
+        const keywords = section.toLowerCase().split(/[^a-z]+/).filter(w => w.length > 3);
+        const hits = matches.filter((r, i) => !assigned.has(i) && keywords.some(w => r.line.content.toLowerCase().includes(w)));
+        hits.forEach(h => assigned.add(matches.indexOf(h)));
+        if (hits.length) sectionBlocks.push(`## ${section}\n\n${hits.map(r => `> ${r.line.content}\nSource: ${r.line.locator_key}`).join("\n\n")}`);
+      }
+      const remainder = matches.filter((_, i) => !assigned.has(i));
+      const remainderText = remainder.length ? remainder.map(r => `> ${r.line.content}\nSource: ${r.line.locator_key}`).join("\n\n") : sourceParagraphs;
+      const absent = handler.sections.slice(1).filter((_, i) => !sectionBlocks.some(b => b.startsWith(`## ${handler.sections[i + 1]}\n`)));
+      body = `# ${entry.Output_Name}\n\n## ${handler.sections[0]}\n\n${remainderText}\n\n${sectionBlocks.join("\n\n")}${sectionBlocks.length ? "\n\n" : ""}## Unavailable in the authorized source\n${absent.length ? absent.map(s => `- ${s}: no corresponding records in this document; omitted rather than filled with generic text.`).join("\n") : "- None; all declared sections have cited source material."}\n\n## Missing information and release gates\n${missing.map(m => `- ${m}`).join("\n")}\n\n${caution}`;
     }
     const emit = (type: string, copy: string) => outputs.push({ type, name: entry.Output_Name, title: eventFields["title"] ?? entry.Output_Name, body: copy, manifest: c.manifest, tables: sourceTables(c.lines), draft: { version: "catalogue-draft-1", handler: id, revision: 1, parentSetId: null, edited: false, missing, cautions: [caution, ...(event?.cautions ?? [])], citations }, catalogue: { catalogueId: id, contractId: null, support: "stored-draft-only", reason: "Source-linked catalogue draft; all approval, consent and official mapping gates remain unmet." }, contract: { template: "catalogue-draft-1", mimeType: "text/markdown", dimensions: null, approver: null, release: "not_authorized" } });
     if (event && id === "OUT-009") {

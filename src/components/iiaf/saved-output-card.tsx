@@ -10,15 +10,16 @@ import { outputCsv, outputDocx, outputFileBase, outputHtml, outputText, outputWo
 import { saveBlob } from "@/lib/package-export";
 import { OutputPreview } from "./output-preview";
 import { Status } from "./ui";
+import type { QualityResult } from "@/lib/output-quality";
 
-export function SavedOutputCard({output:o,setId,source,onSaved}:{output:GeneratedOutput;setId:string|undefined;source:string;onSaved:(set:OutputSet)=>void}){
+export function SavedOutputCard({output:o,setId,source,onSaved,quality}:{output:GeneratedOutput;setId:string|undefined;source:string;onSaved:(set:OutputSet)=>void;quality?:QualityResult|undefined}){
   const revise=useServerFn(reviseOutput);const [editing,setEditing]=useState(false);const [body,setBody]=useState(o.body);const [error,setError]=useState("");const [busy,setBusy]=useState(false);const [url,setUrl]=useState("");
   const improve=useServerFn(improveOutputWriting);
   useEffect(()=>{let active=true;let objectUrl="";if(o.artifact)void savedPng(o).then(blob=>{objectUrl=URL.createObjectURL(blob);if(active)setUrl(objectUrl);}).catch(e=>setError(String(e)));return()=>{active=false;if(objectUrl)URL.revokeObjectURL(objectUrl);};},[o.artifact?.key]);
   async function save(){if(!setId)return;setBusy(true);setError("");try{onSaved(await revise({data:{setId,type:o.type,body}}));setEditing(false);}catch(e){setError(e instanceof Error?e.message:"Revision could not be saved.");}finally{setBusy(false);}}
   const base=outputFileBase(o,source);
   return <article className="flex flex-col border bg-background p-4" aria-label={`${o.name} saved output`}>
-    <div className="flex items-start justify-between gap-2"><p className="text-xs uppercase tracking-wide text-muted-foreground">{o.name}</p><Status tone="warning">Draft · review required</Status></div>
+    <div className="flex items-start justify-between gap-2"><p className="text-xs uppercase tracking-wide text-muted-foreground">{o.name}</p><div className="flex gap-1">{quality&&<Status tone={quality.status==="COMPLETE"?"success":quality.status==="BLOCKED"?"danger":"warning"}>Quality: {quality.status}</Status>}<Status tone="warning">Draft · review required</Status></div></div>
     <h3 className="mt-1 font-semibold">{o.title}</h3>
     {setId&&<p className="mt-1 break-all text-xs text-muted-foreground">Output ID {setId}:{o.type}{o.draft&&` · revision ${o.draft.revision}`}</p>}
     {error&&<p role="alert" className="mt-2 text-sm text-destructive">{error}</p>}
