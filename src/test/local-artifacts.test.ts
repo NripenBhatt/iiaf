@@ -20,4 +20,14 @@ describe("local source-linked artifacts", () => {
     expect(drafts).toHaveLength(6);
     expect(drafts.every(d => d.originalHash === "hash1" && d.parserVersion === "p1" && !d.persisted)).toBe(true);
   });
+  it("reuses contextual saved poster text but never promotes local writing to a saved artifact", () => {
+    const drafts = localDrafts(source(["From Ideas to", "Enterprises", "Understanding Legal Entity Formation for Startups:", "Why, How, Benefits and Goals", "13 October 2026", "Thursday", "Test University Hall", "Organised by Synthetic Foundation", "PARTICIPANT MOBILE FLOW", "Organised by Fabricated Foundation"]));
+    const article = drafts.find(d => d.type === "press_release");
+    expect(article?.body).toContain("Synthetic Foundation");
+    expect(article?.body).not.toContain("Fabricated Foundation");
+    expect(article?.cautions.join(" ")).toContain("weekday/date conflict");
+    expect(article?.citations.map(c => c.locatorKey)).toContain("ocr:l8");
+    expect(drafts.every(d => !d.persisted && d.release === "not_authorized")).toBe(true);
+    expect(new Set(drafts.map(d => d.body)).size).toBe(drafts.length);
+  });
 });

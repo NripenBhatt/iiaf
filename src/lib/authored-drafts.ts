@@ -1,4 +1,5 @@
 import type { SourceLine } from "./output-contract";
+import { publicationCopy } from "./publication-copy";
 
 export type DraftSource = { documentId: string; jobId: string; filename: string; originalHash: string; parserVersion: string; classification: "DEMO" | "unverified"; lines: SourceLine[] };
 export type AuthoredDraft = { type: "press_release" | "website_event" | "linkedin" | "facebook" | "instagram" | "x_post"; catalogueId: "OUT-008" | "OUT-009"; title: string; body: string; citations: { documentId: string; jobId: string; filename: string; locatorKey: string; raw: string }[]; missing: string[]; review: "human_review_required"; release: "not_authorized"; persisted: false };
@@ -27,13 +28,10 @@ export function authoredEventDrafts(source: DraftSource): AuthoredDraft[] {
   const chosen = keys.flatMap(key => usable(key)?.entries ?? []);
   const citations = chosen.map(({ line }) => ({ documentId: source.documentId, jobId: source.jobId, filename: source.filename, locatorKey: line.locator_key, raw: line.content }));
   const missing = keys.filter(key => !usable(key)).map(key => fields.has(key) ? `${key}: conflicting source values` : `${key}: not explicitly recorded`);
-  const statement = `${title.value} is announced for ${date.value}${usable("time") ? ` at ${usable("time")?.value}` : ""}${usable("venue") ? `, at ${usable("venue")?.value}` : ""}.`;
-  const subject = usable("subject"); const institutions = usable("institutions");
-  const paragraphs = [statement, subject ? `The stated workshop subject is ${subject.value}.` : "", institutions ? `The source lists these participating institutions: ${institutions.value}.` : ""].filter(Boolean);
   const languageCaution = /[\u0900-\u097f]/.test(chosen.map(e => e.line.content).join(""));
   if (languageCaution) return []; // this English template must not silently translate Hindi sources
   return (["press_release", "website_event", "linkedin", "facebook", "instagram", "x_post"] as const).flatMap(type => {
-    const body = (type === "x_post" ? [statement] : paragraphs).join("\n\n");
+    const body = publicationCopy(type, { title: title.value, date: date.value, time: usable("time")?.value, venue: usable("venue")?.value, subject: usable("subject")?.value, institutions: usable("institutions")?.value });
     const limit = limits[type];
     if (limit && Array.from(body).length > limit) return []; // no silent truncation of facts
     return [{ type, catalogueId: type === "press_release" || type === "website_event" ? "OUT-008" as const : "OUT-009" as const, title: title.value, body, citations, missing, review: "human_review_required" as const, release: "not_authorized" as const, persisted: false as const }];
