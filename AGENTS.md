@@ -40,4 +40,3 @@
 - DOCX uses a depth-aware OOXML tree for nested tables and merge-origin metadata; embedded-image omissions force manual review and existing originals are never automatically reread.
 
 
-- Catalogue readiness is computed by output-readiness.ts before dispatch; explicit limited/alternative choices are included in the dispatcher key to prevent silent downgrade or cache reuse. Quality dimensions are computed, not persisted, so saved attestations remain immutable.

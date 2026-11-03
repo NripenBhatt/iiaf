@@ -10,3 +10,5 @@
 - Output quality is assessed by src/lib/output-quality.ts with per-catalogue-ID rules and categorical COMPLETE/PARTIAL/BLOCKED/NOT_IMPLEMENTED statuses; it is computed at generation/readback and never persisted, so the save_catalogue_draft payload attestation stays unchanged. Handler changes must bump the catalogue-dispatch cache key in outputs.functions.ts.
 
 - Category-purpose DEMO fixtures exercise every catalogue ID without extraction/provider calls; absent original evidence bytes must block bundle generation, and generated examples never establish professional or release acceptance.
+
+- Catalogue readiness is computed by output-readiness.ts before dispatch; explicit limited/alternative choices are included in the dispatcher key to prevent silent downgrade or cache reuse. Quality dimensions are computed, not persisted, so saved attestations remain immutable.
