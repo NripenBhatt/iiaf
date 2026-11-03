@@ -269,8 +269,20 @@ export function generateCatalogue(c: HandlerContext, requested: string[]) {
     else if (event && id === "OUT-010") body = handler.sections.map((h, i) => `## ${h}\nOn-screen text / voiceover draft: ${event.fields[i]?.value ?? "Check the original notice before release."}\nVisual direction: source-backed typography; no invented people or photographs.`).join("\n\n") + `\n\n${caution}\nNot a rendered video.`;
     else if (id === "OUT-021") body = `# Data quality and conflict report\n\n## Extraction reconciliation\n${c.lines.length} current-run source segments; ${sourceTables(c.lines).length} structured tables.\n\n## Review cautions\n${event?.cautions.join("\n") ?? "Contradiction decisions are not available; absence of a detected conflict is not validation."}\n\n## Source findings\n${sourceParagraphs}\n\n${caution}`;
     else {
-      const absent = handler.sections.slice(1);
-      body = `# ${entry.Output_Name}\n\n## ${handler.sections[0]}\n\n${sourceParagraphs}\n\n## Unavailable in the authorized source\n${absent.length ? absent.map(s => `- ${s}: no corresponding records in this document; omitted rather than filled with generic text.`).join("\n") : "- None; all declared sections have cited source material."}\n\n## Missing information and release gates\n${missing.map(m => `- ${m}`).join("\n")}\n\n${caution}`;
+      // Distribute matched source lines across declared sections by keyword affinity;
+      // sections with no matching records stay explicitly unavailable, never padded.
+      const assigned = new Set<number>();
+      const sectionBlocks: string[] = [];
+      for (const section of handler.sections.slice(1)) {
+        const keywords = section.toLowerCase().split(/[^a-z]+/).filter(w => w.length > 3);
+        const hits = matches.filter((r, i) => !assigned.has(i) && keywords.some(w => r.line.content.toLowerCase().includes(w)));
+        hits.forEach(h => assigned.add(matches.indexOf(h)));
+        if (hits.length) sectionBlocks.push(`## ${section}\n\n${hits.map(r => `> ${r.line.content}\nSource: ${r.line.locator_key}`).join("\n\n")}`);
+      }
+      const remainder = matches.filter((_, i) => !assigned.has(i));
+      const remainderText = remainder.length ? remainder.map(r => `> ${r.line.content}\nSource: ${r.line.locator_key}`).join("\n\n") : sourceParagraphs;
+      const absent = handler.sections.slice(1).filter((_, i) => !sectionBlocks.some(b => b.startsWith(`## ${handler.sections[i + 1]}\n`)));
+      body = `# ${entry.Output_Name}\n\n## ${handler.sections[0]}\n\n${remainderText}\n\n${sectionBlocks.join("\n\n")}${sectionBlocks.length ? "\n\n" : ""}## Unavailable in the authorized source\n${absent.length ? absent.map(s => `- ${s}: no corresponding records in this document; omitted rather than filled with generic text.`).join("\n") : "- None; all declared sections have cited source material."}\n\n## Missing information and release gates\n${missing.map(m => `- ${m}`).join("\n")}\n\n${caution}`;
     }
     const emit = (type: string, copy: string) => outputs.push({ type, name: entry.Output_Name, title: eventFields["title"] ?? entry.Output_Name, body: copy, manifest: c.manifest, tables: sourceTables(c.lines), draft: { version: "catalogue-draft-1", handler: id, revision: 1, parentSetId: null, edited: false, missing, cautions: [caution, ...(event?.cautions ?? [])], citations }, catalogue: { catalogueId: id, contractId: null, support: "stored-draft-only", reason: "Source-linked catalogue draft; all approval, consent and official mapping gates remain unmet." }, contract: { template: "catalogue-draft-1", mimeType: "text/markdown", dimensions: null, approver: null, release: "not_authorized" } });
     if (event && id === "OUT-009") {
