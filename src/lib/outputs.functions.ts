@@ -53,7 +53,8 @@ export const generateOutputs = createServerFn({ method: "POST" }).middleware([re
     const source = lines.map(l => `[${l.locator_key}] ${l.content}`).join("\n");
     const { data: organization } = await context.supabase.from("organizations").select("name").eq("id", doc.organization_id).single();
     const classification = /synthetic|demo|fictional|dummy|काल्पनिक|नमूना/i.test(`${organization?.name ?? ""} ${doc.original_filename} ${doc.declared_purpose} ${source}`) ? "DEMO" as const : "unverified" as const;
-    const hash = await sha256(`${CONTRACT_VERSION}\n${job.id}\n${classification}\n${source}\n${JSON.stringify(lines.map(l => l.locator))}${selectionKeySuffix(data.requested)}\n${JSON.stringify(Object.entries(data.choices).sort())}\ncatalogue-dispatch-4`);
+    const annualVersion=data.requested.includes('OUT-015')||!data.requested.length?'\nOUT-015-annual-report-1':'';
+    const hash = await sha256(`${CONTRACT_VERSION}\n${job.id}\n${classification}\n${source}\n${JSON.stringify(lines.map(l => l.locator))}${selectionKeySuffix(data.requested)}\n${JSON.stringify(Object.entries(data.choices).sort())}\ncatalogue-dispatch-4${annualVersion}`);
     const { data: cached, error: cacheError } = await context.supabase.from("document_outputs").select("id,outputs,source_version,created_at").eq("document_id", doc.id).eq("source_hash", hash).maybeSingle();
     if (cacheError) throw new Error("Saved output cache could not be read.");
     if (cached) { const set = stored.parse(cached.outputs); return { ...set, setId: cached.id, outcomes: selectionOutcomes(data.requested, set.outputs), sourceVersion: cached.source_version, createdAt: cached.created_at, cached: true, quality: assessSet(set.outputs, set.skipped, { lines, segmentIds: sourceResult.segmentIds, period:doc.reporting_period }) }; }

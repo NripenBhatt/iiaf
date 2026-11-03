@@ -1,6 +1,7 @@
 import { assessReadiness, PURPOSE_RULES, type ReadinessResult } from "./output-readiness";
 import type { GeneratedOutput, SourceLine } from "./output-contract";
 import { sourceRates } from "./purpose-content";
+import { annualReport, annualRates } from "./annual-report";
 
 /** Shared Output Quality Standard. Statuses are categorical, never a numeric score:
  * COMPLETE — every output-specific requirement passed against the authorized source.
@@ -74,8 +75,11 @@ export function assessOutput(id: string, output: GeneratedOutput, ctx: QualityCo
   const checks: QualityCheck[] = [];
   const body = output.body ?? "";
 
-  const absentSections = rule.requiredSections.filter(s => !body.includes(s));
-  checks.push({ name: "Required sections", passed: absentSections.length === 0, detail: absentSections.length ? `Missing sections: ${absentSections.join("; ")}` : `All ${rule.requiredSections.length} required sections present.` });
+  const annual=id==='OUT-015'?annualReport(ctx.lines,ctx.period??null):null;
+  const annualAlternative=id==='OUT-015'&&/Data Collection Draft|Annual Report Framework/.test(output.title);
+  const requiredSections=annual&&!annualAlternative?['Executive Summary',...annual.evidence.present.map(([h])=>h),'Conclusion','Evidence and Source References']:rule.requiredSections;
+  const absentSections = requiredSections.filter(s => !body.includes(s));
+  checks.push({ name: "Required sections", passed: absentSections.length === 0, detail: absentSections.length ? `Missing sections: ${absentSections.join("; ")}` : `All ${requiredSections.length} applicable required sections present.` });
 
   const developed = body.length >= rule.minBodyChars;
   checks.push({ name: "Content development", passed: developed, detail: developed ? `Body length ${body.length} characters meets the ${rule.minBodyChars} minimum for this output.` : `Body length ${body.length} characters is below the ${rule.minBodyChars} minimum; content is not sufficiently developed.` });
@@ -101,7 +105,7 @@ export function assessOutput(id: string, output: GeneratedOutput, ctx: QualityCo
   const readiness = assessReadiness(id, { lines:ctx.lines, period:ctx.period ?? null, event:/announc|programme|workshop/i.test(body) });
   const alternative = /explicitly selected alternative|Single-item Bulletin|Data Collection Draft/i.test(`${output.name} ${output.title} ${body}`);
   const factualNumbers = [...body.matchAll(/\b\d+(?:\.\d+)?%/g)].map(m=>m[0]);
-  const derived = sourceRates(id, ctx.lines, ctx.period ?? null);
+  const derived = id==='OUT-015'?annualRates(ctx.lines,ctx.period??null):sourceRates(id, ctx.lines, ctx.period ?? null);
   const unsupportedNumbers = factualNumbers.filter(n=>!ctx.lines.some(l=>l.content.includes(n)) && !derived.some(r=>r.value===n && body.includes(`derived = ${r.numerator} ÷ ${r.denominator} × 100`) && body.includes(r.basis)));
   const claimLines = body.split(/\n|(?<=[.!?])\s+/).filter(line=>!/^\s*(?:>|Source:)/.test(line)&&!/(?:not |no |unconfirmed|not confirmation|not established|requires? .*review|not authorized)/i.test(line));
   const substantiveClaims = claimLines.some(line=>/(?:was held|took place|achieved|attended by|approved by|certified compliant|placement rate is)\s/i.test(line)&&!ctx.lines.some(source=>source.content.includes(line.trim())));
@@ -110,7 +114,7 @@ export function assessOutput(id: string, output: GeneratedOutput, ctx: QualityCo
   const traced = checks.find(c=>c.name==="Citation traceability")?.passed ?? false;
   const functional = readiness.status==="READY"&&!alternative&&!!fields&&output.meeting?.validation!=="incomplete"&&output.meeting?.validation!=="ambiguous";
   const dimension=(name:string,passed:boolean,findings:string[]):QualityDimension=>({name,status:passed?"COMPLETE":"PARTIAL",findings});
-  const dimensions:QualityDimension[]=[
+  let dimensions:QualityDimension[]=[
    dimension("Structural completeness",absentSections.length===0,[checks[0]?.detail??"Structure unassessed"]),
    dimension("Factual integrity",false,[traced?"Citations match exact authorized segment/locator/value triples.":"Citation traceability failed.","Human factual verification is not established; source citations alone cannot prove every generated claim.",...unsupportedNumbers.map(n=>`Unsupported percentage: ${n}`)]),
    dimension("Functional completeness",false,[fields?.acceptance??"No purpose rule",...readiness.reasons,alternative?"Alternative purpose only; requested deliverable remains incomplete.":"Input readiness is not workflow or deliverable acceptance; purpose-specific user acceptance is not recorded."]),
@@ -118,7 +122,22 @@ export function assessOutput(id: string, output: GeneratedOutput, ctx: QualityCo
    dimension("Practical usability",false,[functional?"Relevant required source fields available; intended-team use and downloaded-file acceptance have not been recorded.":readiness.nextAction]),
    dimension("Release readiness",false,[restrictionsPreserved?"Restrictions preserved: approval, consent and publication remain unauthorized.":"Release safeguards failed; reject this output."]),
   ];
-  const hardFailed=!traced||!restrictionsPreserved||unsupportedNumbers.length>0||substantiveClaims;
+  if(annual){
+   const exact=body===annual.body&&!annualAlternative;
+   const gapsDeclared=annual.evidence.gaps.every(g=>body.includes(g));
+   checks.push({name:'Annual evidence coverage and gap disclosure',passed:exact||annualAlternative,detail:annualAlternative?'Separate framework, not an annual report.':exact?'Generated narrative and named gaps match current evidence.':'Content changed or historical; current narrative/coverage acceptance not established.'});
+   checks.push({name:'Annual source period and value consistency',passed:annual.evidence.status!=='BLOCKED',detail:annual.evidence.conflict?'Conflicting reporting periods; blocked.':annual.evidence.alternatives.length?`Conflicting values: ${annual.evidence.alternatives.join(', ')}`:'No recognized period/value conflicts; source assertions still require verification.'});
+   dimensions=[
+    dimension('Source/Input Readiness',annual.evidence.status==='READY',readiness.reasons),
+    dimension('Generation Status',exact,[exact?'Deterministic annual narrative generated from current source records.':'Historical, framework or edited content; generation against current annual contract not established.']),
+    dimension('Structural Completeness',exact&&absentSections.length===0&&annual.evidence.gaps.length===0,[...annual.evidence.gaps,`${annual.evidence.present.length} supported reporting areas; missing areas are a separate evidence worklist, not empty chapters.`]),
+    dimension('Factual Integrity',false,[`${validCitations.length}/${citations.length} exact source citations.`,exact?'Content matches deterministic source-backed narrative; facts remain unverified.':'Edited content requires renewed fact-by-fact review.',...unsupportedNumbers.map(n=>`Unsupported percentage ${n}`)]),
+    dimension('Analytical Completeness',false,[`${annual.evidence.rates.length} scoped, formula-backed percentage indicators.`,body.includes('Derived absolute change:')?'Paired numeric comparison included; causal interpretation withheld.':'Comparable historical data not established; no invented trends.',...annual.evidence.gaps.filter(g=>/indicator/i.test(g)),'Institutional analytical acceptance not recorded.']),
+    dimension('Professional Quality',false,[filler??'No recognized repetitive filler.',gapsDeclared?'Section-specific missing records disclosed.':'Gap disclosure incomplete.','Downloaded-file/editorial acceptance must be verified separately; READY does not mean professionally complete.']),
+    dimension('Human Review and Release Authorization',false,['No authorized factual/editorial acceptance or release. DEMO is never verified institutional coverage.']),
+   ];
+  }
+  const hardFailed=!traced||!restrictionsPreserved||unsupportedNumbers.length>0||substantiveClaims||!!annual&&annual.evidence.status==='BLOCKED';
   const status:QualityStatus=hardFailed?"BLOCKED":readiness.status==="BLOCKED"&&!alternative?"BLOCKED":"PARTIAL";
   return { catalogueId:id,status,checks,missing:[...new Set([...missing,...readiness.missing])],dimensions,readiness,nextAction:hardFailed?"Resolve citation/factual/release failures before use.":readiness.nextAction,release:"not_authorized" };
 

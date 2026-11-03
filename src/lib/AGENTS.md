@@ -13,3 +13,4 @@
 
 - Catalogue readiness is computed by output-readiness.ts before dispatch; explicit limited/alternative choices are included in the dispatcher key to prevent silent downgrade or cache reuse. Quality dimensions are computed, not persisted, so saved attestations remain immutable.
 - Purpose content and derived metrics use purpose-content.ts; associate labelled/structured records before arithmetic and validate exact formula/basis in quality checks, because flattened multi-record lists must never create invented cohorts.
+- OUT-015 alone uses annual-report.ts for exact-label/row-header evidence, section gaps and scoped metrics; its cache suffix is isolated to annual selections so unrelated saved output identities stay unchanged. Annual exports separate raw evidence appendices and computed quality never modifies historical saved bodies.

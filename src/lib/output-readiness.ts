@@ -1,4 +1,5 @@
 import type { SourceLine } from './output-contract';
+import { annualEvidence } from './annual-report';
 
 export type ReadinessStatus = 'READY' | 'LIMITED' | 'ALTERNATIVE' | 'BLOCKED';
 export type DraftChoice = 'requested' | 'limited' | 'alternative';
@@ -56,6 +57,11 @@ export function assessReadiness(id: string, ctx: {lines:SourceLine[];period:stri
  const base: ReadinessResult = {catalogueId:id,status:'BLOCKED',available:[],missing:[],absentCategories:[],verification:[],reasons:[],nextAction:'Supply attributable source records and assess again.',alternative:null,canLimit:false,release:'not_authorized'};
  if(!r) return {...base,reasons:['No implemented catalogue rule.']};
  if(ctx.companyAllowed===false)return {...base,reasons:['Company-only output; server authorization denied.']};
+ if(id==='OUT-015'){
+  const a=annualEvidence(ctx.lines,ctx.period);const alternative=a.status==='ALTERNATIVE'?r.alternative:null;
+  const verification=['Source values require human verification; DEMO is not verified institutional evidence.',...(a.conflict?['Conflicting or mismatched source reporting periods; report generation blocked.']:[]),...a.alternatives.map(k=>`${k}: conflicting source values; authorized review required.`)];
+  return {...base,status:a.status,available:r.fields.filter(k=>a.usable(k).length),missing:a.gaps,verification,reasons:a.status==='READY'?['Source fields support an annual review draft; READY does not establish professional completion.']:a.status==='BLOCKED'?verification.slice(1):['Insufficient annual evidence; only an explicitly selected partial draft or separate planning framework is available.'],alternative,canLimit:a.status==='LIMITED',nextAction:a.status==='READY'?'Generate the requested annual review draft.':a.status==='LIMITED'?'Choose the Annual Report — Partial Draft explicitly; supply each named missing institutional record.':a.status==='ALTERNATIVE'?'Supply institutional annual records; the framework is a separate planning aid only.':'Resolve source period/value conflicts through authorized review; originals remain unchanged.'};
+ }
  const fields=sourceFields(ctx.lines);const has=(s:string)=>fields.has(s.toLowerCase());
  const eventAliases:Record<string,RegExp>={'Event Title':/^(from ideas to|event title\s*:|workshop title\s*:)/i,'Programme Focus':/^(understanding legal|programme focus\s*:)/i,'Audience':/^(interactive learning for|audience\s*:)/i,'Event Date':/^(\d{1,2}\s+[a-z]+\s+20\d{2}|event date\s*:)/i,'Organizer':/^organis?ed by/i,'Venue':/university|auditorium|campus|hall/i};
  const available=r.fields.filter(f=>has(f)||(r.category==='event'&&ctx.event&&ctx.lines.some(l=>eventAliases[f]?.test(l.content))));

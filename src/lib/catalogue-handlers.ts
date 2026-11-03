@@ -5,6 +5,7 @@ import { publicationCopy } from "./publication-copy";
 import { sourceTables, type GeneratedOutput, type SourceLine, type SourceManifest } from "./output-contract";
 import { structuredMeetings } from "./meeting-contract";
 import { editorialBody, purposeBody } from "./purpose-content";
+import { annualReport } from "./annual-report";
 
 export type HandlerContext = { lines: SourceLine[]; segmentIds: string[]; manifest: SourceManifest; company: boolean; period: string | null; choices?: Record<string, DraftChoice> };
 
@@ -287,7 +288,7 @@ export function generateCatalogue(c: HandlerContext, requested: string[]) {
     const citations = [...new Map(selected.map(s => [s.segmentId, s])).values()];
     if (!citations.length) { skipped.push({ name: id, reason: "No attributable source passages." }); continue; }
     const sourceParagraphs = citations.map(s => `> ${s.raw}\nSource: ${s.locatorKey}`).join("\n\n");
-    const missing = [...assessment.missing, ...handler.missing, ...(!c.period && /OUT-004|OUT-015|OUT-016|OUT-027|OUT-030/.test(id) ? ["Reporting period not recorded"] : [])];
+    const missing = [...assessment.missing, ...(id==='OUT-015'?[]:handler.missing), ...(!c.period && /OUT-004|OUT-015|OUT-016|OUT-027|OUT-030/.test(id) ? ["Reporting period not recorded"] : [])];
     const caution = "Human review required. Source-derived draft, not verified evidence. Release and external communication are not authorized.";
     let body = "";
     if (event && id === "OUT-008") body = newsArticleBody(eventFields, sourceParagraphs);
@@ -298,6 +299,7 @@ export function generateCatalogue(c: HandlerContext, requested: string[]) {
     else if (event && id === "OUT-012") body = `Subject: ${eventFields["title"]}\n\n${publicationCopy("website_event", eventFields)}\n\nRecipients, sender, opt-out and schedule: unconfirmed. Draft only; no message sent.`;
     else if (event && id === "OUT-013") body = `Message draft\n\n${publicationCopy("facebook", eventFields)}\n\nRecipients and WhatsApp eligibility: unconfirmed. No message sent.`;
     else if (event && id === "OUT-010") body = handler.sections.map((h, i) => `## ${h}\nOn-screen text / voiceover draft: ${event.fields[i]?.value ?? "Check the original notice before release."}\nVisual direction: source-backed typography; no invented people or photographs.`).join("\n\n") + `\n\n${caution}\nNot a rendered video.`;
+    else if (id==='OUT-015') body = annualReport(c.lines,c.period).body;
     else if (purposeBody(id, c.lines, c.period)) body = purposeBody(id, c.lines, c.period) ?? "";
     else {
       const fields = sourceFields(c.lines);
@@ -309,7 +311,8 @@ export function generateCatalogue(c: HandlerContext, requested: string[]) {
     if (choice === "alternative" && assessment.alternative) {
       body = id === "OUT-014" ? body : `# ${assessment.alternative}\n\nExplicitly selected alternative to ${entry.Output_Name}; not a completed requested deliverable.\n\n## Available information\n${assessment.available.join("; ") || "The source supports no substantive requested-report fields."}\n\n## Data collection plan\n| Required record | Purpose | Action |\n| --- | --- | --- |\n${assessment.missing.map(m => `| ${m} | Support ${entry.Output_Name} | Supply dated, attributable records and verify values |`).join("\n")}\n\n## Available source references\n${sourceParagraphs}\n\n${caution}`;
     }
-    const emit = (type: string, copy: string) => outputs.push({ type, name: choice === "alternative" ? `${entry.Output_Name} — alternative: ${assessment.alternative}` : assessment.status === "LIMITED" ? `${entry.Output_Name} — explicitly limited draft` : entry.Output_Name, title: choice === "alternative" ? assessment.alternative ?? entry.Output_Name : eventFields["title"] ?? entry.Output_Name, body: copy, manifest: c.manifest, tables: sourceTables(c.lines), draft: { version: "catalogue-draft-1", handler: id, revision: 1, parentSetId: null, edited: false, missing, cautions: [caution, ...(event?.cautions ?? [])], citations }, catalogue: { catalogueId: id, contractId: null, support: "stored-draft-only", reason: "Source-linked catalogue draft; all approval, consent and official mapping gates remain unmet." }, contract: { template: "catalogue-draft-1", mimeType: "text/markdown", dimensions: null, approver: null, release: "not_authorized" } });
+    const annualTitle=id==='OUT-015'&&choice!=='alternative'?annualReport(c.lines,c.period).title:null;
+    const emit = (type: string, copy: string) => outputs.push({ type, name: annualTitle ?? (choice === "alternative" ? `${entry.Output_Name} — alternative: ${assessment.alternative}` : assessment.status === "LIMITED" ? `${entry.Output_Name} — explicitly limited draft` : entry.Output_Name), title: annualTitle ?? (choice === "alternative" ? assessment.alternative ?? entry.Output_Name : eventFields["title"] ?? entry.Output_Name), body: copy, manifest: c.manifest, tables: sourceTables(c.lines), draft: { version: "catalogue-draft-1", handler: id, revision: 1, parentSetId: null, edited: false, missing, cautions: [caution, ...(event?.cautions ?? [])], citations }, catalogue: { catalogueId: id, contractId: null, support: "stored-draft-only", reason: "Source-linked catalogue draft; all approval, consent and official mapping gates remain unmet." }, contract: { template: "catalogue-draft-1", mimeType: "text/markdown", dimensions: null, approver: null, release: "not_authorized" } });
     if (event && id === "OUT-009") {
       for (const channel of ["facebook","instagram","linkedin","x_post"] as const) {
         let copy = publicationCopy(channel, eventFields); const limit = { facebook: 800, instagram: 2200, linkedin: 1200, x_post: 270 }[channel];
