@@ -1,4 +1,9 @@
 # Phase 1 security and persistence
+## Existing 30-output completion — 3 November 2026
+- [ ] Batch 1: improve source-cited article/website/platform writing using saved extraction; preserve saved source-event-1 bodies and existing OUT-008/009 dispatch.
+- [ ] Verify changed draft/download flow once in the assigned workspace; publish an honest 30-entry generation/quality/persistence/file matrix.
+- [ ] Next batches: remaining catalogue-specific handlers and formats; exact protected contract approval and source/governance inputs required before persistence extensions. No catalogue expansion, UI redesign, provider calls or Phase 4.
+
 > Current authority: the Unified Phase 3 programme below. Earlier sections are historical evidence, not current authorization or verified A/B acceptance.
 - [x] Inspect existing application and connect supported Lovable Cloud.
 - [x] Create organization, profile, membership, protected role and audit schema with tenant policies.
