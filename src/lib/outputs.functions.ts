@@ -23,13 +23,16 @@ const stored = storedOutputSetSchema;
 export const getOutputs = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
   .inputValidator(z.object({ documentId: z.string().uuid() }))
   .handler(async ({ context, data }) => {
-    const { data: row, error } = await context.supabase.from("document_outputs").select("id,outputs,source_version,created_at").eq("document_id", data.documentId).order("created_at", { ascending: false }).limit(1).maybeSingle();
+    const { data: rows, error } = await context.supabase.from("document_outputs").select("id,outputs,source_version,created_at").eq("document_id", data.documentId).order("created_at", { ascending: false }).limit(100);
     if (error) throw new Error("Outputs could not be read.");
+    const row=rows?.find(r=>stored.parse(r.outputs).outputs.some(o=>o.draft))??rows?.[0];
     if (!row) return null;
     const source = await latestSource(context.supabase, data.documentId);
     if (!source) throw new Error("The latest document reading is unavailable; saved drafts were not presented as current.");
     const set = stored.parse(row.outputs);
-    return { ...set, setId: row.id, limitations: [...set.limitations, ...(source.job.error ? [source.job.error] : [])], sourceVersion: row.source_version, createdAt: row.created_at, cached: true };
+    const combined=new Map(set.outputs.map(o=>[o.type,{...o,persistedSetId:row.id}]));
+    for(const candidate of rows??[])for(const o of stored.parse(candidate.outputs).outputs){if(!combined.has(o.type))combined.set(o.type,{...o,persistedSetId:candidate.id});}
+    return { ...set, outputs:[...combined.values()],setId: row.id, limitations: [...set.limitations, ...(source.job.error ? [source.job.error] : [])], sourceVersion: row.source_version, createdAt: row.created_at, cached: true };
   });
 
 /** No-credit repair: reuse historical drafts and stored text, persist qualification/lineage in the existing JSON cache. */

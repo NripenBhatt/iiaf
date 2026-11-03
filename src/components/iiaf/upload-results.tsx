@@ -135,7 +135,7 @@ function OneFile({ r, requested, detailed }: { r: FileResult; requested: string[
       {set?.setId && <p className="mb-3 break-all text-xs text-muted-foreground">Saved set {set.setId} · {set.createdAt} · source version {set.sourceVersion}</p>}
       {lineage && <LocalAuthoring lineage={lineage} />}
       {set && set.outputs.length > 0 && <Button size="sm" variant="outline" className="mb-3" onClick={() => { if (set) void outputsZip(set.outputs, r.name).then(b => saveBlob(b, `${outputFileBase({ type: "outputs" }, r.name)}.zip`)); }}><Download /> Download saved outputs (ZIP)</Button>}
-      <div className="grid gap-4 lg:grid-cols-2">{(set?.outputs ?? []).map(o => <SavedOutputCard key={o.type} output={o} setId={set?.setId} source={r.name} onSaved={setGeneratedSet}/>)}</div>
+      <div className="grid gap-4 lg:grid-cols-2">{(set?.outputs ?? []).map(o => <SavedOutputCard key={o.type} output={o} setId={o.persistedSetId??set?.setId} source={r.name} onSaved={setGeneratedSet}/>)}</div>
       {set && set.skipped.length > 0 && <details className="mt-3 text-xs text-muted-foreground"><summary className="cursor-pointer font-medium">Not produced ({set.skipped.length}) and why</summary><ul className="mt-2 list-disc pl-5">{set.skipped.map(s => <li key={s.name}>{s.name}: {s.reason}</li>)}</ul></details>}
     </TabsContent>
   </Tabs>;

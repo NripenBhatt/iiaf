@@ -44,7 +44,7 @@ export async function outputsZip(list: GeneratedOutput[], source: string) {
     zip.file(`${base}.xlsx`,outputWorkbook(o,source));
     if (o.artifact) zip.file(`${base}.png`, await savedPng(o));
     zip.file(`${base}.csv`, outputCsv(o));
-    if (o.manifest) zip.file(`${base}.manifest.json`, JSON.stringify({ ...o.manifest, catalogue: o.catalogue ?? null, qualification: o.qualification ?? [], tables: o.tables ?? [], meeting: o.meeting ?? null, authored:o.authored??null,artifact:o.artifact??null }, null, 2));
+    if (o.manifest) zip.file(`${base}.manifest.json`, JSON.stringify({ ...o.manifest, catalogue: o.catalogue ?? null, qualification: o.qualification ?? [], tables: o.tables ?? [], meeting: o.meeting ?? null, draft:o.draft??null,persistedSetId:o.persistedSetId??null,authored:o.authored??null,artifact:o.artifact??null }, null, 2));
   }
   return zip.generateAsync({ type: "blob" });
 }
