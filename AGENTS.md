@@ -39,4 +39,3 @@
 - Meeting contracts use explicit source table headers only, retaining per-field provenance, missing values and alternatives; deterministic drafts never infer proceedings or promote facts.
 - DOCX uses a depth-aware OOXML tree for nested tables and merge-origin metadata; embedded-image omissions force manual review and existing originals are never automatically reread.
 
-- Selected article/social catalogue IDs dispatch through the cited event generator before saving in the existing output store; dispatcher-version keys prevent extraction-only cache reuse after handler changes.
