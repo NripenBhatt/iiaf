@@ -1,9 +1,10 @@
 # Phase 1 security and persistence
 ## OUT-015 targeted Annual Report correction — 3 November 2026
-- [ ] Isolate annual narrative, section-specific gaps, period/conflict validation and provenance-backed metrics; leave unrelated outputs unchanged.
-- [ ] Test sufficient, partial, conflicting-period and missing-denominator records; inspect actual Annual Report Word and spreadsheet files.
-- [ ] Verify new saved version, full refresh, reopen and Word download with available authorized institutional sources; report missing source/authorization blockers honestly.
-- [ ] Deliver root cause, changed files, before/after samples and dimension-specific acceptance verdict; no AI/OCR/schema/access/deployment changes.
+- [x] Isolate annual narrative, section-specific gaps, period/conflict validation and provenance-backed metrics; leave unrelated outputs unchanged.
+- [x] 17 Annual Report tests + 40 focused compatibility checks passed; sufficient/partial/mismatched/missing-denominator cases exercised. Three DOCX/XLSX sample exports opened; 25 final Word pages visually inspected (21 DEMO + 4 actual downloaded partial draft).
+- [x] New Annual Report — Partial Draft saved as fc9b8d81-dde3-4c94-8261-e7e75959199d:annual_report; full browser refresh, same ID reopened and correct Word downloaded. Generation invoked through existing authenticated application function in browser; generation-button path not claimed verified. Five current candidate sources lack selected annual periods/complete institutional records; no source edits or rereads.
+- [x] Deliver OUT-015 correction report, actual partial Word download and synthetic sufficient example; no AI/OCR/schema/access/deployment changes.
+- [ ] OUT-015 professional acceptance: requires attributable complete annual institutional source records with selected period, approved factual/editorial review and sufficient-source in-app generation-button acceptance. Current verdict PARTIAL; Phase 3 NO-GO, W1 pending, Phase 4 unstarted.
 ## Targeted correction and quality acceptance — 3 November 2026
 - [x] Batch 1: purpose-specific priority source narratives, composed multi-item editorial records and provenance-checked placement/analytics arithmetic; per-READY-output generation button, seven-slot individual campaign copy/proposed dates.
 - [x] Complete automated regression suite: 279/279 passed. Generated all thirty DEMO cases (29 drafts, evidence bundle blocked); opened 32 DOCX/32 XLSX structurally; visually inspected 50 pages from nine priority DEMO documents and three actual UI downloads. Dense lineage appendix remains a usability defect, not accepted.

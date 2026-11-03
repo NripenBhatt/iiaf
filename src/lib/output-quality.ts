@@ -79,7 +79,7 @@ export function assessOutput(id: string, output: GeneratedOutput, ctx: QualityCo
   const annualAlternative=id==='OUT-015'&&/Data Collection Draft|Annual Report Framework/.test(output.title);
   const requiredSections=annual&&!annualAlternative?['Executive Summary',...annual.evidence.present.map(([h])=>h),'Conclusion','Evidence and Source References']:rule.requiredSections;
   const absentSections = requiredSections.filter(s => !body.includes(s));
-  checks.push({ name: "Required sections", passed: absentSections.length === 0, detail: absentSections.length ? `Missing sections: ${absentSections.join("; ")}` : `All ${rule.requiredSections.length} required sections present.` });
+  checks.push({ name: "Required sections", passed: absentSections.length === 0, detail: absentSections.length ? `Missing sections: ${absentSections.join("; ")}` : `All ${requiredSections.length} applicable required sections present.` });
 
   const developed = body.length >= rule.minBodyChars;
   checks.push({ name: "Content development", passed: developed, detail: developed ? `Body length ${body.length} characters meets the ${rule.minBodyChars} minimum for this output.` : `Body length ${body.length} characters is below the ${rule.minBodyChars} minimum; content is not sufficiently developed.` });
