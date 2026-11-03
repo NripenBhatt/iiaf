@@ -1,10 +1,11 @@
+import { assessReadiness, sourceFields, PURPOSE_RULES, type DraftChoice } from "./output-readiness";
 import reference from "@/data/output-reference-catalogue.json";
 import { eventContent } from "./source-authored";
 import { publicationCopy } from "./publication-copy";
 import { sourceTables, type GeneratedOutput, type SourceLine, type SourceManifest } from "./output-contract";
 import { structuredMeetings } from "./meeting-contract";
 
-export type HandlerContext = { lines: SourceLine[]; segmentIds: string[]; manifest: SourceManifest; company: boolean; period: string | null };
+export type HandlerContext = { lines: SourceLine[]; segmentIds: string[]; manifest: SourceManifest; company: boolean; period: string | null; choices?: Record<string, DraftChoice> };
 
 /** Source categories an output may draw on. Retrieval is category-aware: an event
  * poster can never satisfy placement, institutional, evidence or analytics outputs. */
@@ -80,6 +81,8 @@ export function catalogueEligible(id: string, c: HandlerContext) {
   return c.lines.some(l => handler.signal.test(l.content)) || (eventIds.includes(id) && !!event);
 }
 
+const isEventRecord = (id:string) => PURPOSE_RULES[id]?.category === "event" || id === "OUT-014";
+
 type Fields = Partial<Record<string, string | undefined>>;
 const sentenceValue = (value: string) => value.trim().replace(/[.:;]+$/, "");
 const labelledValue = (value: string, label: RegExp) => sentenceValue(value.replace(label, ""));
@@ -104,7 +107,7 @@ function newsArticleBody(f: Fields, sourceParagraphs: string) {
   return [
     `# ${h.title}`,
     h.subject ? `*${h.subject} — announced programme, occurrence unconfirmed.*` : "*Announced programme; occurrence unconfirmed.*",
-    h.lead,
+    `${h.lead} ${h.subject ? `The notice sets out a learning focus on ${h.subject}, bringing the programme’s purpose into view before readers review the logistical details.` : "The notice provides the basis for this announcement; it does not establish event completion."}`,
     "## Programme focus",
     [h.subject ? `The announced programme focuses on ${h.subject}.` : undefined, h.audience ? `The source describes the intended audience as “${h.audience}”.` : undefined].filter(Boolean).join(" ") || "The source does not state a programme focus beyond the title.",
     h.people ? "## People and institutions" : undefined,
@@ -115,6 +118,10 @@ function newsArticleBody(f: Fields, sourceParagraphs: string) {
     REVIEW_NOTE,
     "## Cited source passages",
     sourceParagraphs,
+    "## Closing",
+    "Readers should consult the original notice and obtain confirmation of current arrangements before acting on this announcement. Any account of participation or results requires a separate source-backed follow-up.",
+    `Suggested URL slug: ${h.title.toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"")}`,
+    `Editorial review: pending. Publication status: not authorized.`,
     `SEO title: ${h.title}`,
     `Meta description: ${h.subject ?? "Source-backed workshop announcement; details require review."}`,
   ].filter(Boolean).join("\n\n");
@@ -143,7 +150,7 @@ function newsletterBody(f: Fields, caution: string) {
   const h = fieldHelpers(f);
   const masthead = h.host ?? h.organizer ?? "Institution";
   return [
-    `# ${masthead} — Newsletter (review edition)`,
+    `# ${masthead} — Single-item Bulletin (explicitly selected alternative)`,
     `*Source-derived draft · ${f["date"] ? `feature date ${f["date"]}` : "date unconfirmed"} · human review required*`,
     "## In this issue",
     `- Featured announcement: ${h.title}`,
@@ -152,7 +159,7 @@ function newsletterBody(f: Fields, caution: string) {
     "## Details at a glance",
     h.details || "No event details recorded in the source.",
     "## Editorial notes",
-    `No other verified news items were supplied for this edition; sections without source records are omitted rather than padded. ${caution}`,
+    `This bulletin contains one announcement, not a full institutional newsletter. A full issue needs recent academic, research, student/faculty or opportunity updates with reader value, dates and attributable details; approved links and visual assets should be supplied where relevant. ${caution}`,
   ].filter(Boolean).join("\n\n");
 }
 
@@ -188,11 +195,17 @@ function socialCalendarBody(f: Fields, eventCautions: string[], missing: string[
     { key: "linkedin" as const, label: "LinkedIn", strategy: "Professional announcement framing the programme's practical value for the intended audience; suited to the OUT-011 long-form article as a follow-up." },
     { key: "x_post" as const, label: "X", strategy: "Short announcement within 270 characters; detail deferred to a linked page rather than compressed copy." },
   ];
-  const scheduleRows = channels.map(c => {
-    const phase = retrospective ? "Retrospective slot (date passed)" : dateValid ? `Proposed slot relative to ${f["date"]}` : "Proposed slot (no source date)";
-    return `| ${phase} | ${c.label} | ${c.key === "x_post" ? "Short announcement" : "Event announcement"} | OUT-009 ${c.key} copy embedded below | Not approved |`;
-  });
-  const schedule = ["| When | Channel | Content | Copy source | Approval |", "| --- | --- | --- | --- | --- |", ...scheduleRows].join("\n");
+  const phases = [
+    ["Awareness","T-7","Facebook","Community introduction","Learn the programme focus"],
+    ["Main announcement","T-5","LinkedIn","Professional context","Read the source notice"],
+    ["Engagement","T-3","Instagram","Proposed carousel","Save the verified details"],
+    ["Reminder","T-1","X","Short reminder","Check current arrangements"],
+    ["Event-day","T0","Instagram","Proposed story","Only publish after occurrence confirmation"],
+    ["Post-event","T+1","Facebook","Verification-gated follow-up","Supply attendance/outcome records first"],
+    ["Follow-up","T+7","LinkedIn","Evidence-led reflection","Supply verified impact records first"],
+  ];
+  const scheduleRows = phases.map(([phase,slot,platform,format,cta]) => `| ${phase} | ${retrospective ? "Retrospective DEMO " : "Proposed "}${slot} | ${platform} | ${format} | ${h.audience ?? "Proposed: learners interested in the programme"} | ${phase === "Awareness" ? "Awareness" : "Useful information / engagement"} | ${slot === "T+1" || slot === "T+7" || slot === "T0" ? "Withheld: verification required" : `Actual ${platform} draft below; adapt for this slot after review`} | Typography; approved assets only | ${cta} | Draft / owner unassigned | Not scheduled |`);
+  const schedule = ["| Phase | Relative slot | Platform | Format/theme | Audience | Objective | Copy | Creative | CTA | Approval/owner | Publishing |", "| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |", ...scheduleRows].join("\n");
   const postCopy = channels.map(c => `### ${c.label}\n${publicationCopy(c.key, f)}`).join("\n\n");
   const creative = channels.map(c => `- ${c.label}: source-backed typographic creative (no photographs or logos are invented); ${c.key === "instagram" ? "square 1080×1080 or portrait 1080×1350" : c.key === "x_post" ? "landscape 1920×1080" : "square 1080×1080"}; alt text required; DEMO/review ribbon retained until release approval.`).join("\n");
   return [
@@ -202,11 +215,11 @@ function socialCalendarBody(f: Fields, eventCautions: string[], missing: string[
     "## Communication goals",
     `- Announce the programme accurately from the source notice.\n- Direct interested readers to the original notice for details.\n- Avoid any claim of occurrence, attendance, outcomes or endorsement until verified.`,
     "## Target audiences and audience segments",
-    h.audience ? `The source describes the intended audience as “${h.audience}”. No further segmentation is recorded; additional segments must not be invented.` : "The source does not record an intended audience. Audience definition is a missing input listed below.",
+    h.audience ? `The source describes the intended audience as “${h.audience}”. Proposed segments (recommendations, not approved decisions): prospective founders seeking formation basics; students exploring entrepreneurship; academic/incubation teams seeking a shareable notice. Tailor introductory messaging to each segment without attributing attendance or endorsements.` : "The source does not record an intended audience. Audience definition is a missing input listed below.",
     "## Campaign phases",
     `- Pre-event: announcement posts across all four channels.${dateValid ? `\n- Event day (${f["date"]}): day-of reminder, only if occurrence is confirmed by an authorized reviewer.` : "\n- Event day: no source date; slot retained as a relative phase."}\n- Post-event: follow-up only from verified outcomes; no outcome content exists in the source.\n- ${timing}`,
     "## Content pillars and themes",
-    h.subject ? `Single source-supported pillar: ${h.subject}. Additional pillars require further authorized source material.` : "The source supports one announcement pillar only; the title does not establish a broader theme.",
+    h.subject ? `Single source-supported pillar: ${h.subject}. Proposed supporting pillars: practical learning questions, source-notice details, and verification-led follow-up. These are editorial recommendations, not recorded institutional strategy.` : "The source supports one announcement pillar only; the title does not establish a broader theme.",
     "## Publication schedule",
     schedule,
     "Only source-recorded dates appear in this calendar; no publication date is invented. Approved publishing dates are not recorded.",
@@ -231,6 +244,7 @@ function socialCalendarBody(f: Fields, eventCautions: string[], missing: string[
 }
 
 export function generateCatalogue(c: HandlerContext, requested: string[]) {
+  const readiness: Record<string, ReturnType<typeof assessReadiness>> = {};
   const outputs: GeneratedOutput[] = []; const skipped: { name: string; reason: string }[] = [];
   const ids = requested.length ? [...new Set(requested)] : reference.outputs.filter(e => catalogueEligible(e.Output_ID, c)).map(e => e.Output_ID);
   const event = eventContent(c.lines, c.segmentIds);
@@ -241,8 +255,13 @@ export function generateCatalogue(c: HandlerContext, requested: string[]) {
     const entry = reference.outputs.find(e => e.Output_ID === id); const handler = CATALOGUE_HANDLERS[id];
     if (!entry || !handler) { skipped.push({ name: id, reason: "Unknown catalogue ID." }); continue; }
     if (/Company|internal/i.test(entry.Default_Access_Class) && !c.company) { skipped.push({ name: id, reason: "Company-only output; server authorization denied." }); continue; }
-    if (!cats.has(handler.category)) { skipped.push({ name: id, reason: `Blocked: no ${CATEGORY_LABELS[handler.category]} records in the authorized source for this document. Required inputs: ${entry.Principal_Input_Entities}. Missing sections are never filled with generic text.` }); continue; }
-    if (!catalogueEligible(id, c)) { skipped.push({ name: id, reason: `Missing source category: ${entry.Principal_Input_Entities}` }); continue; }
+    const assessment = assessReadiness(id, { lines:c.lines, period:c.period, event:!!event, categories:cats });
+    readiness[id] = assessment;
+    const choice = c.choices?.[id] ?? "requested";
+    if (assessment.status === "BLOCKED" || (assessment.status === "ALTERNATIVE" && choice !== "alternative") || (assessment.status === "LIMITED" && choice !== "limited")) {
+      skipped.push({name:id,reason:assessment.reasons.join(" ") + " " + assessment.nextAction}); continue;
+    }
+    if (choice === "alternative" && !assessment.alternative) { skipped.push({name:id,reason:"No appropriate alternative is available; requested output was not silently changed."});continue; }
     if (["OUT-005","OUT-006","OUT-007"].includes(id)) {
       const kinds = id === "OUT-006" ? ["meeting_report","decisions"] : [handler.type];
       const drafts = meetings.filter(m => kinds.includes(m.kind));
@@ -250,7 +269,7 @@ export function generateCatalogue(c: HandlerContext, requested: string[]) {
       for (const m of drafts) outputs.push({ type: m.kind, name: entry.Output_Name, title: entry.Output_Name, body: m.body, meeting: m.meeting, tables: sourceTables(c.lines), manifest: c.manifest, catalogue: { catalogueId: id, contractId: m.meeting.contractId, support: "source-review", reason: "Explicit-source structured draft; approval remains separate." }, contract: { template: null, mimeType: "text/markdown", dimensions: null, approver: null, release: "not_authorized" } });
       continue;
     }
-    const matches = c.lines.flatMap((line, i) => handler.signal.test(line.content) ? [{ line, id: c.segmentIds[i] }] : []).filter((r): r is { line: SourceLine; id: string } => !!r.id);
+    const matches = c.lines.flatMap((line, i) => (!isEventRecord(id) || handler.signal.test(line.content)) ? [{ line, id: c.segmentIds[i] }] : []).filter((r): r is { line: SourceLine; id: string } => !!r.id);
     const isEventOutput = ["OUT-008","OUT-009","OUT-010","OUT-011","OUT-012","OUT-013","OUT-014","OUT-026","OUT-029"].includes(id);
     const selected = event && isEventOutput ? event.fields.flatMap(f => f.citations) : matches.map(r => ({ segmentId: r.id, locatorKey: r.line.locator_key, raw: r.line.content }));
     const citations = [...new Map(selected.map(s => [s.segmentId, s])).values()];
@@ -269,22 +288,16 @@ export function generateCatalogue(c: HandlerContext, requested: string[]) {
     else if (event && id === "OUT-010") body = handler.sections.map((h, i) => `## ${h}\nOn-screen text / voiceover draft: ${event.fields[i]?.value ?? "Check the original notice before release."}\nVisual direction: source-backed typography; no invented people or photographs.`).join("\n\n") + `\n\n${caution}\nNot a rendered video.`;
     else if (id === "OUT-021") body = `# Data quality and conflict report\n\n## Extraction reconciliation\n${c.lines.length} current-run source segments; ${sourceTables(c.lines).length} structured tables.\n\n## Review cautions\n${event?.cautions.join("\n") ?? "Contradiction decisions are not available; absence of a detected conflict is not validation."}\n\n## Source findings\n${sourceParagraphs}\n\n${caution}`;
     else {
-      // Distribute matched source lines across declared sections by keyword affinity;
-      // sections with no matching records stay explicitly unavailable, never padded.
-      const assigned = new Set<number>();
-      const sectionBlocks: string[] = [];
-      for (const section of handler.sections.slice(1)) {
-        const keywords = section.toLowerCase().split(/[^a-z]+/).filter(w => w.length > 3);
-        const hits = matches.filter((r, i) => !assigned.has(i) && keywords.some(w => r.line.content.toLowerCase().includes(w)));
-        hits.forEach(h => assigned.add(matches.indexOf(h)));
-        if (hits.length) sectionBlocks.push(`## ${section}\n\n${hits.map(r => `> ${r.line.content}\nSource: ${r.line.locator_key}`).join("\n\n")}`);
-      }
-      const remainder = matches.filter((_, i) => !assigned.has(i));
-      const remainderText = remainder.length ? remainder.map(r => `> ${r.line.content}\nSource: ${r.line.locator_key}`).join("\n\n") : sourceParagraphs;
-      const absent = handler.sections.slice(1).filter((_, i) => !sectionBlocks.some(b => b.startsWith(`## ${handler.sections[i + 1]}\n`)));
-      body = `# ${entry.Output_Name}\n\n## ${handler.sections[0]}\n\n${remainderText}\n\n${sectionBlocks.join("\n\n")}${sectionBlocks.length ? "\n\n" : ""}## Unavailable in the authorized source\n${absent.length ? absent.map(s => `- ${s}: no corresponding records in this document; omitted rather than filled with generic text.`).join("\n") : "- None; all declared sections have cited source material."}\n\n## Missing information and release gates\n${missing.map(m => `- ${m}`).join("\n")}\n\n${caution}`;
+      const fields = sourceFields(c.lines);
+      const purpose = PURPOSE_RULES[id];
+      const records = (purpose?.fields ?? []).flatMap(field => (fields.get(field.toLowerCase()) ?? []).map(value => `| ${field} | ${value.replace(/\|/g, "\\|")} |`));
+      body = `# ${entry.Output_Name} — source-recorded review draft\n\n## Purpose and scope\n${purpose?.acceptance ?? entry.Output_Name}\n${c.period ? `Selected reporting period: ${c.period}. Only matching-period records support reporting.` : "Reporting scope must be confirmed before analytical use."}\n\n## Source-recorded information\n| Field | Source value |\n| --- | --- |\n${records.join("\n")}\n\n## Interpretation and practical next steps\n${purpose?.acceptance ?? "Review source values before use."} Interpretation is not an institutional decision; no unsupported conclusions, calculated indicators or approvals are inferred.\n\n## Source references\n${sourceParagraphs}\n\n## Missing information and verification\n${assessment.missing.map(m => `- ${m}`).join("\n")}\n${assessment.verification.join("\n")}\n\n${caution}`;
+
     }
-    const emit = (type: string, copy: string) => outputs.push({ type, name: entry.Output_Name, title: eventFields["title"] ?? entry.Output_Name, body: copy, manifest: c.manifest, tables: sourceTables(c.lines), draft: { version: "catalogue-draft-1", handler: id, revision: 1, parentSetId: null, edited: false, missing, cautions: [caution, ...(event?.cautions ?? [])], citations }, catalogue: { catalogueId: id, contractId: null, support: "stored-draft-only", reason: "Source-linked catalogue draft; all approval, consent and official mapping gates remain unmet." }, contract: { template: "catalogue-draft-1", mimeType: "text/markdown", dimensions: null, approver: null, release: "not_authorized" } });
+    if (choice === "alternative" && assessment.alternative) {
+      body = id === "OUT-014" && event ? body : `# ${assessment.alternative}\n\nExplicitly selected alternative to ${entry.Output_Name}; not a completed requested deliverable.\n\n## Available information\n${assessment.available.join("; ") || "The source supports no substantive requested-report fields."}\n\n## Data collection plan\n| Required record | Purpose | Action |\n| --- | --- | --- |\n${assessment.missing.map(m => `| ${m} | Support ${entry.Output_Name} | Supply dated, attributable records and verify values |`).join("\n")}\n\n## Available source references\n${sourceParagraphs}\n\n${caution}`;
+    }
+    const emit = (type: string, copy: string) => outputs.push({ type, name: choice === "alternative" ? `${entry.Output_Name} — alternative: ${assessment.alternative}` : entry.Output_Name, title: choice === "alternative" ? assessment.alternative ?? entry.Output_Name : eventFields["title"] ?? entry.Output_Name, body: copy, manifest: c.manifest, tables: sourceTables(c.lines), draft: { version: "catalogue-draft-1", handler: id, revision: 1, parentSetId: null, edited: false, missing, cautions: [caution, ...(event?.cautions ?? [])], citations }, catalogue: { catalogueId: id, contractId: null, support: "stored-draft-only", reason: "Source-linked catalogue draft; all approval, consent and official mapping gates remain unmet." }, contract: { template: "catalogue-draft-1", mimeType: "text/markdown", dimensions: null, approver: null, release: "not_authorized" } });
     if (event && id === "OUT-009") {
       for (const channel of ["facebook","instagram","linkedin","x_post"] as const) {
         let copy = publicationCopy(channel, eventFields); const limit = { facebook: 800, instagram: 2200, linkedin: 1200, x_post: 270 }[channel];
@@ -296,5 +309,5 @@ export function generateCatalogue(c: HandlerContext, requested: string[]) {
     }
     emit(handler.type, body);
   }
-  return { outputs, skipped };
+  return { outputs, skipped, readiness };
 }
