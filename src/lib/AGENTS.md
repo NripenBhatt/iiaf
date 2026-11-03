@@ -12,3 +12,4 @@
 - Category-purpose DEMO fixtures exercise every catalogue ID without extraction/provider calls; absent original evidence bytes must block bundle generation, and generated examples never establish professional or release acceptance.
 
 - Catalogue readiness is computed by output-readiness.ts before dispatch; explicit limited/alternative choices are included in the dispatcher key to prevent silent downgrade or cache reuse. Quality dimensions are computed, not persisted, so saved attestations remain immutable.
+- Purpose content and derived metrics use purpose-content.ts; associate labelled/structured records before arithmetic and validate exact formula/basis in quality checks, because flattened multi-record lists must never create invented cohorts.

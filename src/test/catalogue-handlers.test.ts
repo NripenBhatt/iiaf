@@ -19,11 +19,11 @@ describe("versioned thirty-entry output dispatch",()=>{
     // Actual OUT-009 channel copy is embedded, not a reference label.
     expect(body).toContain("Workshop announcement:");for(const label of ["### Facebook","### Instagram","### LinkedIn","### X"])expect(body).toContain(label);
     // The source date (13 October 2026) is in the past: retrospective/demo classification, no future-campaign framing.
-    expect(body).toContain("retrospective/demo");expect(body).toContain("no publication date is invented");expect(body).toContain("weekday");
+    expect(body).toContain("retrospective/demo");expect(body).toContain("No publication date is invented");expect(body).toContain("weekday");
     expect(body).toContain("No channel is approved for publication");expect(body).toContain("not measured");
     const dates=[...new Set([...body.matchAll(/\b\d{1,2} [A-Z][a-z]+ 20\d{2}\b/g)].map(m=>m[0]))];expect(dates).toEqual(["13 October 2026"]);});
   it("writes a distinct LinkedIn article and publicity pack, not repeated source dumps",()=>{const r=generateCatalogue(c,["OUT-008","OUT-011","OUT-026"]);const article=r.outputs.find(o=>o.type==="news_article")?.body??"";const linkedin=r.outputs.find(o=>o.type==="linkedin_article")?.body??"";const pack=r.outputs.find(o=>o.type==="event_publicity")?.body??"";expect(linkedin).toContain("## Looking ahead");expect(linkedin).not.toBe(article);for(const label of ["## Poster copy","## Website blurb","## Press note","## Email invitation","## WhatsApp invitation"])expect(pack).toContain(label);});
-  it("generates an institutional profile draft only from profile-category records",()=>{const profile=ctx(["Institution Name: Demo University","Established: 2001","Campus: Lucknow","Programmes: courses across faculties"]);const r=generateCatalogue(profile,["OUT-001"]);expect(r.outputs).toHaveLength(1);expect(r.outputs[0]?.body).toContain("Institution Name: Demo University");expect(r.outputs[0]?.body).toContain("Source-recorded information");});
+  it("generates an institutional profile draft only from profile-category records",()=>{const profile=ctx(["Institution Name: Demo University","Established: 2001","Campus: Lucknow","Programmes: courses across faculties"]);const r=generateCatalogue(profile,["OUT-001"]);expect(r.outputs).toHaveLength(1);expect(r.outputs[0]?.draft?.citations.some(v=>v.raw==="Institution Name: Demo University")).toBe(true);expect(r.outputs[0]?.manifest?.verifiedCoverage).toBe(false);});
 });
 
 describe("shared output quality validation layer",()=>{

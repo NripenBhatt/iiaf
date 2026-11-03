@@ -2,6 +2,11 @@
 
 Scope: the thirty unchanged definitions in `src/data/output-reference-catalogue.json`. Phase 3 acceptance is not granted; Phase 4 is not started.
 
+## Latest controlled correction batch — 3 November 2026
+`purpose-content.ts` supplies named institutional/reporting sections and row-associated metrics rather than the common field table for non-event drafts. OUT-014 composes multiple labelled editorial records separately from the explicitly chosen bulletin; missing per-item dates/details remain gaps. OUT-004/030 derive rates only from numeric, nonconflicting matched records with explicit same-period methodology and denominator basis. Quality validates the exact percentage/formula/basis; it never promotes factual or professional approval. Campaign dates are proposed deterministic offsets, not approved publishing decisions; post-event copy is withheld. Dispatcher key is catalogue-dispatch-4.
+
+Full regression suite: 279/279. All thirty local DEMO handlers exercised; 29 produced drafts and OUT-022 stayed blocked. Three new University A sets were generated from unchanged poster job 3f22ae50-e164-431c-9685-048c0e8dbbb6: article d7a84a8e-ed84-40b1-ba9d-02241e2987c5, annual-report framework 9fbed41e-c473-42e7-a126-ec740019c3f3, calendar 10081918-b718-4b7a-aa8a-7367c62410b4. Same IDs reopened after refresh and Word downloaded. These are new-cycle drafts, not proof of full institutional report acceptance. Fifty priority/download pages inspected; dense long source appendices remain a practical limitation. No provider/extraction/schema/permission/deployment changes. Historical sections below are earlier evidence, not current feature descriptions.
+
 ## Runtime path
 `generateOutputs` authorizes the caller with `may_upload`, reads `latestSource` once, derives source tables and draft classification, and invokes `generateCatalogue`. Catalogue-specific source signals, categories, sections and gaps live in `catalogue-handlers.ts`. Meeting outputs reuse `structuredMeetings`; no proceedings or decisions are inferred. Company-only definitions require `is_operator` on the server and in database validation.
 
