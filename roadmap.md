@@ -1,4 +1,9 @@
 # Phase 1 security and persistence
+## Targeted correction and quality acceptance — 3 November 2026
+- [ ] Correct purpose-specific priority content, real multi-item newsletter composition and calculated analytics with source provenance.
+- [ ] Verify classification, blocked/conflicting inputs, exports and complete automated regression suite.
+- [ ] Verify newly generated versions through authorized application save/refresh/reopen/download; report unavailable institutional records and sessions as blockers.
+- [ ] Deliver correction register, thirty-row acceptance matrix, application/test report, generated examples and technical handover inventory; preserve Phase 3 NO-GO and separate W1 acceptance.
 ## Final master output implementation — 3 November 2026
 - [x] Add output-specific suitability/readiness gates and explicit limited/alternative choices; preserve source, tenant and release safeguards.
 - [x] Correct priority article, newsletter, annual-report classification and actionable campaign sequence; expose six independent quality dimensions.
