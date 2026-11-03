@@ -22,7 +22,7 @@ export function localDrafts(source: DraftSource): LocalDraft[] {
         const body = publicationCopy(type, fields);
         const limit = type in limits ? limits[type as keyof typeof limits] : undefined;
         if (limit && Array.from(body).length > limit) continue;
-        const draft = attach({ type, catalogueId: ["press_release", "website_event"].includes(type) ? "OUT-008" : "OUT-009", title: fields.title ?? "Event announcement", body, citations: event.fields.flatMap(f => f.citations.map(c => ({ documentId: source.documentId, jobId: source.jobId, filename: source.filename, locatorKey: c.locatorKey, raw: c.raw }))), missing: ["Attendance, outcomes and completion are unconfirmed."], review: "human_review_required", release: "not_authorized", persisted: false });
+        const draft = attach({ type, catalogueId: ["press_release", "website_event"].includes(type) ? "OUT-008" : "OUT-009", title: fields["title"] ?? "Event announcement", body, citations: event.fields.flatMap(f => f.citations.map(c => ({ documentId: source.documentId, jobId: source.jobId, filename: source.filename, locatorKey: c.locatorKey, raw: c.raw }))), missing: ["Attendance, outcomes and completion are unconfirmed."], review: "human_review_required", release: "not_authorized", persisted: false });
         drafts.push({ ...draft, cautions: [...draft.cautions, ...event.cautions] });
       }
     }

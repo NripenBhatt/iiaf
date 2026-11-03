@@ -1,6 +1,6 @@
 /** No-provider writing from attributable values. This is a local draft, not the
  * source-event-1 body checked by the database; saved content is never rewritten. */
-export type PublicationFields = Partial<Record<"title" | "date" | "time" | "venue" | "subject" | "institutions" | "audience" | "organizer" | "host" | "facilitator", string>>;
+export type PublicationFields = Partial<Record<"title" | "date" | "time" | "venue" | "subject" | "institutions" | "audience" | "organizer" | "host" | "facilitator", string | undefined>>;
 export type PublicationChannel = "press_release" | "website_event" | "linkedin" | "facebook" | "instagram" | "x_post";
 
 const sentenceValue = (value: string) => value.trim().replace(/[.:;]+$/, "");
