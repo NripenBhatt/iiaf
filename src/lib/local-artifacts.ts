@@ -1,6 +1,8 @@
 import { Document, HeadingLevel, Packer, Paragraph } from "docx";
 import JSZip from "jszip";
 import { authoredEventDrafts, type AuthoredDraft, type DraftSource } from "./authored-drafts";
+import { eventContent } from "./source-authored";
+import { publicationCopy } from "./publication-copy";
 
 export type LocalDraft = Omit<AuthoredDraft, "type" | "catalogueId"> & { type: AuthoredDraft["type"] | "profile_section"; catalogueId: "OUT-001" | "OUT-008" | "OUT-009"; classification: "DEMO" | "unverified"; originalHash: string; parserVersion: string; cautions: string[] };
 
@@ -9,6 +11,22 @@ export function localDrafts(source: DraftSource): LocalDraft[] {
   const cautions = ["DRAFT — human review required; release not authorized; not verified coverage.", ...(source.lines.some(l => /^ocr[:!]/i.test(l.locator_key) || /ocr/i.test(l.method ?? "")) ? ["OCR_CAUTION: compare transcription against the unchanged original."] : [])];
   const attach = (draft: Omit<LocalDraft, "classification" | "originalHash" | "parserVersion" | "cautions">): LocalDraft => ({ ...draft, classification: source.classification, originalHash: source.originalHash, parserVersion: source.parserVersion, cautions });
   const drafts = authoredEventDrafts(source).map(attach);
+  // Reuse saved contextual poster passages without another extraction. These
+  // richer drafts remain explicitly local; source-event-1 persistence is intact.
+  if (!drafts.length) {
+    const event = eventContent(source.lines, source.lines.map((_, i) => `local:${i}`));
+    if (event && !/[\u0900-\u097f]/.test(event.fields.map(f => f.value).join(""))) {
+      const fields = Object.fromEntries(event.fields.map(f => [f.role, f.value]));
+      const limits = { linkedin: 1200, facebook: 800, x_post: 270 };
+      for (const type of ["press_release", "website_event", "linkedin", "facebook", "instagram", "x_post"] as const) {
+        const body = publicationCopy(type, fields);
+        const limit = type in limits ? limits[type as keyof typeof limits] : undefined;
+        if (limit && Array.from(body).length > limit) continue;
+        const draft = attach({ type, catalogueId: ["press_release", "website_event"].includes(type) ? "OUT-008" : "OUT-009", title: fields["title"] ?? "Event announcement", body, citations: event.fields.flatMap(f => f.citations.map(c => ({ documentId: source.documentId, jobId: source.jobId, filename: source.filename, locatorKey: c.locatorKey, raw: c.raw }))), missing: ["Attendance, outcomes and completion are unconfirmed."], review: "human_review_required", release: "not_authorized", persisted: false });
+        drafts.push({ ...draft, cautions: [...draft.cautions, ...event.cautions] });
+      }
+    }
+  }
   const profileLabels = ["Institution Name", "Established", "Campus"];
   const fields = profileLabels.map(label => ({ label, lines: source.lines.filter(l => l.content.toLowerCase().startsWith(`${label.toLowerCase()}:`)) }));
   const name = fields[0];

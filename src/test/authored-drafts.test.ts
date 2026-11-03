@@ -29,4 +29,16 @@ describe("staged source-cited authoring", () => {
     expect(drafts.some(d => d.type === "x_post")).toBe(false);
     expect(drafts.some(d => d.type === "press_release")).toBe(true);
   });
+  it("produces distinct platform bodies while retaining source values and lineage", () => {
+    const drafts = authoredEventDrafts(source(notice));
+    const byType = (type: string) => drafts.find(d => d.type === type);
+    expect(new Set(drafts.map(d => d.body)).size).toBe(6);
+    for (const type of ["press_release", "website_event", "linkedin", "facebook", "instagram"]) {
+      expect(byType(type)?.body).toContain("Enterprise planning");
+      expect(byType(type)?.body).toContain("23 October 2026");
+      expect(byType(type)?.citations.map(c => c.locatorKey)).toContain("line:4");
+    }
+    expect(byType("press_release")?.body.length).toBeGreaterThan(byType("x_post")?.body.length ?? 0);
+    expect(byType("press_release")?.body).not.toContain("successful");
+  });
 });
