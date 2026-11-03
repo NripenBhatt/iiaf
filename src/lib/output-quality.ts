@@ -1,5 +1,6 @@
 import { assessReadiness, PURPOSE_RULES, type ReadinessResult } from "./output-readiness";
 import type { GeneratedOutput, SourceLine } from "./output-contract";
+import { sourceRates } from "./purpose-content";
 
 /** Shared Output Quality Standard. Statuses are categorical, never a numeric score:
  * COMPLETE — every output-specific requirement passed against the authorized source.
@@ -100,7 +101,8 @@ export function assessOutput(id: string, output: GeneratedOutput, ctx: QualityCo
   const readiness = assessReadiness(id, { lines:ctx.lines, period:ctx.period ?? null, event:/announc|programme|workshop/i.test(body) });
   const alternative = /explicitly selected alternative|Single-item Bulletin|Data Collection Draft/i.test(`${output.name} ${output.title} ${body}`);
   const factualNumbers = [...body.matchAll(/\b\d+(?:\.\d+)?%/g)].map(m=>m[0]);
-  const unsupportedNumbers = factualNumbers.filter(n=>!ctx.lines.some(l=>l.content.includes(n)));
+  const derived = sourceRates(id, ctx.lines, ctx.period ?? null);
+  const unsupportedNumbers = factualNumbers.filter(n=>!ctx.lines.some(l=>l.content.includes(n)) && !derived.some(r=>r.value===n && body.includes(`derived = ${r.numerator} ÷ ${r.denominator} × 100`) && body.includes(r.basis)));
   const claimLines = body.split(/\n|(?<=[.!?])\s+/).filter(line=>!/^\s*(?:>|Source:)/.test(line)&&!/(?:not |no |unconfirmed|not confirmation|not established|requires? .*review|not authorized)/i.test(line));
   const substantiveClaims = claimLines.some(line=>/(?:was held|took place|achieved|attended by|approved by|certified compliant|placement rate is)\s/i.test(line)&&!ctx.lines.some(source=>source.content.includes(line.trim())));
   checks.push({ name:"Unsupported factual claims",passed:unsupportedNumbers.length===0&&!substantiveClaims,detail:unsupportedNumbers.length||substantiveClaims?"Unattested outcome/approval claim or percentage requires exact source support and calculation provenance.":"No recognized unsupported outcome/approval claim or percentage detected; this is a bounded check, not semantic fact verification." });
