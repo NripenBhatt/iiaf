@@ -2,6 +2,7 @@ import { describe,expect,it } from "vitest";
 import reference from "@/data/output-reference-catalogue.json";
 import { CATALOGUE_HANDLERS,generateCatalogue,type HandlerContext } from "@/lib/catalogue-handlers";
 import { generatedOutputSchema } from "@/lib/output-contract";
+import { QUALITY_REQUIREMENTS, assessOutput, assessSet } from "@/lib/output-quality";
 const text=["From Ideas to","Enterprises","Understanding Legal Entity Formation for Startups:","Why, How, Benefits and Goals","13 October 2026","(Thursday)","Khwaja Moinuddin Chishti Language University, Lucknow","Organised by Awadh Incubation Foundation"];
 const ctx=(lines:string[]):HandlerContext=>({lines:lines.map((content,seq)=>({content,seq,locator_key:`ocr:${seq}`,method_version:"ocr-1",locator:{page:1}})),segmentIds:lines.map((_,i)=>`00000000-0000-4000-8000-${String(i).padStart(12,"0")}`),company:false,period:null,manifest:{documentId:"00000000-0000-4000-8000-000000000099",jobId:"00000000-0000-4000-8000-000000000098",originalHash:"a".repeat(64),parserVersion:"ocr-1",contractVersion:"iiaf-output-2.2",classification:"DEMO",approval:"draft",locators:lines.map((_,i)=>`ocr:${i}`),verifiedCoverage:false}});
 const c=ctx(text);
