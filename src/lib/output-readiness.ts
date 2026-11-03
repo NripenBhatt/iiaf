@@ -47,7 +47,7 @@ export function sourceFields(lines: SourceLine[]): Map<string, string[]> {
  for (const l of lines) { const m = l.content.match(/^([^:|]{2,60}):\s*(.+)$/); if (m?.[1] && m[2]) add(m[1].trim(), m[2]); }
  // Structured row fields use exact column headers, never semantic keyword guessing.
  const groups = new Map<string, SourceLine[]>();
- for (const l of lines) { const p = l.locator as {cells?: {column:number;value:string}[];sheet?:string;table?:number}; if (p?.cells) { const key=p.sheet??String(p.table??0); groups.set(key,[...(groups.get(key)??[]),l]); } }
+ for (const l of lines) { const p = l.locator as {cells?: {column:number;value:string}[];sheet?:string;table?:number}; if (p?.cells) { const key=JSON.stringify([p.sheet??'',p.table??0]); groups.set(key,[...(groups.get(key)??[]),l]); } }
  for(const rows of groups.values()){const headers=(rows[0]?.locator as {cells?: {column:number;value:string}[]})?.cells??[];for(const row of rows.slice(1))for(const cell of (row.locator as {cells?: {column:number;value:string}[]}).cells??[]){const h=headers.find(v=>v.column===cell.column);if(h)add(h.value,cell.value);}}
  return fields;
 }
@@ -85,8 +85,10 @@ export function assessReadiness(id: string, ctx: {lines:SourceLine[];period:stri
  if(id==='OUT-004'){
  const numerator=Number(fields.get('placed students')?.[0]);const denominator=Number(fields.get('eligible students')?.[0]);if(!Number.isFinite(numerator)||!Number.isFinite(denominator)||denominator<=0||numerator<0||numerator>denominator){status='ALTERNATIVE';missing.push('Valid same-scope placement numerator and positive denominator (placed ≤ eligible)');}
  }
+ if(r.period&&missing.includes('Matching source Reporting Period and selected reporting period')&&status==='READY')status='LIMITED';
  const categoryAvailable=ctx.categories?.has(r.category)||available.length>0||(r.category==='editorial'&&ctx.event)||r.category==='general';
  if(!categoryAvailable){status=r.alternative&&ctx.lines.length?'ALTERNATIVE':'BLOCKED';base.absentCategories=[r.category];}
+ if(r.period&&ctx.period&&periods.some(p=>p!==ctx.period))status='BLOCKED';
  const reasons= status==='READY'?['Relevant source fields support the requested draft; factual verification and release remain separate.']:[`Requested ${id} lacks ${missing.join('; ')||'suitable source records'}.`,...(status==='ALTERNATIVE'?[`Only an explicitly selected alternative (${alternative}) may be generated.`]:[])];
  return {...base,status,available,missing:[...new Set(missing)],verification,reasons,alternative:status==='ALTERNATIVE'?alternative:null,canLimit:status==='LIMITED'&&essential.length===0,nextAction:status==='READY'?'Generate the requested review draft.':status==='ALTERNATIVE'?`Choose ${alternative} explicitly, or supply the missing records.`:`Supply ${missing.join('; ')} and verify source dates/values, then reassess.`};
 }

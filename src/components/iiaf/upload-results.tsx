@@ -68,7 +68,7 @@ function OneFile({ r, requested, detailed }: { r: FileResult; requested: string[
     <section className="mt-4 space-y-3" aria-label="Output readiness and alternatives">
       <h3 className="font-semibold">Source readiness · requested deliverables</h3>
       {readiness.error&&<p role="alert" className="text-sm text-destructive">{readiness.error.message}</p>}
-      {Object.values(readiness.data??{}).filter(a=>requested.includes(a.catalogueId)||["OUT-014","OUT-015","OUT-029"].includes(a.catalogueId)).map(a=><div key={a.catalogueId} className="border-b py-3 text-sm">
+      {Object.values(readiness.data??{}).map(a=><div key={a.catalogueId} className="border-b py-3 text-sm">
         <strong>{a.catalogueId} · {a.status}</strong><p className="mt-1">{a.reasons.join(" ")}</p>
         <details className="mt-2"><summary>Available information, gaps and verification</summary><p>Available: {a.available.join(", ")||"None suitable"}</p><p>Missing: {a.missing.join("; ")||"None identified by bounded source-field checks"}</p><p>{a.verification.join(" ")}</p><p>Release: not authorized</p><p>Next action: {a.nextAction}</p></details>
         {(a.canLimit||a.alternative)&&<Button className="mt-2" variant="outline" size="sm" disabled={generating} onClick={()=>{setGenerating(true);setGenerationError("");void generate({data:{documentId:r.documentId,requested:[a.catalogueId],choices:{[a.catalogueId]:a.alternative?"alternative":"limited"}}}).then(setGeneratedSet).catch(e=>setGenerationError(e instanceof Error?e.message:"Draft could not be saved.")).finally(()=>setGenerating(false));}}>{a.alternative?`Generate alternative · ${a.alternative}`:"Generate explicitly limited draft"}</Button>}

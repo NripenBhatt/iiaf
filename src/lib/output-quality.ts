@@ -101,7 +101,8 @@ export function assessOutput(id: string, output: GeneratedOutput, ctx: QualityCo
   const alternative = /explicitly selected alternative|Single-item Bulletin|Data Collection Draft/i.test(`${output.name} ${output.title} ${body}`);
   const factualNumbers = [...body.matchAll(/\b\d+(?:\.\d+)?%/g)].map(m=>m[0]);
   const unsupportedNumbers = factualNumbers.filter(n=>!ctx.lines.some(l=>l.content.includes(n)));
-  const substantiveClaims = /(?:was held|took place|achieved|attended by|approved by|certified compliant|placement rate is)\s/i.test(body);
+  const claimLines = body.split(/\n|(?<=[.!?])\s+/).filter(line=>!/^\s*(?:>|Source:)/.test(line)&&!/(?:not |no |unconfirmed|not confirmation|not established|requires? .*review|not authorized)/i.test(line));
+  const substantiveClaims = claimLines.some(line=>/(?:was held|took place|achieved|attended by|approved by|certified compliant|placement rate is)\s/i.test(line)&&!ctx.lines.some(source=>source.content.includes(line.trim())));
   checks.push({ name:"Unsupported factual claims",passed:unsupportedNumbers.length===0&&!substantiveClaims,detail:unsupportedNumbers.length||substantiveClaims?"Unattested outcome/approval claim or percentage requires exact source support and calculation provenance.":"No recognized unsupported outcome/approval claim or percentage detected; this is a bounded check, not semantic fact verification." });
   checks.push({name:"Correct document classification",passed:!((id==="OUT-014"||id==="OUT-015")&&readiness.status==="ALTERNATIVE"&&!alternative),detail:alternative?"Clearly identified alternative; never the completed requested deliverable.":readiness.status==="ALTERNATIVE"?"Source does not justify the requested document classification.":"Requested classification remains subject to source sufficiency."});
   const traced = checks.find(c=>c.name==="Citation traceability")?.passed ?? false;
