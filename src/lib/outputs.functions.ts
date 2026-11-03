@@ -10,8 +10,9 @@ import { selectedDrafts, selectionKeySuffix, selectionOutcomes } from "./output-
 import { eventContent, selectedEventOutputs } from "./source-authored";
 import { generateCatalogue } from "./catalogue-handlers";
 import { writeCatalogueDraft } from "./catalogue-writing.server";
+import { assessSet, type QualityResult } from "./output-quality";
 
-export type OutputSet = { outputs: GeneratedOutput[]; skipped: { name: string; reason: string }[]; limitations: string[]; sourceVersion: string; segmentCount: number; createdAt: string; cached: boolean; setId?: string; outcomes?: ReturnType<typeof selectionOutcomes> };
+export type OutputSet = { outputs: GeneratedOutput[]; skipped: { name: string; reason: string }[]; limitations: string[]; sourceVersion: string; segmentCount: number; createdAt: string; cached: boolean; setId?: string; outcomes?: ReturnType<typeof selectionOutcomes>; quality?: Record<string, QualityResult> };
 
 async function sha256(text: string) {
   const d = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(text));
@@ -32,7 +33,8 @@ export const getOutputs = createServerFn({ method: "POST" }).middleware([require
     const set = stored.parse(row.outputs);
     const combined=new Map(set.outputs.map(o=>[o.type,{...o,persistedSetId:row.id}]));
     for(const candidate of rows??[])for(const o of stored.parse(candidate.outputs).outputs){if(!combined.has(o.type))combined.set(o.type,{...o,persistedSetId:candidate.id});}
-    return { ...set, outputs:[...combined.values()],setId: row.id, limitations: [...set.limitations, ...(source.job.error ? [source.job.error] : [])], sourceVersion: row.source_version, createdAt: row.created_at, cached: true };
+    const outputs=[...combined.values()];
+    return { ...set, outputs, setId: row.id, limitations: [...set.limitations, ...(source.job.error ? [source.job.error] : [])], sourceVersion: row.source_version, createdAt: row.created_at, cached: true, quality: assessSet(outputs, set.skipped, { lines: source.lines, segmentIds: source.segmentIds }) };
   });
 
 /** No-credit repair: reuse historical drafts and stored text, persist qualification/lineage in the existing JSON cache. */
