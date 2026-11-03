@@ -17,6 +17,6 @@ export function selectionOutcomes(requested: string[], outputs: GeneratedOutput[
     if (saved.length) return { catalogueId: id, status: "generated_saved" as const, reason: `${saved.length} source-linked draft(s) saved; human review required.` };
     if (["OUT-005", "OUT-006", "OUT-007"].includes(id)) return { catalogueId: id, status: "needs_source_information" as const, reason: "No explicit source headers support this meeting contract. Missing decisions or proceedings are not inferred." };
     const binding = outputBinding(id === "OUT-008" ? "press_release" : id === "OUT-009" ? "linkedin" : id === "OUT-010" ? "reel_script" : id);
-    return { catalogueId: id, status: "not_supported" as const, reason: !entry ? "Unknown catalogue ID." : ["OUT-001", "OUT-008", "OUT-009", "OUT-011", "OUT-015", "OUT-023"].includes(id) ? "Saving this authored type requires separately approved source/payload validation in the protected output contract; local previews are not saved outputs." : id === "OUT-010" ? binding.reason : "Catalogue definition exists, but no implemented and validated output-specific generation/persistence contract exists for it." };
+    return { catalogueId: id, status: entry ? "needs_source_information" as const : "not_supported" as const, reason: !entry ? "Unknown catalogue ID." : `Source category and access must satisfy ${entry.Principal_Input_Entities}. ${entry.Generation_Gates}. No result is fabricated.` };
   });
 }
