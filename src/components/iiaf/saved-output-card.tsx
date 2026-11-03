@@ -11,7 +11,7 @@ import { saveBlob } from "@/lib/package-export";
 import { OutputPreview } from "./output-preview";
 import { Status } from "./ui";
 
-export function SavedOutputCard({output:o,setId,source,onSaved}:{output:GeneratedOutput;setId?:string;source:string;onSaved:(set:OutputSet)=>void}){
+export function SavedOutputCard({output:o,setId,source,onSaved}:{output:GeneratedOutput;setId:string|undefined;source:string;onSaved:(set:OutputSet)=>void}){
   const revise=useServerFn(reviseOutput);const [editing,setEditing]=useState(false);const [body,setBody]=useState(o.body);const [error,setError]=useState("");const [busy,setBusy]=useState(false);const [url,setUrl]=useState("");
   useEffect(()=>{let active=true;let objectUrl="";if(o.artifact)void savedPng(o).then(blob=>{objectUrl=URL.createObjectURL(blob);if(active)setUrl(objectUrl);}).catch(e=>setError(String(e)));return()=>{active=false;if(objectUrl)URL.revokeObjectURL(objectUrl);};},[o.artifact?.key]);
   async function save(){if(!setId)return;setBusy(true);setError("");try{onSaved(await revise({data:{setId,type:o.type,body}}));setEditing(false);}catch(e){setError(e instanceof Error?e.message:"Revision could not be saved.");}finally{setBusy(false);}}

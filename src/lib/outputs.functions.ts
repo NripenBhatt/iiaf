@@ -81,7 +81,8 @@ export const reviseOutput = createServerFn({method:"POST"}).middleware([requireS
     if(!row)throw new Error("Saved output is unavailable.");
     const set=stored.parse(row.outputs);const output=set.outputs.find(o=>o.type===data.type);
     if(!output?.draft)throw new Error("This historical or structured output cannot be edited through the catalogue draft editor.");
-    const next=stored.parse({...set,outputs:set.outputs.map(o=>o.type===data.type?{...o,body:data.body,draft:{...output.draft,revision:output.draft.revision+1,parentSetId:data.setId,edited:true,cautions:[...output.draft.cautions,"Manual editorial revision; factual review is still required."]}}:o)});
+    const draft=output.draft;
+    const next=stored.parse({...set,outputs:set.outputs.map(o=>o.type===data.type?{...o,body:data.body,draft:{...draft,revision:draft.revision+1,parentSetId:data.setId,edited:true,cautions:[...draft.cautions,"Manual editorial revision; factual review is still required."]}}:o)});
     const hash=await sha256(JSON.stringify(next));
     const {data:id,error}=await context.supabase.rpc("save_catalogue_draft",{_doc:row.document_id,_version:row.source_version,_hash:hash,_payload:JSON.parse(JSON.stringify(next))});
     if(error)throw new Error(`Revision not saved: ${error.message}`);
