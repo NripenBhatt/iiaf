@@ -76,7 +76,7 @@ export const generateOutputs = createServerFn({ method: "POST" }).middleware([re
       const winner = confirmedCacheWinner(set, existing, version);
       return { ...winner, setId: existing.id, outcomes: selectionOutcomes(data.requested, winner.outputs) };
     }
-    return { ...set, setId: saved.id, outcomes: selectionOutcomes(data.requested, set.outputs), sourceVersion: version, createdAt: saved.created_at, cached: false };
+    return { ...set, setId: saved.id, outcomes: selectionOutcomes(data.requested, set.outputs), sourceVersion: version, createdAt: saved.created_at, cached: false, quality: assessSet(set.outputs, set.skipped, { lines, segmentIds: sourceResult.segmentIds }) };
   });
 
 /** Individual revisions append a new set; previous content and source records are never updated. */
