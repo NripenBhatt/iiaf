@@ -1,7 +1,7 @@
 # Phase 1 security and persistence
 ## Existing 30-output completion — 3 November 2026
-- [ ] Batch 1: improve source-cited article/website/platform writing using saved extraction; preserve saved source-event-1 bodies and existing OUT-008/009 dispatch.
-- [ ] Verify changed draft/download flow once in the assigned workspace; publish an honest 30-entry generation/quality/persistence/file matrix.
+- [x] Batch 1: improved local article/website/LinkedIn/Facebook/Instagram/X writing using cited values and contextual saved poster passages; preserved saved source-event-1 bodies and existing OUT-008/009 dispatch. 16 focused tests passed; automatic build OK 05:58:55 UTC. No hosted writes or paid calls.
+- [ ] Changed draft/download live acceptance — blocked: injected signed-in session could open Institutional Information but had no accessible matching saved poster. Do not choose another identity or reupload; assigned poster-owning account needed. Thirty-entry matrix delivered; local quality changes are not claimed saved/reopened.
 - [ ] Next batches: remaining catalogue-specific handlers and formats; exact protected contract approval and source/governance inputs required before persistence extensions. No catalogue expansion, UI redesign, provider calls or Phase 4.
 
 > Current authority: the Unified Phase 3 programme below. Earlier sections are historical evidence, not current authorization or verified A/B acceptance.
