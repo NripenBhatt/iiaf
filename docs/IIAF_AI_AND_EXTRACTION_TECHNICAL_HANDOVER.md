@@ -47,7 +47,7 @@ File selection (11 accepted extensions; 20 MiB)
 
 ## 3. Upload and extraction inventory
 
-Shared selection/upload UI: `src/components/iiaf/document-uploads.tsx` (`DocumentUploads`, upload loop); validators: `src/lib/upload-rules.ts`; authenticated operations: `src/lib/documents.functions.ts`. The UI registers each file, uploads with `upsert: false`, finalizes, optionally processes, and records batches through `src/lib/import.functions.ts` (`recordBatch`). UI status alone cannot finalize a stored original.
+Shared selection/upload UI: `src/components/iiaf/document-uploads.tsx` (`DocumentUploads`, upload loop); validators: `src/lib/upload-rules.ts`; authenticated operations: `src/lib/documents.functions.ts`. The UI registers each file, uploads with `upsert: false`, finalizes, optionally processes, and records batches through `src/lib/lineage.functions.ts` (`recordBatch`, `getDocumentBatch`). UI status alone cannot finalize a stored original.
 
 `registerDocument` validates metadata/selection and calls `register_document`; `finalizeDocument` downloads the stored object, hashes it, detects the MIME family from the first 512 bytes and calls `finalize_document`. `getDocumentLink` records access and makes a 60-second original-download URL. OCR PDF URLs last 300 seconds. All originals use private `institution-documents` storage.
 
@@ -296,7 +296,7 @@ Lovable models use the same workspace credit balance, not a separate AI wallet. 
 Companion **IIAF_Developer_Source_Handover_2026_11_03.zip** includes the current application source, all native helper/data definitions, auth client/middleware, UI/export code, package manifest/lock/config, SQL migrations/schema, synthetic test fixtures and offline scripts. `SOURCE_MANIFEST.json` lists SHA-256/size for every payload file. It is not a hosted-data export. Excluded at every depth: `.git`, dependencies, build output, `.env*`/runtime secret files, editor/workspace caches and generated route tree. The route tree regenerates from supplied routes. Two relevant rollback SQL files are provided under `handover/rollback/` with origin metadata, rather than exporting the private `.lovable` tree. No runtime source was sanitized or simplified; no credential values were found/inserted in supplied source. Environment **names** and credential-use code are intentionally retained.
 
 File-by-file map:
-- Upload: `document-uploads.tsx`, `upload-rules.ts`, `documents.functions.ts`, `import.functions.ts` (batch); SQL 0002/0013 batch migration.
+- Upload: `document-uploads.tsx`, `upload-rules.ts`, `documents.functions.ts`, `lineage.functions.ts` (upload batch), `import.functions.ts` (separate controlled master import); SQL 0002/0013 batch migration.
 - Extract/facts: `extraction.ts`, `docx-structure.ts`, `ocr.server.ts`, `intelligence.functions.ts`, `fact-fields.json`, `src/types/word-extractor.d.ts`; SQL 0004/0007.
 - Brain: `knowledge.functions.ts`, `knowledge.ts`, `lineage.functions.ts`, `evidence-eligibility.ts`, `agency.functions.ts`, `package-format.ts`, mapping/security functions. No separate Brain inference call.
 - Dispatch/drafts: `output-contract.ts`, `output-reference.ts`, `output-selection.ts`, `output-opportunities*.ts`, `catalogue-handlers.ts`, `catalogue-draft.ts`, `meeting-contract.ts`, `source-authored.ts`, `publication-copy.ts`, `authored-drafts.ts`.
