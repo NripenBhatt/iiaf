@@ -58,6 +58,7 @@ function OneFile({ r, requested, detailed }: { r: FileResult; requested: string[
     </TabsList>
     {r.error && <p role="alert" className="mt-3 text-sm text-destructive">{r.error}</p>}
     {generationError && <p role="alert" className="mt-3 text-sm text-destructive">{generationError}</p>}
+    {!requested.length&&<div className="mt-4"><Button size="sm" disabled={generating} onClick={()=>void generateDraft()}>{generating?"Generating and saving…":"Generate eligible outputs from saved source"}</Button></div>}
     {requested.length > 0 && <section className="mt-4 space-y-2" aria-label="Selected output results">
       <div className="flex flex-wrap items-center gap-3"><h3 className="font-semibold">Saved selections · {requested.join(", ")}</h3><Button size="sm" disabled={generating} onClick={() => void generateDraft()}>{generating ? "Generating and saving…" : "Generate selected outputs"}</Button></div>
       {selectionOutcomes(requested, set?.outputs ?? []).map(o => <p key={o.catalogueId} className="text-sm"><strong>{o.catalogueId} · {generationError ? "Failed" : o.status === "generated_saved" ? "Generated and saved" : o.status === "needs_source_information" ? "Needs source information" : "Not supported"}</strong> — {generationError || o.reason}</p>)}
@@ -75,7 +76,7 @@ function OneFile({ r, requested, detailed }: { r: FileResult; requested: string[
           <details className="mt-2 text-xs"><summary className="cursor-pointer">Source citations ({o.locators.length}) and missing attributes</summary><p className="mt-1 break-all">{r.name} · {o.locators.join(", ") || "No qualified source locator"}</p><p className="mt-1">Missing / needs review: {o.missing.join(", ") || "Not established by discovery"}</p></details>
           <p className="mt-2 text-xs">Supported: {o.supported ? "Yes, governed draft path" : "No"} · Generated: {o.generated ? "Yes" : "No"} · Persisted: {o.persisted ? "Yes" : "No"}</p>
           {o.dependency && <p className="mt-2 text-xs text-muted-foreground">{o.dependency}</p>}
-          {o.supported && !o.generated && <Button className="mt-2" size="sm" variant="outline" disabled={generating} onClick={() => void generateDraft()}>{generating ? "Saving draft…" : "Generate governed draft"}</Button>}
+          {o.supported && !o.generated && <Button className="mt-2" size="sm" variant="outline" disabled={generating} onClick={() => {setGenerating(true);setGenerationError("");void generate({data:{documentId:r.documentId,requested:o.catalogueId?[o.catalogueId]:[]}}).then(setGeneratedSet).catch(e=>setGenerationError(String(e))).finally(()=>setGenerating(false));}}>{generating ? "Saving draft…" : "Generate governed draft"}</Button>}
         </article>)}</div>
         {!discovery.data.opportunities.some(o => !o.artifact) && <p className="text-sm text-muted-foreground">No catalogue opportunity established from the saved source. Extraction artifacts remain separate.</p>}
       </>}

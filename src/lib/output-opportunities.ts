@@ -2,6 +2,7 @@ import { OUTPUT_REFERENCE, outputBinding } from "./output-reference";
 import { classifyLines } from "./qualification-rules";
 import { structuredMeetings } from "./meeting-contract";
 import type { GeneratedOutput, SourceLine } from "./output-contract";
+import { eventContent } from "./source-authored";
 
 export type OutputOpportunity = {
   key: string; name: string; type: string; catalogueId: string | null; contractId: string | null;
@@ -9,7 +10,7 @@ export type OutputOpportunity = {
   supported: boolean; generated: boolean; persisted: boolean; dependency: string | null;
   artifact: boolean; requested: boolean;
 };
-const GATE = "The saved-output safety gate accepts only O06–O10 and O13 source-review/meeting drafts. A separately reviewed and authorized contract/gate extension is required; this output is not saved under a review-artifact type.";
+const GATE = "Versioned source-linked draft generation is available where the required source category exists. Approval, public release, privacy and official mapping remain separate gates.";
 const routes: Record<string, string[]> = {
   "OUT-001": ["Q01"], "OUT-005": ["Q06"], "OUT-006": ["Q07", "Q08"], "OUT-007": ["Q09"],
   "OUT-008": ["Q02"], "OUT-009": ["Q01", "Q02"], "OUT-010": ["Q02"],
@@ -19,7 +20,7 @@ const routes: Record<string, string[]> = {
 };
 const variants: Record<string, string[]> = {
   "OUT-001": ["profile_section"], "OUT-005": ["agenda_summary"], "OUT-006": ["meeting_report", "decisions"], "OUT-007": ["action_items"],
-  "OUT-008": ["press_release", "website_event"], "OUT-009": ["linkedin", "facebook", "instagram", "x_post", "social_image", "carousel"],
+  "OUT-008": ["news_article"], "OUT-009": ["linkedin", "facebook", "instagram", "x_post", "image_creative"],
   "OUT-010": ["reel_script"], "OUT-011": ["linkedin_article"], "OUT-015": ["annual_report"], "OUT-023": ["website_content"],
 };
 const ruleForType: Record<string, string[]> = { agenda_summary: ["Q06"], meeting_report: ["Q07"], decisions: ["Q08"], action_items: ["Q09"] };
@@ -48,7 +49,7 @@ export function discoverOutputOpportunities(lines: SourceLine[], outputs: Genera
       const actual = saved.find(o => o.type === type);
       if (!relevant.length && !requestedEntry && !actual) continue;
       const rules = relevant.flatMap(l => applications.get(l.locator_key) ?? []).filter(r => (ruleForType[type] ?? ids).includes(r.ruleId));
-      const supported = meetings.some(m => m.kind === type);
+      const supported = meetings.some(m => m.kind === type)|| (!!eventContent(lines,lines.map((_,i)=>`read:${i}`))&&["OUT-008","OUT-009","OUT-010","OUT-011","OUT-012","OUT-013","OUT-014","OUT-026","OUT-029"].includes(entry.Output_ID)&&type!=="image_creative");
       const restricted = /Company|internal/i.test(entry.Default_Access_Class);
       const dependency = actual ? null : restricted ? "Company-restricted catalogue output; University A must not generate it. Required authorized source/field bindings and an allowed output contract are absent." : visualDependency[type] ?? (supported ? null : !relevant.length ? "No implemented source qualification/authoring contract matches this requested definition. Exact source inputs and reviewed behavior are required." : GATE);
       found.push({ key: `${entry.Output_ID}:${type}`, name: entry.Output_Name, type, catalogueId: entry.Output_ID,
